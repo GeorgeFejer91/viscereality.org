@@ -2,6 +2,7 @@
 import csv
 import hashlib
 import json
+import runpy
 import subprocess
 import sys
 import tempfile
@@ -22,6 +23,27 @@ HEADER = """schema_version,participant_id,session_id,run_index,scenario_id,recor
 
 def digest(data):
     return hashlib.sha256(data).hexdigest()
+
+
+class EcgPacketCoverageTest(unittest.TestCase):
+    def check_packets(self, packets):
+        tool = runpy.run_path(str(TOOL))
+        coverage = tool['EcgPacketCoverage']()
+        for frame, indices in enumerate(packets, 10):
+            for index in indices:
+                coverage.observe(str(frame), str(index))
+
+    def test_first_packet_can_be_clipped_at_official_start(self):
+        self.check_packets([range(37, 73), range(73), range(36)])
+
+    def test_repeated_missing_packet_prefix_is_not_uninterrupted_capture(self):
+        with self.assertRaisesRegex(Exception, 'ECG packet sample prefix is missing'):
+            self.check_packets([range(37, 73), range(37, 73)])
+
+    def test_missing_or_duplicate_sample_inside_packet_fails(self):
+        for indices in [[0, 2], [0, 1, 1]]:
+            with self.assertRaisesRegex(Exception, 'ECG packet sample index is discontinuous'):
+                self.check_packets([indices])
 
 
 class CollectionEvidenceTest(unittest.TestCase):

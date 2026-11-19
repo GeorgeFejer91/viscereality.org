@@ -1,5 +1,37 @@
 # Atmungsraum Quest 2 APKs
 
+## Developer35 main signal recovery candidate — 2026-11-19
+
+Local replacement candidate `0.2.34-dev`/35 uses native commit
+`d114c54027995cff5095763ed11fc464cef959fb`, tree
+`6cb5b7e2a07c22e3fcdabe412904ec776f8083f3`. Apply
+[main-continuity-recovery.patch](../main-continuity-recovery.patch) after the
+Developer34 Start-recovery source. The actual signed APK is73,613,376bytes,
+SHA256 `65581cb8cb985e73ffcb15eb2dfcdfd07c5d75b7d5d12d963ea61c14b2d19bec`.
+Retained v3 signer
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`,
+16KiB alignment, actual Android JNI compilation and signed900000ms session
+closure pass. OpenXR/Meta loader and music asset hashes remain unchanged.
+
+Software evidence:926 serialized native tests pass with6 isolated peers kept
+separate; the Java/Rust audio owner passes4 host groups including11 native
+integration groups; gateway tests cover84 boundary,30 rejection,36 BLE and77
+trusted-member controls plus actual serialized Snapshot→PWA readiness checks.
+The production Android35 Java projection compile, native boundary scan,
+368 zero-skip PWA tests,454 GUI states and20 evidence-checker cases pass.
+Real writer/export tests retain73 ECG+36 ACC samples per test packet instead
+of applying the short classification window to old raw samples.
+
+The first local35 candidate was rejected at startup verification because its
+Wi-Fi adapter omitted the new fields. The replacement above is installed with
+exact byte/version/signer readback and a normal MAIN/LAUNCHER launch. Actual
+signed phone status now contains the5000ms policy and typed readiness fields;
+it confirms IDLE, no writer/pending command, active phone control, Automatic
+parked at minimum and audio stopped. At the user's request, calibration and
+the main session have not started. Wearer pause/recovery and full-run data
+validation remain pending. The final buffered sensor tail after producer cutoff
+is separately unqualified. Meta still serves33; no35 upload is claimed.
+
 ## Developer34 Start recovery candidate — 2026-11-19
 
 Version `0.2.33-dev`/34 is built locally from clean native commit

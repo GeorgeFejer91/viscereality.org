@@ -1,0 +1,2319 @@
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+index ad1fd448d59b126349308d3b849aa55439ed5ecf..f81c0b5fd2407d32e852b891cc0cf7c054f09363 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+@@ -218,7 +218,7 @@ pub(crate) struct TiltSample {
+ // Conservative engineering admission limits, not physiological/clinical bounds.
+ // A 25 Hz training grid gives equal time weighting and a hard 800 sample bound.
+ const CLOCK_FRESH_NS: u64 = 250_000_000;
+-const SIGNAL_FRESH_NS: u64 = 200_000_000;
++pub(crate) const SIGNAL_FRESH_NS: u64 = 200_000_000;
+ const ALIGNMENT_TOLERANCE_NS: u64 = 150_000_000;
+ const TRAINING_STEP_NS: u64 = 40_000_000;
+ const MAX_TILT_SPEED_PER_S: f64 = 0.60; // normalized gravity chord / second
+@@ -505,10 +505,7 @@ impl BreathingSetup {
+             self.quality.warning = "timing";
+             if self.input.is_polar()
+                 && !self.calibration_active()
+-                && matches!(
+-                    self.experiment,
+-                    ExperimentState::Waiting | ExperimentState::Running
+-                )
++                && self.experiment == ExperimentState::Waiting
+             {
+                 self.experiment = ExperimentState::Invalidated;
+                 self.failure = Some(SetupFailure::SignalGap);
+@@ -549,10 +546,7 @@ impl BreathingSetup {
+                 .is_some_and(|resumed| monotonic_ns.saturating_sub(resumed) > SIGNAL_FRESH_NS)
+         {
+             self.mask_quality(SetupFailure::SignalGap);
+-            if matches!(
+-                self.experiment,
+-                ExperimentState::Waiting | ExperimentState::Running
+-            ) {
++            if self.experiment == ExperimentState::Waiting {
+                 self.experiment = ExperimentState::Invalidated;
+                 self.failure = Some(SetupFailure::SignalGap);
+             }
+@@ -587,7 +581,14 @@ impl BreathingSetup {
+             }
+         }
+         if self.experiment == ExperimentState::Running {
+-            if !self.input_ready(monotonic_ns) && !signal_resuming && !buffered_delivery {
++            // Once admitted, Polar quality masks leave classification unavailable;
++            // the driver retains its last diagnosis while the real audio clock
++            // advances the session. Source and clock retirement still invalidate.
++            if !self.input.is_polar()
++                && !self.input_ready(monotonic_ns)
++                && !signal_resuming
++                && !buffered_delivery
++            {
+                 self.fail(SetupFailure::InputNotReady);
+                 return;
+             }
+@@ -783,16 +784,18 @@ impl BreathingSetup {
+         let Some(clock) = self.clock else {
+             return;
+         };
+-        if !clock.playing {
++        let paused_main = !clock.playing && clock.healthy && self.experiment == ExperimentState::Running
++            && clock.host_ns.abs_diff(host_timestamp_ns) <= CLOCK_FRESH_NS;
++        if !clock.playing && !paused_main {
+             return;
+         }
+-        let mapped_frame = match self.frame_for_sample(host_timestamp_ns) {
++        let mapped_frame = if paused_main { None } else { match self.frame_for_sample(host_timestamp_ns) {
+             Ok(frame) => frame,
+             Err(reason) => {
+                 self.mask_quality(reason);
+                 return;
+             }
+-        };
++        }};
+         self.quality_sample_frame = mapped_frame;
+         let Some(unit) = gravity_direction(vector_g) else {
+             self.gravity_estimate = None;
+@@ -1188,6 +1191,25 @@ impl BreathingSetup {
+         }
+     }
+
++    /// Current source/model-owned signal evidence for manual Continue. An
++    /// intentional paused Running clock may assess quality but produces no
++    /// driver output, training samples, or main timeline progress.
++    pub(crate) fn usable_polar_signal_sample(&self, now_ns: u64) -> Option<TiltSample> {
++        if !self.clock_fresh(now_ns) || !self.input.is_polar() || self.experiment == ExperimentState::Invalidated
++            || self.clock.is_some_and(|clock| !clock.playing) && self.experiment != ExperimentState::Running
++        { return None; }
++        let source_owner = self.source_owner?;
++        let live = self.live.filter(|live| now_ns >= live.host_ns && now_ns - live.host_ns <= SIGNAL_FRESH_NS)?;
++        let (model_generation, volume) = if self.input.pretrained() {
++            (self.calibration_generation, 0.0)
++        } else {
++            let model = self.model.as_ref().filter(|model| self.source_owner == Some(model.source_owner))?;
++            (model.generation, ((dot(live.unit, model.axis) - model.low) / (model.high - model.low)).clamp(0.0, 1.0))
++        };
++        Some(TiltSample { input:self.input, volume, phase:None, source_owner:Some(source_owner),
++            model_generation:Some(model_generation), source_timestamp_ns:live.host_ns })
++    }
++
+     pub(crate) fn snapshot(&self, now_ns: u64) -> SetupStatus {
+         let frame = self.clock.map_or(0, |clock| clock.frame);
+         let (phase, phase_frame, automatic_volume) = self.schedule.phase_at(frame);
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+index f1f357020ec98b85cd18ef0ac7b83c0f6677527d..05c4c85219fea7e608460a98a6a1bf26dc00d9af 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+@@ -133,6 +133,9 @@ struct Runtime {
+     started: bool,
+     clock_anchor: Option<(u64, Instant)>,
+     last_clock: Option<(u64, u64, u64, bool)>,
++    // Earliest time in the current uninterrupted, healthy physical playback.
++    // Raw packet capture may look farther back than live tilt classification.
++    raw_play_started_ns: Option<u64>,
+     park_after: Option<(u64, u64)>,
+     last_admitted_frame: Option<u64>,
+     source_binding: Option<(u64, u64)>,
+@@ -452,7 +455,8 @@ impl Runtime {
+         }
+         self.observe_acc_with_source(sensor, host, host, mg);
+     }
+-    fn observe_acc_with_source(&mut self, sensor: u64, host: u64, source_ns: u64, mg: [f32; 3]) {
++    fn observe_acc_with_source(&mut self, sensor: u64, host: u64, source_ns: u64, mg: [f32; 3]) -> bool {
++        let mut usable = false;
+         let norm = mg.iter().map(|v| f64::from(*v).powi(2)).sum::<f64>().sqrt();
+         let mapped = self.map_raw_host(source_ns) == Some(host);
+         let observed_now = self.now_ns().max(host);
+@@ -481,7 +485,8 @@ impl Runtime {
+         );
+         self.refresh_classifier_continuity(source_ns);
+         let now = self.now_ns().max(host);
+-        if let Some(sample) = self.core.driver_sample(now).filter(|s| s.input.is_polar()) {
++        if let Some(sample) = self.core.usable_polar_signal_sample(now) {
++            usable = sample.source_timestamp_ns == host;
+             if sample.model_generation != self.classified_model {
+                 let _ = self
+                     .classifier
+@@ -502,6 +507,7 @@ impl Runtime {
+                                 mg.map(|v| f64::from(v) / 1000.0),
+                             );
+                             if masked {
++                                usable = false;
+                                 CommonBreathPhase::Unknown
+                             } else {
+                                 phase
+@@ -536,6 +542,7 @@ impl Runtime {
+         }
+         self.complete_recovery_if_ready(now);
+         self.refresh(now);
++        usable
+     }
+     fn refresh_classifier_continuity(&mut self, source_ns: u64) {
+         self.synchronize_evidence_retirement(source_ns);
+@@ -690,6 +697,7 @@ impl Runtime {
+             started: false,
+             clock_anchor: None,
+             last_clock: None,
++            raw_play_started_ns: None,
+             park_after: None,
+             last_admitted_frame: None,
+             source_binding: None,
+@@ -807,6 +815,10 @@ impl Runtime {
+         if !self.controller_ready(ns) {
+             self.core.defer_controller_main_until_after(frame);
+         }
++        let raw_play_continuous = self.last_clock.is_some_and(|(old_g, old_frame, old_ns, old_playing)| {
++            old_g == g && old_playing && playing && frame >= old_frame
++                && ns >= old_ns && ns - old_ns <= 250_000_000
++        });
+         self.core.observe_clock(g, frame, ns, playing);
+         if self
+             .last_clock
+@@ -816,6 +828,13 @@ impl Runtime {
+             self.last_clock = Some((g, frame, ns, playing));
+         }
+         let s = self.core.snapshot(ns);
++        if s.clock_valid && playing && self.last_clock == Some((g, frame, ns, true)) {
++            if !raw_play_continuous || self.raw_play_started_ns.is_none() {
++                self.raw_play_started_ns = Some(ns);
++            }
++        } else {
++            self.raw_play_started_ns = None;
++        }
+         if advancing && s.clock_valid {
+             if let Some(recovery) = &mut self.recovery {
+                 recovery.forward = true;
+@@ -841,6 +860,7 @@ impl Runtime {
+     }
+     fn bind_source(&mut self, binding: (u64, u64)) {
+         if self.source_binding != Some(binding) {
++            self.raw_play_started_ns = None;
+             self.retire_driver_phase();
+             self.projection_generation = None;
+             if self.source_binding.is_some_and(|old| old.0 != binding.0) {
+@@ -862,6 +882,7 @@ impl Runtime {
+                 .projection_generation
+                 .is_some_and(|previous| previous != projection.generation)
+             {
++                self.raw_play_started_ns = None;
+                 self.retire_driver_phase();
+                 self.source_reference = self.source_reference.checked_add(1).unwrap_or(0);
+                 self.core.observe_source_owner(self.source_reference);
+@@ -2047,6 +2068,13 @@ pub(crate) fn completion_audio_clock(active_ns: u64) -> Option<CompletionAudioCl
+ #[cfg(not(feature = "showcase"))]
+ pub(crate) fn recording_sample_admitted(
+     record: &crate::session_recording_contract::SessionRecord,
++) -> bool {
++    recording_sample_admitted_with_packet_receipt(record, None)
++}
++#[cfg(not(feature = "showcase"))]
++pub(crate) fn recording_sample_admitted_with_packet_receipt(
++    record: &crate::session_recording_contract::SessionRecord,
++    packet_receipt: Option<crate::session_recording_clock::SourceTimestamp>,
+ ) -> bool {
+     use crate::{session_recording_contract::SessionRecord, source_clock::SourceClock};
+     if !selected() {
+@@ -2076,7 +2104,7 @@ pub(crate) fn recording_sample_admitted(
+     let Some((_, clock_frame, clock_ns, playing)) = r.last_clock else {
+         return false;
+     };
+-    if !playing {
++    if !playing || !s.clock_valid {
+         return false;
+     }
+     let contains = |elapsed: u64| {
+@@ -2093,17 +2121,61 @@ pub(crate) fn recording_sample_admitted(
+         SourceClock::JavaNanoTime => r.map_raw_host(time).is_some_and(contains),
+         _ => false,
+     };
++    let raw_contains = |clock: SourceClock, time: u64, observation: u64| {
++        // H10 ECG packets carry 73 samples at 130 Hz (~562 ms), each with
++        // its original acquisition timestamp. A fresh receipt is capture
++        // evidence, not a fresh current breathing/classification assessment.
++        const RAW_PACKET_LOOKBACK_NS: u64 = 1_000_000_000;
++        let Some(receipt) = packet_receipt else {
++            // Legacy/non-packet producers retain the original short window.
++            return source_contains(clock, time);
++        };
++        if receipt.clock != clock || receipt.value_ns == 0 || time > receipt.value_ns
++            || receipt.value_ns - time > RAW_PACKET_LOOKBACK_NS
++        { return false; }
++        let Some(play_start) = r.raw_play_started_ns else { return false; };
++        let mapped = match clock {
++            SourceClock::AndroidElapsedRealtime => Some((time, receipt.value_ns)),
++            SourceClock::JavaNanoTime => {
++                let Some((nano, elapsed, observed)) = r.source_clock_pair else { return false; };
++                if observed.elapsed().as_nanos() > 250_000_000
++                    || elapsed.abs_diff(clock_ns) > 250_000_000
++                { return false; }
++                let project = |raw: u64| u64::try_from(i128::from(elapsed) + i128::from(raw) - i128::from(nano)).ok();
++                project(time).zip(project(receipt.value_ns))
++            }
++            _ => None,
++        };
++        let Some((mapped, mapped_receipt)) = mapped else { return false; };
++        // The original packet receipt and sample share one clock, so future
++        // samples were rejected exactly above. Separate Java/native Instant
++        // bridges retain their existing bounded coherence allowance here.
++        if mapped_receipt.abs_diff(r.now_ns()) > 250_000_000
++            || mapped_receipt.abs_diff(observation) > 250_000_000
++            || mapped_receipt.abs_diff(clock_ns) > 250_000_000 || mapped < play_start
++        {
++            return false;
++        }
++        let delta = i128::from(mapped) - i128::from(clock_ns);
++        // Compare before frame rounding: a sample one nanosecond before start
++        // must not round into the first experimental frame.
++        let frame_ns = i128::from(clock_frame) * 1_000_000_000 + delta * i128::from(r.schedule.sample_rate);
++        frame_ns >= i128::from(start) * 1_000_000_000
++            && frame_ns < i128::from(start + s.experiment_target_frames) * 1_000_000_000
++    };
+     match record {
+         SessionRecord::PolarAcc(batch) => batch.samples.iter().all(|sample| {
+-            source_contains(
++            raw_contains(
+                 sample.received_source.clock,
+                 sample.received_source.value_ns,
++                sample.observed_at.get(),
+             )
+         }),
+         SessionRecord::PolarEcg(batch) => batch.samples.iter().all(|sample| {
+-            source_contains(
++            raw_contains(
+                 sample.received_source.clock,
+                 sample.received_source.value_ns,
++                sample.observed_at.get(),
+             )
+         }),
+         SessionRecord::PolarHeartRate(sample) => {
+@@ -2132,7 +2204,7 @@ pub(crate) fn observe_accepted_acc(binding: (u64, u64), sensor: u64, host: u64,
+     if !selected() || binding != crate::polar_input_health::source_binding() {
+         return;
+     }
+-    let observation = {
++    let (observation, usable, sample_age_ns) = {
+         let mut guard = state().lock().unwrap_or_else(|e| e.into_inner());
+         let Some(r) = guard.as_mut() else {
+             return;
+@@ -2141,16 +2213,17 @@ pub(crate) fn observe_accepted_acc(binding: (u64, u64), sensor: u64, host: u64,
+         let Some(mapped_host) = r.map_raw_host(host) else {
+             return;
+         };
+-        r.observe_acc_with_source(sensor, mapped_host, host, mg);
++        let usable = r.observe_acc_with_source(sensor, mapped_host, host, mg);
+         let now = r.now_ns().max(mapped_host);
+-        r.tilt_assessment(now).map(|assessment| {
++        (r.tilt_assessment(now).map(|assessment| {
+             (
+                 assessment,
+                 r.revision,
+                 r.core.snapshot(now).experiment == ExperimentState::Running,
+             )
+-        })
++        }), usable, now.saturating_sub(mapped_host))
+     };
++    crate::polar_input_health::publish_setup_usable_with_age(binding, usable, std::time::Duration::from_nanos(sample_age_ns));
+     if let Some((assessment, revision, main_running)) = observation {
+         crate::breath_composition_runtime::record_setup_assessment(
+             assessment,
+@@ -2182,6 +2255,7 @@ pub(crate) fn observe_rejected_acc(binding: (u64, u64), mg: [f32; 3]) {
+         r.core.snapshot(r.now_ns()).input.is_polar()
+     };
+     crate::polar_input_health::set_setup_required(Some(required));
++    crate::polar_input_health::publish_setup_usable(binding, false);
+ }
+ pub(crate) fn current_tilt_assessment(
+ ) -> Option<rusty_quest_breath_contract::assessment::BreathAssessmentObservation> {
+@@ -2391,6 +2465,12 @@ pub(crate) mod test_support {
+             selection,
+         }
+     }
++    pub(super) fn install_runtime_for_usable_test(r: Runtime) -> Guard {
++        let selection = TEST_SELECTED.lock().unwrap().replace("ab".repeat(32));
++        let previous = state().lock().unwrap().replace(r);
++        crate::polar_input_health::set_setup_required(Some(true));
++        Guard { previous, selection }
++    }
+     pub(crate) fn controller_main_waiting() -> Guard {
+         let selection = TEST_SELECTED.lock().unwrap().replace("ab".repeat(32));
+         let binding = crate::polar_input_health::source_binding();
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+index 496197e743f86ff9dc7f4032fe03466fdde8a4ef..20469cf2f33e18b91648e0505a3b6bdd32e64ce9 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+@@ -498,6 +498,8 @@ fn java_audio_recovery_native_peer() {
+                 json!({})
+             }
+             "status" => r.status(n("now")),
++            "usable-signal" => json!({"usable":r.core.usable_polar_signal_sample(n("now")).is_some(),
++                "driver_output":r.core.driver_sample(n("now")).is_some()}),
+             "end-preparation" => {
+                 if !r.can_end_preparation() {
+                     json!({"accepted":false})
+@@ -986,6 +988,98 @@ fn vector(volume: f64) -> [f32; 3] {
+ fn calibrated_inhale_runtime() -> (Runtime, u64, u64) {
+     calibrated_inhale_runtime_with_binding((5, 1))
+ }
++#[test]
++fn paused_quality_publication_requires_actual_usable_source_owned_samples() {
++    let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++    let binding = crate::polar_input_health::source_binding();
++    let (mut r, frame, now) = calibrated_inhale_runtime_with_binding(binding);
++    command(&mut r, 50, "begin-main", now);
++    for tick in 1..=800 {
++        let at = now + tick * 20_000_000;
++        r.observe_clock(7, frame + tick * 882, at, true);
++        r.observe_host_aligned_acc(100_000_000_000 + at, at, vector(0.5));
++    }
++    let frame = frame + 800 * 882; let base = now + 16_000_000_000;
++    let original_model = r.core.model().map(|m| (m.source_owner,m.generation,m.axis,m.low,m.high));
++    let frozen = r.core.snapshot(base).experiment_completed_frames;
++    r.observe_clock(7, frame, base + 20_000_000, false);
++    let _setup = test_support::install_runtime_for_usable_test(r);
++    for tick in 1..=50 {
++        let at = base + 20_000_000 + tick * 40_000_000;
++        observe_clock(7, frame, at, false); observe_source_clock_pair(at, at);
++        assert!(crate::polar_input_health::commit_acc(crate::polar_input_health::acquisition_token(), || true));
++        observe_accepted_acc(binding, 100_000_000_000 + at, at, if tick == 1 { [f32::NAN,0.0,1000.0] } else { vector(0.5) });
++        if tick == 1 { assert!(!crate::polar_input_health::status(true,false).0.usable_fresh, "raw callback is not quality acceptance"); }
++        let guard = state().lock().unwrap(); let r = guard.as_ref().unwrap();
++        assert!(matches!(r.output(at), SetupDriverOutput::PolarUnavailable { .. }));
++        assert_eq!(r.core.snapshot(at).experiment_completed_frames, frozen);
++        assert_eq!(r.core.model().map(|m| (m.source_owner,m.generation,m.axis,m.low,m.high)), original_model);
++    }
++    assert!(crate::polar_input_health::status(true,false).0.usable_fresh, "valid paused signal recovers manual Continue readiness");
++    observe_rejected_acc(binding, [f32::NAN,0.0,1000.0]);
++    assert!(!crate::polar_input_health::status(true,false).0.usable_fresh);
++    crate::polar_input_health::publish_setup_usable((binding.0,binding.1+1),true);
++    assert!(!crate::polar_input_health::status(true,false).0.usable_fresh, "retired publication cannot unmask current signal");
++}
++#[test]
++fn running_main_keeps_the_last_diagnosis_and_radius_ramp_through_quality_loss() {
++    use crate::breath_composition_driver::{BreathCompositionDriver, tests::setup_frame};
++    for desired in [
++        CommonBreathPhase::Inhale,
++        CommonBreathPhase::Exhale,
++        CommonBreathPhase::Hold,
++    ] {
++        let (mut r, frame, now) = calibrated_inhale_runtime();
++        assert_eq!(command(&mut r, 20, "begin-main", now)["accepted"], true);
++        for tick in 1..=800 {
++            let at = now + tick * 20_000_000;
++            r.observe_clock(7, frame + tick * 882, at, true);
++            r.observe_host_aligned_acc(100_000_000_000 + at, at, vector(0.5));
++        }
++        let frame = frame + 800 * 882;
++        let now = now + 16_000_000_000;
++        assert_eq!(r.status(now)["stage"], "main");
++        for tick in 1..=30 {
++            let at = now + tick * 40_000_000;
++            let volume = match desired {
++                CommonBreathPhase::Inhale => 0.5 + tick as f64 / 100.0,
++                CommonBreathPhase::Exhale => 0.5 - tick as f64 / 100.0,
++                _ => 0.5,
++            };
++            r.observe_clock(7, frame + tick * 1764, at, true);
++            r.observe_host_aligned_acc(100_000_000_000 + at, at, vector(volume));
++        }
++        assert_eq!(r.phase, desired);
++        let frame = frame + 30 * 1764;
++        let now = now + 1_200_000_000;
++        let mut driver =
++            BreathCompositionDriver::new(crate::breath_composition_driver::tests::settings());
++        setup_frame(&mut driver, r.output(now), now, 0.0);
++        let initial = driver.value01();
++        for tick in 1..=30 {
++            let at = now + tick * 40_000_000;
++            r.observe_clock(7, frame + tick * 1764, at, true);
++            r.observe_host_aligned_acc(100_000_000_000 + at, at, [f32::NAN, 0.0, 1000.0]);
++            assert!(matches!(r.output(at), SetupDriverOutput::PolarTilt {
++                confirmed_phase: Some(p), availability: SetupSampleAvailability::SampleUnavailable, ..
++            } if p == desired));
++            let previous = driver.value01();
++            setup_frame(&mut driver, r.output(at), at, 0.04);
++            match desired {
++                CommonBreathPhase::Inhale => assert!(driver.value01() >= previous),
++                CommonBreathPhase::Exhale => assert!(driver.value01() <= previous),
++                _ => assert_eq!(driver.value01(), previous),
++            }
++            assert_eq!(r.status(at)["stage"], "main");
++        }
++        match desired {
++            CommonBreathPhase::Inhale => assert!(driver.value01() > initial),
++            CommonBreathPhase::Exhale => assert!(driver.value01() < initial),
++            _ => assert_eq!(driver.value01(), initial),
++        }
++    }
++}
++
+ fn calibrated_inhale_runtime_with_binding(binding: (u64, u64)) -> (Runtime, u64, u64) {
+     let mut r = runtime();
+     r.observe_clock(7, 0, sample_time(0), true);
+@@ -3253,3 +3347,179 @@ fn pending_recovery_must_resolve_before_explicit_preparation_retirement() {
+         CalibrationState::Idle
+     );
+ }
++// Raw PMD packets retain their per-sample timestamps; their delivery cadence is
++// separate from the current tilt/classifier freshness budget.
++fn raw_packet_main_runtime() -> (Runtime, u64) {
++    let (mut r, frame, now) = calibrated_inhale_runtime();
++    assert_eq!(command(&mut r, 90, "begin-main", now)["accepted"], true);
++    for tick in 1..=800 {
++        let at = now + tick * 20_000_000;
++        r.observe_clock(7, frame + tick * 882, at, true);
++        r.observe_host_aligned_acc(100_000_000_000 + at, at, vector(0.5));
++    }
++    let now = now + 16_000_000_000;
++    r.observe_source_pair(now + 900_000_000_000, now);
++    assert_eq!(r.core.snapshot(now).experiment, ExperimentState::Running);
++    (r, now)
++}
++
++fn raw_packet_ecg(sample_elapsed: u64, receipt_elapsed: u64, index: u32) -> crate::session_recording_contract::SessionRecord {
++    use crate::session_recording_clock::{MonotonicNanos, SourceClock, SourceTimestamp};
++    use crate::session_recording_contract::{PolarEcgBatch, PolarEcgSample, SessionRecord};
++    SessionRecord::PolarEcg(PolarEcgBatch {
++        frame_sequence: 12,
++        samples: vec![PolarEcgSample {
++            source_sequence: 12, sample_index: index,
++            source_time: SourceTimestamp { clock: SourceClock::PolarSensor, value_ns: sample_elapsed + 100_000_000_000 },
++            received_source: SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: sample_elapsed + 900_000_000_000 },
++            observed_at: MonotonicNanos::new(receipt_elapsed), microvolts: -37,
++        }].into_boxed_slice(),
++    })
++}
++
++fn raw_packet_admitted(record: &crate::session_recording_contract::SessionRecord) -> bool {
++    recording_sample_admitted_with_packet_receipt(record, Some(crate::session_recording_clock::SourceTimestamp {
++        clock: crate::source_clock::SourceClock::JavaNanoTime,
++        value_ns: record.observed_at().get() + 900_000_000_000,
++    }))
++}
++
++#[test]
++fn raw_packet_admission_retains_all_73_ecg_samples_and_real_writer_csv_rows() {
++    use crate::session_recording_clock::MonotonicNanos;
++    use crate::session_recording_contract::{FinalizationReason, SessionEventKind};
++    use crate::session_recording_writer::{SessionRecordingWriter, OfferOutcome, tests::{config, spec, temp_root}};
++    let (r, now) = raw_packet_main_runtime();
++    let start_ns = now - (r.last_clock.unwrap().1 - r.last_admitted_frame.unwrap()) * 1_000_000_000 / 44_100;
++    let _setup = test_support::install_runtime_for_usable_test(r);
++    let samples: Vec<_> = (0..73).map(|index| raw_packet_ecg(now - (72 - u64::from(index)) * (1_000_000_000 / 130), now, index)).collect();
++    assert!(!recording_sample_admitted(&samples[0]), "missing packet provenance retains legacy 250 ms admission");
++    let mut admitted: Vec<_> = samples.into_iter().filter(raw_packet_admitted).collect();
++    assert_eq!(admitted.len(), 73, "a 562 ms ECG packet is not a stale current breath assessment");
++    for index in 0..36 {
++        use crate::session_recording_contract::{SessionRecord, PolarAccBatch, PolarAccSample};
++        let SessionRecord::PolarEcg(batch) = raw_packet_ecg(now - (35 - u64::from(index)) * 5_000_000, now, index) else { unreachable!() };
++        let sample = &batch.samples[0];
++        let acc = SessionRecord::PolarAcc(PolarAccBatch { frame_sequence: 12, samples: vec![PolarAccSample {
++            source_sequence: sample.source_sequence, sample_index: sample.sample_index, source_time: sample.source_time,
++            received_source: sample.received_source, observed_at: sample.observed_at, xyz_mg: [1.0, 2.0, 1000.0],
++        }].into_boxed_slice() });
++        assert!(raw_packet_admitted(&acc));
++        admitted.push(acc);
++    }
++    let root = temp_root("buffered-raw-ecg-admission");
++    let writer = SessionRecordingWriter::spawn(config(root.clone(), 256, 100)).unwrap();
++    let mut session = spec(1_700_000_000_000_000_000);
++    session.participant = Some(crate::session_recording_participant::ParticipantPlan::parse(&json!({
++        "participant_id":"Tes_30_N", "scenario_id":"haupt-15", "scenario_sha256":"a".repeat(64),
++        "sample_rate":44100, "total_frames":39_690_000, "phases":[[0,"inhale"]]
++    })).unwrap());
++    session.completion_threshold_ns = session.participant.as_ref().unwrap().completion_threshold_ns();
++    let prepared = writer.prepare(1, session).unwrap().receive().unwrap();
++    writer.record_control(1, MonotonicNanos::new(start_ns), SessionEventKind::OfficialStart).unwrap().receive().unwrap();
++    for sample in admitted {
++        assert!(matches!(writer.try_offer(1, sample).outcome, OfferOutcome::Accepted { .. }));
++    }
++    let finalized = writer.try_finalize(1, MonotonicNanos::new(now + 1), FinalizationReason::RestartToExperimenter, false).unwrap().receive().unwrap();
++    assert!(finalized.saved);
++    assert_eq!(finalized.dropped_records, 0);
++    let raw = std::fs::read_to_string(prepared.directory.join("polar-ecg.jsonl")).unwrap();
++    assert_eq!(raw.lines().count(), 73);
++    let final_json: Value = serde_json::from_slice(&std::fs::read(prepared.directory.join("final.json")).unwrap()).unwrap();
++    let csv = std::fs::read_to_string(prepared.directory.join(final_json["participant_csv"]["name"].as_str().unwrap())).unwrap();
++    assert_eq!(csv.lines().filter(|row| row.split(',').nth(5) == Some("ecg")).count(), 73);
++    assert_eq!(csv.lines().filter(|row| row.split(',').nth(5) == Some("accelerometer")).count(), 36);
++    writer.shutdown(std::time::Duration::from_secs(2)).unwrap();
++    std::fs::remove_dir_all(root).unwrap();
++}
++
++#[test]
++fn raw_packet_admission_keeps_start_end_pause_and_receipt_clock_fences() {
++    let (r, now) = raw_packet_main_runtime();
++    let (g, frame, _, _) = r.last_clock.unwrap();
++    let start_ns = now - (frame - r.last_admitted_frame.unwrap()) * 1_000_000_000 / 44_100;
++    let _setup = test_support::install_runtime_for_usable_test(r);
++    assert!(!raw_packet_admitted(&raw_packet_ecg(start_ns - 1, now, 0)), "buffering cannot import pre-main data");
++    assert!(raw_packet_admitted(&raw_packet_ecg(start_ns, now, 1)), "the real main start is inclusive");
++    assert!(!raw_packet_admitted(&raw_packet_ecg(now + 1, now, 2)), "a sample cannot be newer than its receipt");
++    assert!(!raw_packet_admitted(&raw_packet_ecg(now - 1_000_000_001, now, 3)), "raw lookback is bounded independently");
++    assert!(!raw_packet_admitted(&raw_packet_ecg(now - 100_000_000, now - 300_000_000, 4)), "old receipt cannot refresh a sample");
++    let packet_receipt = crate::session_recording_clock::SourceTimestamp {
++        clock: crate::source_clock::SourceClock::JavaNanoTime, value_ns: now + 900_000_000_000,
++    };
++    assert!(recording_sample_admitted_with_packet_receipt(
++        &raw_packet_ecg(now - 500_000_000, now - 10_000_000, 5), Some(packet_receipt)),
++        "independent elapsed bridge estimates need not equal the actual Java packet receipt");
++    assert!(!recording_sample_admitted_with_packet_receipt(
++        &raw_packet_ecg(now + 1, now + 10_000_000, 5), Some(packet_receipt)),
++        "an ahead-of-receipt source sample cannot borrow observation-bridge skew");
++    assert!(!recording_sample_admitted_with_packet_receipt(
++        &raw_packet_ecg(now - 100_000_000, now, 5), Some(crate::session_recording_clock::SourceTimestamp {
++            value_ns: packet_receipt.value_ns + 300_000_000, ..packet_receipt
++        })), "a receipt outside current clock coherence cannot authorize a packet");
++    assert!(!recording_sample_admitted_with_packet_receipt(
++        &raw_packet_ecg(now - 100_000_000, now, 5), Some(crate::session_recording_clock::SourceTimestamp {
++            clock: crate::source_clock::SourceClock::PolarSensor, ..packet_receipt
++        })), "a receipt in another clock cannot authorize Java samples");
++    {
++        let mut guard = state().lock().unwrap();
++        let r = guard.as_mut().unwrap();
++        r.source_clock_pair.as_mut().unwrap().2 = Instant::now() - std::time::Duration::from_millis(251);
++    }
++    assert!(!raw_packet_admitted(&raw_packet_ecg(now - 100_000_000, now, 5)), "a stale source-clock pair is not mapping authority");
++    {
++        let mut guard = state().lock().unwrap();
++        let r = guard.as_mut().unwrap();
++        r.observe_source_pair(now + 900_000_000_000, now);
++        r.observe_clock(g, frame, now + 20_000_000, false);
++    }
++    assert!(!raw_packet_admitted(&raw_packet_ecg(now - 100_000_000, now + 20_000_000, 6)), "no records while audio is paused");
++    let resumed = now + 100_000_000;
++    {
++        let mut guard = state().lock().unwrap();
++        let r = guard.as_mut().unwrap();
++        r.observe_clock(g, frame, resumed, true);
++        r.observe_clock(g, frame + 882, resumed + 20_000_000, true);
++        r.observe_source_pair(resumed + 20_000_000 + 900_000_000_000, resumed + 20_000_000);
++    }
++    assert!(!raw_packet_admitted(&raw_packet_ecg(now - 100_000_000, resumed + 20_000_000, 7)), "a post-resume packet cannot import pre-pause samples");
++    assert!(raw_packet_admitted(&raw_packet_ecg(resumed + 10_000_000, resumed + 20_000_000, 8)));
++    {
++        let mut guard = state().lock().unwrap();
++        let r = guard.as_mut().unwrap();
++        let end_frame = r.last_admitted_frame.unwrap() + 39_690_000;
++        let mut at = resumed + 20_000_000;
++        // Every observation advances the actual head by 20 ms, including
++        // the final boundary; there is no fabricated long poll gap.
++        for next_frame in ((frame + 1764)..=end_frame).step_by(882) {
++            at += 20_000_000;
++            r.core.observe_clock(g, next_frame, at, true);
++        }
++        assert_eq!(r.core.snapshot(at).experiment, ExperimentState::Finished);
++        r.last_clock = Some((g, end_frame, at, true));
++        r.clock_anchor = Some((at, Instant::now()));
++        r.observe_source_pair(at + 900_000_000_000, at);
++    }
++    let end = state().lock().unwrap().as_ref().unwrap().last_clock.unwrap().2;
++    assert!(raw_packet_admitted(&raw_packet_ecg(end - 1, end, 9)), "the final in-window sample is retained");
++    assert!(!raw_packet_admitted(&raw_packet_ecg(end, end, 10)), "main end is exclusive");
++}
++
++#[test]
++fn raw_packet_admission_retires_on_audio_clock_and_source_barriers() {
++    for barrier in ["clock-stale", "audio-generation", "source-retired"] {
++        let (r, now) = raw_packet_main_runtime();
++        let _setup = test_support::install_runtime_for_usable_test(r);
++        assert!(raw_packet_admitted(&raw_packet_ecg(now - 500_000_000, now, 0)));
++        {
++            let mut guard = state().lock().unwrap();
++            let r = guard.as_mut().unwrap();
++            match barrier {
++                "clock-stale" => r.clock_anchor = Some((now, Instant::now() - std::time::Duration::from_millis(251))),
++                "audio-generation" => r.observe_clock(8, 0, now + 20_000_000, true),
++                _ => r.bind_source((0, 0)),
++            }
++        }
++        assert!(!raw_packet_admitted(&raw_packet_ecg(now - 100_000_000, now, 1)), "{barrier}");
++    }
++}
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
+index 4f733b9108e23a02e470bfc939be0514fc000dd1..f5eebe4ffa47afab90693708c5d07d258eaede78 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
+@@ -1417,3 +1417,115 @@ fn technical_retirement_keeps_each_polar_selection_but_retires_model_and_main()
+         }
+     }
+ }
++#[test]
++fn running_main_survives_quality_masks_without_faking_freshness() {
++    for quality_mask in [false, true] {
++        let mut setup = calibrated();
++        setup.request_experiment(time(2_116_800)).unwrap();
++        run(&mut setup, 2_118_564, 2_822_400, |f| Some(guided_vector(f)));
++        assert_eq!(
++            setup.snapshot(time(2_822_400)).experiment,
++            ExperimentState::Running
++        );
++        let model_generation = setup.snapshot(time(2_822_400)).model_generation;
++        for tick in 1..=30 {
++            let frame = 2_822_400 + tick * 1764;
++            setup.observe_clock(1, frame, time(frame), true);
++            if quality_mask {
++                setup.reject_acc(7, SetupFailure::ExcessiveMotion);
++            }
++        }
++        let now = time(2_875_320);
++        let s = setup.snapshot(now);
++        assert!(s.playing && s.clock_valid);
++        assert!(setup.model().is_some());
++        assert_eq!(s.experiment, ExperimentState::Running);
++        assert_eq!(s.model_generation, model_generation);
++        assert!(!s.ready);
++        assert!(setup.driver_sample(now).is_none());
++        assert_eq!(s.experiment_completed_frames, 52_920);
++        run(&mut setup, 2_877_084, 2_910_600, |f| Some(guided_vector(f)));
++        let recovered = setup.snapshot(time(2_910_600));
++        assert_eq!(recovered.experiment, ExperimentState::Running);
++        assert!(recovered.ready);
++        assert_eq!(recovered.model_generation, model_generation);
++        assert!(setup.driver_sample(time(2_910_600)).is_some());
++    }
++}
++
++#[test]
++fn paused_running_main_assesses_usable_signal_without_output_or_elapsed_progress() {
++    for input in [SetupInput::PolarTilt, SetupInput::PolarTiltFixed, SetupInput::PolarTiltAdaptive] {
++        let mut setup = calibrated();
++        if input.pretrained() {
++            setup.select_pretrained(input, 7, time(2_116_800)).unwrap();
++            run(&mut setup, 2_118_564, 2_152_080, |_| Some([0.0,0.0,1.0]));
++        }
++        let before = setup.snapshot(time(if input.pretrained() { 2_152_080 } else { 2_116_800 }));
++        setup.request_experiment(time(before.absolute_frame)).unwrap();
++        run(&mut setup, before.absolute_frame + 1764, 2_822_400, |_| Some([0.0,0.0,1.0]));
++        let frame = 2_822_400; let base = time(frame);
++        let model_identity = |s: &BreathingSetup| s.model().map(|m| (m.source_owner,m.generation,m.axis,m.low,m.high));
++        let original_model = model_identity(&setup);
++        setup.observe_clock(1, frame, base + 40_000_000, false);
++        setup.observe_acc(7, 100_000_000_000 + base + 40_000_000, base + 40_000_000, [f64::NAN,0.0,1.0]);
++        assert!(setup.usable_polar_signal_sample(base + 40_000_000).is_none(), "invalid paused sample: {input:?}");
++        for tick in 2..=40 {
++            let at = base + tick * 40_000_000;
++            setup.observe_clock(1, frame, at, false);
++            setup.observe_acc(7, 100_000_000_000 + at, at, [0.0,0.0,1.0]);
++            assert!(setup.driver_sample(at).is_none(), "paused signal is not driver output");
++            assert!(!setup.snapshot(at).ready, "ordinary setup readiness still requires playback");
++            assert_eq!(setup.snapshot(at).experiment_completed_frames, 0);
++            assert_eq!(setup.snapshot(at).absolute_frame, frame);
++        }
++        let at = base + 1_600_000_000;
++        assert!(setup.usable_polar_signal_sample(at).is_some(), "valid source/model-qualified paused signal: {input:?}");
++        assert_eq!(model_identity(&setup), original_model);
++        assert!(setup.usable_polar_signal_sample(at + CLOCK_FRESH_NS + 1).is_none(), "stale stopped clock is not intentional fresh pause evidence");
++        setup.observe_source_owner(8);
++        setup.observe_clock(1, frame, at + 40_000_000, false);
++        setup.observe_acc(8, 100_000_000_000 + at + 40_000_000, at + 40_000_000, [0.0,0.0,1.0]);
++        assert!(setup.usable_polar_signal_sample(at + 40_000_000).is_none(), "hard source replacement cannot revive main");
++        assert_eq!(setup.snapshot(at + 40_000_000).experiment, ExperimentState::Invalidated);
++    }
++}
++
++#[test]
++fn running_main_still_retires_on_real_source_and_audio_barriers() {
++    for barrier in [
++        "poll-gap",
++        "head-stall",
++        "source-replaced",
++        "source-retired",
++        "audio-generation",
++        "generation-regression",
++    ] {
++        let mut setup = calibrated();
++        setup.request_experiment(time(2_116_800)).unwrap();
++        run(&mut setup, 2_118_564, 2_822_400, |f| Some(guided_vector(f)));
++        assert_eq!(
++            setup.snapshot(time(2_822_400)).experiment,
++            ExperimentState::Running
++        );
++        let now = time(2_822_400);
++        let at = now + 300_000_000;
++        match barrier {
++            "poll-gap" => setup.observe_clock(1, 2_835_630, at, true),
++            "head-stall" => {
++                for tick in 1..=15 {
++                    setup.observe_clock(1, 2_822_400, now + tick * 20_000_000, true);
++                }
++            }
++            "source-replaced" => setup.observe_source_owner(8),
++            "source-retired" => setup.observe_source_owner(0),
++            "audio-generation" => setup.observe_clock(2, 0, at, true),
++            _ => setup.observe_clock(0, 0, at, true),
++        }
++        let s = setup.snapshot(at);
++        assert_eq!(s.experiment, ExperimentState::Invalidated, "{barrier}");
++        assert!(!s.ready, "{barrier}");
++        assert!(setup.model().is_none(), "{barrier}");
++        assert!(setup.driver_sample(at).is_none(), "{barrier}");
++    }
++}
+diff --git a/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs b/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs
+index e224cabeb91ddee3c15e99f2c074ab3a5f75c73c..66e55151922e2eec1c301ba90b648df9513460f2 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs
+@@ -46,16 +46,20 @@ fn polar_worker_detects_loss_without_frames_or_browser_and_never_resumes() {
+     runtime.apply_command_json(&start_command(&root, "polar-fresh-start"));
+     wait_for(&runtime, "\"phase\":\"active\"");
+     thread::sleep(Duration::from_millis(1150));
++    let grace: Value = serde_json::from_str(&runtime.status_json()).unwrap();
++    assert_eq!(grace["readback"]["control_state"], "running", "one-second acquisition expiry does not pause ongoing main");
++    assert_eq!(grace["readback"]["polar_input"]["fresh"], false);
++    crate::polar_input_health::test_support::age_sample(Duration::from_millis(5100));
++    wait_for(&runtime, "\"control_state\":\"paused\"");
+     let lost: Value = serde_json::from_str(&runtime.status_json()).unwrap();
+     polar_sample();
+-    thread::sleep(Duration::from_millis(30));
+-    let recovered: Value = serde_json::from_str(&runtime.status_json()).unwrap();
++    let recovered: Value = serde_json::from_str(&wait_for(&runtime, "recovered-awaiting-resume")).unwrap();
+     runtime.shutdown_for_test().unwrap();
+     assert_eq!(lost["readback"]["control_state"], "paused");
+     assert_eq!(lost["readback"]["polar_input"]["pause_latched"], true);
+     assert_eq!(lost["readback"]["polar_input"]["fresh"], false);
+     let pause = &lost["readback"]["polar_input"]["last_pause"];
+-    assert_eq!(pause["reason"], "acc-stale");
++    assert_eq!(pause["reason"], "breathing-data-unusable");
+     assert!(pause["deadline_elapsed_realtime_ns"].as_u64().unwrap() <= pause["detected_elapsed_realtime_ns"].as_u64().unwrap());
+     assert_eq!(recovered["readback"]["polar_input"]["last_pause"], *pause);
+     assert_eq!(recovered["readback"]["polar_input"]["reason"], "recovered-awaiting-resume");
+@@ -209,8 +213,8 @@ fn polar_native_and_authenticated_operator_controls_share_freshness_and_manual_r
+         })
+         .unwrap();
+     entered_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+-    crate::polar_input_health::test_support::age_sample(Duration::from_millis(1250));
+-    let current = test_elapsed_realtime_ns(&runtime) + 1_500_000_000;
++    crate::polar_input_health::test_support::age_sample(Duration::from_millis(5250));
++    let current = test_elapsed_realtime_ns(&runtime) + 5_500_000_000;
+     *runtime.monotonic_bridge.lock().unwrap() =
+         Some((MonotonicNanos::new(current), Instant::now()));
+     runtime
+@@ -225,8 +229,8 @@ fn polar_native_and_authenticated_operator_controls_share_freshness_and_manual_r
+         serde_json::from_str(&wait_for(&runtime, "\"control_state\":\"paused\"")).unwrap();
+     let frozen = paused["readback"]["active_time_ms"].as_u64().unwrap();
+     assert!(
+-        (1200..1400).contains(&frozen),
+-        "clock must stop at acquisition deadline: {paused}"
++        (5200..5400).contains(&frozen),
++        "clock must stop at five-second usable-data deadline: {paused}"
+     );
+     let denied = polar_action(&runtime, "resume", "polar-resume-denied");
+     assert_eq!(denied["readback"]["last_reason"], "polar-input-not-fresh");
+@@ -356,7 +360,7 @@ fn polar_gap_recovered_while_worker_is_busy_still_requires_explicit_resume() {
+         })
+         .unwrap();
+     entered_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+-    crate::polar_input_health::test_support::age_sample(Duration::from_millis(1250));
++    crate::polar_input_health::test_support::age_sample(Duration::from_millis(5250));
+     polar_sample();
+     release.send(()).unwrap();
+     thread::sleep(Duration::from_millis(40));
+@@ -365,11 +369,63 @@ fn polar_gap_recovered_while_worker_is_busy_still_requires_explicit_resume() {
+     assert_eq!(status["readback"]["control_state"], "paused");
+     assert_eq!(status["readback"]["polar_input"]["fresh"], true);
+     assert_eq!(status["readback"]["polar_input"]["pause_latched"], true);
+-    assert_eq!(status["readback"]["polar_input"]["last_pause"]["reason"], "acc-stale");
++    assert_eq!(status["readback"]["polar_input"]["last_pause"]["reason"], "breathing-data-unusable");
+     assert_eq!(status["readback"]["polar_input"]["last_pause"]["fresh_at_detection"], true);
+     fs::remove_dir_all(root.parent().unwrap()).unwrap();
+ }
+
++#[test]
++fn polar_gap_recovered_before_five_seconds_does_not_pause_ongoing_main() {
++    let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++    let root = temp_root("polar-short-recovered-gap");
++    let runtime = runtime(&root);
++    wait_for(&runtime, "\"initialization_status\":\"ready\"");
++    polar_sample(); runtime.apply_command_json(&start_command(&root, "short-gap-start"));
++    wait_for(&runtime, "\"phase\":\"active\"");
++    let (entered, entered_rx) = mpsc::sync_channel(1); let (release, release_rx) = mpsc::sync_channel(1);
++    runtime.command_sender.send(WorkerMessage::PauseForTest { entered, resume:release_rx }).unwrap();
++    entered_rx.recv_timeout(Duration::from_secs(2)).unwrap();
++    crate::polar_input_health::test_support::age_sample(Duration::from_millis(4900));
++    polar_sample(); release.send(()).unwrap(); thread::sleep(Duration::from_millis(40));
++    let status: Value = serde_json::from_str(&runtime.status_json()).unwrap();
++    assert_eq!(status["readback"]["control_state"], "running");
++    assert_eq!(status["readback"]["polar_input"]["pause_latched"], false);
++    assert!(status["readback"]["polar_input"]["last_pause"].is_null());
++    runtime.shutdown_for_test().unwrap(); fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
++
++#[test]
++fn polar_quality_pause_requires_usable_recovery_and_an_explicit_resume() {
++    let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++    let root = temp_root("polar-quality-manual-resume"); let runtime = runtime(&root);
++    wait_for(&runtime, "\"initialization_status\":\"ready\"");
++    polar_sample(); runtime.apply_command_json(&start_command(&root, "quality-start"));
++    wait_for(&runtime, "\"phase\":\"active\"");
++    crate::polar_input_health::set_setup_required(Some(true));
++    let binding = crate::polar_input_health::source_binding();
++    crate::polar_input_health::publish_setup_usable(binding, true);
++    crate::polar_input_health::test_support::age_usable(Duration::from_millis(5100));
++    crate::polar_input_health::publish_setup_usable(binding, false);
++    let paused: Value = serde_json::from_str(&wait_for(&runtime, "\"control_state\":\"paused\"")).unwrap();
++    assert_eq!(paused["readback"]["polar_input"]["last_pause"]["reason"], "breathing-data-unusable");
++    for _ in 0..10 { polar_sample(); }
++    let denied = polar_action(&runtime, "resume", "quality-raw-only-resume");
++    assert_eq!(denied["readback"]["last_reason"], "polar-input-not-fresh");
++    assert_eq!(denied["readback"]["polar_input"]["fresh"], true);
++    assert_eq!(denied["readback"]["polar_input"]["usable_fresh"], false);
++    polar_sample(); crate::polar_input_health::publish_setup_usable(binding, true);
++    let recovered: Value = serde_json::from_str(&wait_for(&runtime, "recovered-awaiting-resume")).unwrap();
++    assert_eq!(recovered["readback"]["control_state"], "paused", "quality recovery never auto-resumes");
++    assert_eq!(recovered["readback"]["active_time_ms"], paused["readback"]["active_time_ms"]);
++    polar_present(&runtime, "quality-resume-present"); polar_sample();
++    crate::polar_input_health::publish_setup_usable(binding, true);
++    let resumed = polar_action(&runtime, "resume", "quality-manual-resume");
++    assert_eq!(resumed["readback"]["control_state"], "running");
++    assert_eq!(resumed["readback"]["polar_input"]["pause_latched"], false);
++    crate::polar_input_health::set_setup_required(None);
++    runtime.shutdown_for_test().unwrap(); fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
++
+ fn check_guided_source_changing_start(timing: &str) {
+     use rusty_quest_breath_contract::{
+         composition::BreathCompositionSource, BreathTimestampMicros,
+diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+index 7e397260d329b6ce64bb71111f465eec8eedef9a..743a3abab54657437e06fa9c34eceec592cc4c6f 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+@@ -407,6 +407,7 @@ impl Projection {
+             let mut cached = self.polar_input.json();
+             for key in [
+                 "accepted_age_ms",
++                "unusable_age_ms",
+                 "ingress_age_ms",
+                 "commit_age_ms",
+                 "ingress_to_commit_ms",
+@@ -416,7 +417,7 @@ impl Projection {
+             cached
+         };
+         let readiness = self.polar_input.json();
+-        for key in ["required", "fresh", "pause_latched", "reason"] {
++        for key in ["required", "fresh", "usable_fresh", "pause_latched", "reason"] {
+             input[key] = readiness[key].clone();
+         }
+         input["diagnostics_observed"] = json!(diagnostics_observed);
+@@ -1420,7 +1421,7 @@ impl SessionWorker {
+                 );
+                 return;
+             }
+-            if !polar_ready_at_receipt.ready || (input.required && !input.fresh) {
++            if !polar_ready_at_receipt.ready || (input.required && (!input.fresh || !input.usable_fresh)) {
+                 self.publish_operation(
+                     &parsed.operation_id,
+                     "rejected",
+@@ -1796,7 +1797,8 @@ impl SessionWorker {
+     }
+
+     fn capture_clock_allowed(&self) -> bool {
+-        // Hold the last captured position during Polar loss, pause or renderer stall.
++        // The explicit five-second grace remains part of active capture. Only a
++        // matured interruption, actual Pause or renderer stall freezes capture.
+         let (input, loss) = crate::polar_input_health::status(
+             self.recording_requires_polar,
+             self.polar_pause_latched,
+@@ -1812,7 +1814,7 @@ impl SessionWorker {
+                         <= SUBMITTED_FRAME_STALL_NS
+                 }));
+         !self.polar_pause_latched
+-            && (!input.required || (input.fresh && loss.revision == self.last_input_revision))
++            && (!input.required || (!loss.pause_due && loss.revision == self.last_input_revision))
+             && self.controller.control_state()
+                 != crate::experiment_session::ExperimentControlState::Paused
+             && renderer_ready
+@@ -2420,7 +2422,7 @@ impl SessionWorker {
+             self.recording_requires_polar |= input.required;
+         }
+         if input.required
+-            && (!input.fresh || loss.revision != self.last_input_revision)
++            && (loss.pause_due || loss.revision != self.last_input_revision)
+             && self.controller.phase() == SessionPhase::Active
+             && self.controller.control_state() == ExperimentControlState::Running
+         {
+@@ -2450,6 +2452,7 @@ impl SessionWorker {
+                                 "detected_elapsed_realtime_ns": now.get(),
+                                 "fresh_at_detection": input.fresh,
+                                 "accepted_age_ms_at_detection": input.json()["accepted_age_ms"]
++                                ,"usable_fresh_at_detection":input.usable_fresh
+                             }));
+                             self.refresh_controller_projection();
+                             if let Err(error) = self.process_effects(outcome.effects, at) {
+@@ -3211,7 +3214,7 @@ impl ExperimentSessionRuntime {
+         let (input, _) = crate::polar_input_health::status(required, false);
+         PolarInputAdmission {
+             required: input.required,
+-            ready: !input.required || input.fresh,
++            ready: !input.required || (input.fresh && input.usable_fresh),
+         }
+     }
+
+@@ -3735,7 +3738,11 @@ impl ExperimentSessionRuntime {
+     }
+
+     pub(crate) fn try_offer(&self, record: SessionRecord) -> OfferOutcome {
+-        if !crate::experiment_breathing_setup_runtime::recording_sample_admitted(&record) {
++        self.try_offer_with_packet_receipt(record, None)
++    }
++
++    fn try_offer_with_packet_receipt(&self, record: SessionRecord, packet_receipt: Option<SourceTimestamp>) -> OfferOutcome {
++        if !crate::experiment_breathing_setup_runtime::recording_sample_admitted_with_packet_receipt(&record, packet_receipt) {
+             return OfferOutcome::NotAccepting;
+         }
+         let gate = match self.producer_gate.try_read() {
+@@ -4485,6 +4492,12 @@ pub(crate) fn try_offer_record(record: SessionRecord) -> OfferOutcome {
+     })
+ }
+
++fn try_offer_record_with_packet_receipt(record: SessionRecord, packet_receipt: SourceTimestamp) -> OfferOutcome {
++    runtime().map_or(OfferOutcome::NotAccepting, |runtime| {
++        runtime.try_offer_with_packet_receipt(record, Some(packet_receipt))
++    })
++}
++
+ pub(crate) fn request_restart_from_native(
+     operation_id: &str,
+     expected_generation: u64,
+@@ -4829,12 +4842,13 @@ pub(crate) fn record_polar_acc_sample(
+     sample_index: u32,
+     host_time_ns: u64,
+     sensor_time_ns: u64,
++    frame_host_receipt_time_ns: u64,
+     xyz_mg: [f32; 3],
+ ) -> OfferOutcome {
+     let Some(observed_at_ns) = current_elapsed_realtime_ns() else {
+         return OfferOutcome::NotAccepting;
+     };
+-    try_offer_record(SessionRecord::PolarAcc(PolarAccBatch {
++    try_offer_record_with_packet_receipt(SessionRecord::PolarAcc(PolarAccBatch {
+         frame_sequence,
+         samples: vec![PolarAccSample {
+             source_sequence: frame_sequence,
+@@ -4851,7 +4865,7 @@ pub(crate) fn record_polar_acc_sample(
+             xyz_mg,
+         }]
+         .into_boxed_slice(),
+-    }))
++    }), SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: frame_host_receipt_time_ns })
+ }
+
+ pub(crate) fn record_polar_ecg_sample(
+@@ -4859,12 +4873,13 @@ pub(crate) fn record_polar_ecg_sample(
+     sample_index: u32,
+     host_time_ns: u64,
+     sensor_time_ns: u64,
++    frame_host_receipt_time_ns: u64,
+     microvolts: i32,
+ ) -> OfferOutcome {
+     let Some(observed_at_ns) = current_elapsed_realtime_ns() else {
+         return OfferOutcome::NotAccepting;
+     };
+-    try_offer_record(SessionRecord::PolarEcg(PolarEcgBatch {
++    try_offer_record_with_packet_receipt(SessionRecord::PolarEcg(PolarEcgBatch {
+         frame_sequence,
+         samples: vec![PolarEcgSample {
+             source_sequence: frame_sequence,
+@@ -4881,7 +4896,7 @@ pub(crate) fn record_polar_ecg_sample(
+             microvolts,
+         }]
+         .into_boxed_slice(),
+-    }))
++    }), SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: frame_host_receipt_time_ns })
+ }
+
+ pub(crate) fn record_polar_heart_rate(
+@@ -5828,7 +5843,7 @@ mod tests {
+         let session = SelectedControllerStudy::start();
+         let (entered, resume) = session.pause_worker();
+         entered.recv_timeout(Duration::from_secs(2)).unwrap();
+-        crate::polar_input_health::test_support::age_sample(Duration::from_secs(2));
++        crate::polar_input_health::test_support::age_sample(Duration::from_secs(6));
+         resume.send(()).unwrap();
+         let paused: Value =
+             serde_json::from_str(&wait_for(&session.runtime, "\"control_state\":\"paused\""))
+diff --git a/apps/native-renderer-android/native/src/polar_composition_adapters.rs b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+index b8951d3115f652a94c7de839514105a569e89fb8..d91cfbe5fa5ab6fbfdef6967dd260de6b63b5362 100644
+--- a/apps/native-renderer-android/native/src/polar_composition_adapters.rs
++++ b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+@@ -1117,6 +1117,7 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+         sample_index.max(0) as u32,
+         sample_host_time_ns.max(0) as u64,
+         sample_sensor_time_ns.max(0) as u64,
++        frame_host_receipt_time_ns.max(0) as u64,
+         xyz_mg,
+     );
+     let setup_selected = crate::experiment_breathing_setup_runtime::selected();
+@@ -1204,6 +1205,7 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+         sample_index.max(0) as u32,
+         sample_host_time_ns.max(0) as u64,
+         sample_sensor_time_ns.max(0) as u64,
++        frame_host_receipt_time_ns.max(0) as u64,
+         microvolts,
+     );
+ }
+diff --git a/apps/native-renderer-android/native/src/polar_input_health.rs b/apps/native-renderer-android/native/src/polar_input_health.rs
+index 2afb874d4226070a228799b310fcb9665baffff5..eeb01088eb187547cce0a0822f5ecfd6e47f2a06 100644
+--- a/apps/native-renderer-android/native/src/polar_input_health.rs
++++ b/apps/native-renderer-android/native/src/polar_input_health.rs
+@@ -1,5 +1,6 @@
+-//! Acquisition readiness only. Composition publishes selection, accepted raw ACC
+-//! publishes native receipt time, and the session worker owns all control effects.
++//! Raw acquisition and setup-qualified usable signal health only. Composition
++//! publishes selection; raw ACC and setup publish distinct receipt witnesses.
++//! The session worker owns all control effects and the explicit Resume gate.
+ //! This owner never calls composition, session, classification or history code.
+
+ use std::{
+@@ -8,6 +9,7 @@ use std::{
+ };
+
+ pub(crate) const TIMEOUT: Duration = Duration::from_secs(1);
++pub(crate) const INVALID_TIMEOUT: Duration = Duration::from_secs(5);
+
+ #[derive(Default)]
+ struct Acquisition {
+@@ -17,6 +19,10 @@ struct Acquisition {
+     configured_required: bool,
+     setup_required: Option<bool>,
+     last_sample: Option<Instant>,
++    last_usable: Option<Instant>,
++    last_usable_receipt: Option<Instant>,
++    usable: bool,
++    awaiting_since: Option<Instant>,
+     interruption_revision: u64,
+     interrupted_at: Option<Instant>,
+     interrupted_reason: Option<&'static str>,
+@@ -32,9 +38,11 @@ struct Acquisition {
+ pub(crate) struct Status {
+     pub(crate) required: bool,
+     pub(crate) fresh: bool,
++    pub(crate) usable_fresh: bool,
+     pub(crate) pause_latched: bool,
+     pub(crate) reason: &'static str,
+     accepted_age_ms: Option<u64>,
++    unusable_age_ms: Option<u64>,
+     ingress_age_ms: Option<u64>,
+     commit_age_ms: Option<u64>,
+     ingress_to_commit_ms: Option<u64>,
+@@ -46,10 +54,11 @@ pub(crate) struct Status {
+ impl Status {
+     /// Diagnostic time passing must not churn the session controller projection.
+     pub(crate) fn same_readiness(self, other: Self) -> bool {
+-        (self.required, self.fresh, self.pause_latched, self.reason)
++        (self.required, self.fresh, self.usable_fresh, self.pause_latched, self.reason)
+             == (
+                 other.required,
+                 other.fresh,
++                other.usable_fresh,
+                 other.pause_latched,
+                 other.reason,
+             )
+@@ -57,6 +66,7 @@ impl Status {
+
+     pub(crate) fn json(self) -> serde_json::Value {
+         serde_json::json!({"required":self.required,"fresh":self.fresh,
++            "usable_fresh":self.usable_fresh,"invalid_timeout_ms":5000,"unusable_age_ms":self.unusable_age_ms,
+             "pause_latched":self.pause_latched,"reason":self.reason,"timeout_ms":1000,
+             "clock":"rust-instant","accepted_age_ms":self.accepted_age_ms,
+             "ingress_age_ms":self.ingress_age_ms,"commit_age_ms":self.commit_age_ms,
+@@ -85,6 +95,10 @@ pub(crate) fn configure(owner: u64, required: bool) {
+         state.configured_required = required;
+         state.required = state.setup_required.unwrap_or(required);
+         state.last_sample = None;
++        state.last_usable = None;
++        state.last_usable_receipt = None;
++        state.usable = false;
++        state.awaiting_since = Some(Instant::now());
+         state.ingress_count = 0;
+         state.accepted_count = 0;
+         state.rejected_count = 0;
+@@ -101,6 +115,12 @@ pub(crate) fn source_binding() -> (u64, u64) {
+ }
+ pub(crate) fn set_setup_required(required: Option<bool>) {
+     let mut state = acquisition().lock().unwrap_or_else(|e| e.into_inner());
++    if state.setup_required != required {
++        state.last_usable = None;
++        state.last_usable_receipt = None;
++        state.usable = false;
++        state.awaiting_since = Some(Instant::now());
++    }
+     state.setup_required = required;
+     state.required = required.unwrap_or(state.configured_required);
+ }
+@@ -150,31 +170,40 @@ pub(crate) fn commit_acc(token: AcquisitionToken, accept: impl FnOnce() -> bool)
+         return false;
+     }
+     let committed_at = Instant::now();
++    state.latch_deadline(committed_at);
+     state.accepted_count = state.accepted_count.saturating_add(1);
+     state.last_commit = Some(committed_at);
+     state.ingress_to_commit_ms = committed_at
+         .checked_duration_since(token.entered_at)
+         .map(duration_ms);
+     if state.last_sample.is_none_or(|at| token.received_at >= at) {
+-        if let Some(previous) = state
+-            .last_sample
+-            .filter(|at| token.received_at.duration_since(*at) > TIMEOUT)
+-        {
+-            state.interruption_revision = state.interruption_revision.saturating_add(1);
+-            if state.interrupted_at.is_none() {
+-                state.interrupted_at = Some(previous + TIMEOUT);
+-                state.interrupted_reason = Some("acc-stale");
+-            }
+-        }
+         state.last_sample = Some(token.received_at);
+     }
+     true
+ }
+
++/// Setup publishes quality acceptance only after dropping its own owner lock.
++/// Raw callback acceptance cannot substitute for this current-source witness.
++pub(crate) fn publish_setup_usable(binding: (u64, u64), usable: bool) {
++    publish_setup_usable_with_age(binding, usable, Duration::ZERO);
++}
++pub(crate) fn publish_setup_usable_with_age(binding: (u64, u64), usable: bool, age: Duration) {
++    let mut state = acquisition().lock().unwrap_or_else(|e| e.into_inner());
++    if (state.owner, state.selection_revision) != binding || state.setup_required != Some(true) { return; }
++    let now = Instant::now();
++    state.latch_deadline(now);
++    state.usable = usable;
++    if usable {
++        state.last_usable = now.checked_sub(age);
++        state.last_usable_receipt = Some(now);
++    }
++}
++
+ pub(crate) struct LossObservation {
+     pub(crate) revision: u64,
+     pub(crate) overdue: Duration,
+     pub(crate) reason: &'static str,
++    pub(crate) pause_due: bool,
+ }
+
+ // Only an accepted explicit session control acknowledges prior interruptions.
+@@ -199,6 +228,23 @@ fn duration_ms(duration: Duration) -> u64 {
+ }
+
+ impl Acquisition {
++    fn usable_at(&self) -> Option<Instant> {
++        if self.setup_required == Some(true) { self.last_usable } else { self.last_sample }
++    }
++    fn loss_start(&self) -> Option<Instant> {
++        // Source-sample age controls strict readiness. Receipt gaps control
++        // ongoing interruption duration; buffered input cannot shorten grace.
++        (if self.setup_required == Some(true) { self.last_usable_receipt } else { self.last_sample }).or(self.awaiting_since)
++    }
++    fn latch_deadline(&mut self, now: Instant) {
++        if self.interrupted_at.is_none() {
++            if let Some(deadline) = self.loss_start().and_then(|at| at.checked_add(INVALID_TIMEOUT)).filter(|at| now >= *at) {
++                self.interruption_revision = self.interruption_revision.saturating_add(1);
++                self.interrupted_at = Some(deadline);
++                self.interrupted_reason = Some("breathing-data-unusable");
++            }
++        }
++    }
+     fn status(
+         &self,
+         now: Instant,
+@@ -212,12 +258,22 @@ impl Acquisition {
+         let background_capture =
+             self.setup_required.is_some() && latched_required && self.owner != 0;
+         let fresh = (self.required || background_capture) && age.is_some_and(|age| age <= TIMEOUT);
++        let usable_age = self.usable_at().and_then(|at| now.checked_duration_since(at));
++        let usable_timeout = if self.setup_required == Some(true) {
++            Duration::from_nanos(crate::experiment_breathing_setup::SIGNAL_FRESH_NS)
++        } else { TIMEOUT };
++        let usable_fresh = fresh && (self.setup_required != Some(true) || self.usable)
++            && usable_age.is_some_and(|age| age <= usable_timeout);
++        let deadline = self.interrupted_at.or_else(|| self.loss_start().and_then(|at| at.checked_add(INVALID_TIMEOUT)));
++        let pause_due = deadline.is_some_and(|at| now >= at);
+         let reason = if !required {
+             "not-required"
+         } else if !self.required && !background_capture {
+             "source-unavailable"
+-        } else if fresh && pause_latched {
++        } else if usable_fresh && pause_latched {
+             "recovered-awaiting-resume"
++        } else if fresh && !usable_fresh {
++            "breathing-data-unusable"
+         } else if fresh {
+             "fresh"
+         } else if self.last_sample.is_none() {
+@@ -229,9 +285,11 @@ impl Acquisition {
+             Status {
+                 required,
+                 fresh,
++                usable_fresh,
+                 pause_latched,
+                 reason,
+                 accepted_age_ms: age.map(duration_ms),
++                unusable_age_ms: (!usable_fresh).then(|| self.loss_start().and_then(|at| now.checked_duration_since(at)).map(duration_ms)).flatten(),
+                 ingress_age_ms: self
+                     .last_ingress
+                     .and_then(|at| now.checked_duration_since(at))
+@@ -247,11 +305,11 @@ impl Acquisition {
+             },
+             LossObservation {
+                 revision: self.interruption_revision,
+-                reason: self.interrupted_reason.unwrap_or(reason),
+-                overdue: self
+-                    .interrupted_at
++                reason: self.interrupted_reason.unwrap_or("breathing-data-unusable"),
++                pause_due,
++                overdue: deadline
+                     .and_then(|at| now.checked_duration_since(at))
+-                    .unwrap_or_else(|| age.unwrap_or_default().saturating_sub(TIMEOUT)),
++                    .unwrap_or_default(),
+             },
+         )
+     }
+@@ -269,12 +327,82 @@ pub(crate) mod test_support {
+         );
+         state.last_sample = Some(Instant::now() - age);
+     }
++    pub(crate) fn age_usable(age: Duration) {
++        let mut state = acquisition().lock().unwrap();
++        assert!(state.last_usable.is_some(), "test requires setup-qualified usable sample");
++        state.last_usable = Some(Instant::now() - age);
++        state.last_usable_receipt = state.last_usable;
++    }
+ }
+
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+     #[test]
++    fn ongoing_loss_has_five_second_grace_independent_of_strict_admission() {
++        let now = Instant::now();
++        let state = Acquisition { owner: 1, required: true, last_sample: Some(now), ..Acquisition::default() };
++        let (input, loss) = state.status(now + Duration::from_millis(1250), true, false);
++        assert!(!input.fresh, "Start/Resume acquisition still expires at one second");
++        assert_eq!(loss.overdue, Duration::ZERO, "ongoing loss cannot charge a one-second pause deadline");
++        let (_, loss) = state.status(now + Duration::from_millis(4999), true, false);
++        assert_eq!(loss.overdue, Duration::ZERO, "shorter than five seconds remains grace");
++        assert!(!loss.pause_due);
++        assert!(state.status(now + INVALID_TIMEOUT, true, false).1.pause_due);
++    }
++    #[test]
++    fn usable_gap_latches_original_five_second_deadline_before_late_recovery() {
++        let now = Instant::now();
++        for elapsed in [Duration::from_millis(4999), INVALID_TIMEOUT, Duration::from_millis(5500)] {
++            let mut state = Acquisition { owner:1, required:true, setup_required:Some(true),
++                last_sample:Some(now), last_usable:Some(now), last_usable_receipt:Some(now), usable:true, ..Acquisition::default() };
++            state.latch_deadline(now + elapsed);
++            state.last_sample = Some(now + elapsed); state.last_usable = Some(now + elapsed); state.last_usable_receipt = Some(now + elapsed);
++            let (input, loss) = state.status(now + elapsed, true, false);
++            assert!(input.usable_fresh);
++            assert_eq!(loss.pause_due, elapsed >= INVALID_TIMEOUT, "{elapsed:?}");
++            if elapsed >= INVALID_TIMEOUT {
++                assert_eq!(loss.overdue, elapsed - INVALID_TIMEOUT);
++                assert_eq!(loss.reason, "breathing-data-unusable");
++            }
++        }
++    }
++    #[test]
++    fn buffered_sample_age_cannot_shorten_a_sub_five_second_usable_receipt_gap() {
++        let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++        set_setup_required(Some(true)); acknowledge_interruptions();
++        assert!(commit_acc(acquisition_token(), || true));
++        publish_setup_usable_with_age(source_binding(), true, Duration::from_millis(180));
++        let state = acquisition().lock().unwrap();
++        let now = state.last_sample.unwrap();
++        assert!(!state.status(now + Duration::from_millis(4900), true, false).1.pause_due,
++            "a valid buffered source must not turn a4.9s receipt gap into a5.08s pause");
++        drop(state); set_setup_required(None);
++    }
++    #[test]
++    fn raw_traffic_cannot_recover_a_quality_mask_or_cross_source_binding() {
++        let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++        set_setup_required(Some(true)); acknowledge_interruptions();
++        let source = source_binding();
++        assert!(commit_acc(acquisition_token(), || true));
++        assert!(!status(true, false).0.usable_fresh);
++        publish_setup_usable(source, true); assert!(status(true, false).0.usable_fresh);
++        publish_setup_usable(source, false);
++        for _ in 0..20 { assert!(commit_acc(acquisition_token(), || true)); }
++        assert!(status(true, false).0.fresh);
++        assert!(!status(true, false).0.usable_fresh);
++        publish_setup_usable((source.0,source.1 + 1), true);
++        assert!(!status(true, false).0.usable_fresh, "retired source cannot recover quality");
++        test_support::age_usable(Duration::from_millis(5100));
++        publish_setup_usable(source, true);
++        let (input, loss) = status(true, true);
++        assert!(input.usable_fresh && input.pause_latched && loss.pause_due);
++        assert_eq!(input.reason, "recovered-awaiting-resume");
++        acknowledge_interruptions();
++        assert!(!status(true, false).1.pause_due, "only an explicit accepted control acknowledges old deadline");
++        set_setup_required(None);
++    }
++    #[test]
+     fn setup_requirement_does_not_replace_sensor_owner_or_discard_background_acquisition() {
+         let _binding = crate::breath_composition_runtime::scoped_test_binding::install();
+         let before = source_binding();
+@@ -397,7 +525,7 @@ mod tests {
+             .0
+             .json()["accepted_age_ms"]
+             .is_null());
+-        assert_eq!(overdue.overdue, Duration::from_nanos(1));
++        assert_eq!(overdue.overdue, Duration::ZERO, "one-second admission expiry is not the five-second pause deadline");
+         assert!(
+             !state
+                 .status(now - Duration::from_millis(1), false, false)
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
+index 1dde3999c9126849e1cee8c6b6e4fc9413f5e64e..2edbc12ae8f95889ea96ddcccee30028b0645de6 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
+@@ -318,6 +318,7 @@ final class PolarStopBleCapability {
+         candidate.remove("meta_update_preparation");
+         candidate.remove("power");
+         candidate.remove("polar_health");
++        candidate.remove("pd");
+         org.json.JSONObject setup=candidate.optJSONObject("y");
+         if(setup!=null)setup.remove("health");
+         // Readiness and presentation have priority over optional diagnostics.
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index c75918035917fe1ea3c389be3f1a71a61ca5e8d1..3286e2f637f27fed3e26519ae3dff94cd8845689 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -941,6 +941,7 @@ public final class ExperimentSessionCommandGateway {
+                         else {
+                             response.remove("power");
+                             response.remove("polar_health");
++                            response.remove("pd");
+                             JSONObject setupHealth = response.optJSONObject("y");
+                             if (setupHealth != null) setupHealth.remove("health");
+                         }
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+index e6b8406b4969c887baf9817e1545c6ddea847541..2293de61e29e95e7817d1a9712c98e22da27017d 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+@@ -245,6 +245,7 @@ public final class ExperimentSessionGatewayProtocol {
+             result.remove("meta_update_preparation");
+             result.remove("power");
+             result.remove("polar_health");
++            result.remove("pd");
+             JSONObject polar=result.optJSONObject("y");
+             if(polar!=null){polar.remove("ad");polar.remove("health");}
+         }
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
+index d578e26e0cad3acf1939185fbebf14866de4d4d3..38d3ac6aad475cb66e76bb497b6f729822d9dc28 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
+@@ -89,11 +89,12 @@ final class ExperimentSessionWifiSnapshot {
+         return out;
+     }
+     private static JSONObject nativeDiagnostics(JSONObject input) throws Exception {
+-        JSONObject out=fields(input,new String[]{"clock","diagnostics_observed","reason","timeout_ms","accepted_age_ms","ingress_age_ms",
++        JSONObject out=fields(input,new String[]{"required","fresh","pause_latched","usable_fresh","invalid_timeout_ms","unusable_age_ms",
++            "clock","diagnostics_observed","reason","timeout_ms","accepted_age_ms","ingress_age_ms",
+             "commit_age_ms","ingress_to_commit_ms","ingress_count","accepted_count","rejected_count"});
+         JSONObject pause=input.optJSONObject("last_pause");
+         out.put("last_pause",pause==null?JSONObject.NULL:fields(pause,new String[]{"reason","interruption_revision",
+-            "deadline_elapsed_realtime_ns","detected_elapsed_realtime_ns","fresh_at_detection","accepted_age_ms_at_detection"}));
++            "deadline_elapsed_realtime_ns","detected_elapsed_realtime_ns","fresh_at_detection","usable_fresh_at_detection","accepted_age_ms_at_detection"}));
+         return out;
+     }
+     static void projectJavaDiagnostics(JSONObject status,JSONObject polar) throws Exception {
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+index 77211b4090a79c9a6e30be0b3d1be6550089981f..17a25d8772b873b5e2163dbfa7b7d98a11bc8104 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+@@ -119,8 +119,8 @@ final class BreathingSetupAudio implements AutoCloseable {
+             }
+             if (owner.closed) status.put("ready", false);
+             if (!owner.failure.isEmpty()) status.put("audio_error", owner.failure);
+-            return status;
+-        } catch (Throwable error) { return unavailable("breathing-native-status-unavailable"); }
++            return owner.appendMainDiagnostics(status);
++        } catch (Throwable error) { return owner.appendMainDiagnostics(unavailable("breathing-native-status-unavailable")); }
+     }
+
+     static JSONObject command(JSONObject command) {
+@@ -266,11 +266,36 @@ final class BreathingSetupAudio implements AutoCloseable {
+         BreathingSetupAudio owner = appLifetime;
+         return owner == null ? -1 : owner.positionMs();
+     }
++    static long mainPlaybackPositionMs(long expectedGeneration, long admittedFrame) {
++        BreathingSetupAudio owner = appLifetime;
++        return owner == null ? -1 : owner.positionMs(expectedGeneration, admittedFrame);
++    }
+     static long mainAdmissionFrame() {
+         BreathingSetupAudio owner = appLifetime;
+         if (owner == null) return -1;
+         synchronized (owner) { return owner.closed ? -1 : owner.mainStartFrame; }
+     }
++    static final class MainReservation {
++        final long generation, frame;
++        MainReservation(long generation, long frame) { this.generation = generation; this.frame = frame; }
++    }
++    static MainReservation mainReservation() {
++        BreathingSetupAudio owner = appLifetime;
++        if (owner == null) return null;
++        synchronized (owner) {
++            return owner.closed || !owner.initialized || owner.mainStartFrame < 0 ? null
++                : new MainReservation(owner.generation, owner.mainStartFrame);
++        }
++    }
++    static void recordMainFault(long expectedGeneration, long admittedFrame, String reason) {
++        BreathingSetupAudio owner = appLifetime;
++        if (owner != null) owner.latchMainFault(expectedGeneration, admittedFrame, reason);
++    }
++    static void cancelFailedMain(long expectedGeneration, long admittedFrame) {
++        JSONObject receipt = cancelRejectedMain(expectedGeneration, admittedFrame);
++        BreathingSetupAudio owner = appLifetime;
++        if (owner != null) owner.latchMainCleanup(expectedGeneration, admittedFrame, receipt);
++    }
+     static void endMain(final long admittedFrame) {
+         final BreathingSetupAudio owner = appLifetime;
+         if (owner == null || admittedFrame < 0) return;
+@@ -332,6 +357,10 @@ final class BreathingSetupAudio implements AutoCloseable {
+     private volatile long pollSequence, pollStartedNs, pollEndedNs, lastDispatchNs, lastAdvanceNs, rawHead = -1;
+     private volatile boolean actualPlaying;
+     private volatile String platformDiagnostics = "{}";
++    // Serialized allowlisted snapshots are immutable across cleanup and never
++    // rewritten with a replacement transport's generation or frame.
++    private volatile String lastMainFault = "", lastMainCheckpoint = "", lastMainCleanup = "";
++    private long faultGeneration = -1L, faultFrame = -1L;
+     private long lastPlatformDiagnosticsNs;
+     private Runnable pending, pendingRetired;
+
+@@ -478,13 +507,101 @@ final class BreathingSetupAudio implements AutoCloseable {
+         }
+     }
+     synchronized long positionMs() {
+-        if (closed || !initialized || mainStartFrame < 0) return -1;
++        return positionMs(generation, mainStartFrame);
++    }
++    private synchronized long positionMs(long expectedGeneration, long admittedFrame) {
++        if (closed || !initialized || admittedFrame < 0 || generation != expectedGeneration || mainStartFrame != admittedFrame) return -1;
+         try {
+             JSONObject current = new JSONObject(nativeBridge.status(clock.nowNs()));
+-            if (!mainState(current) || !current.optBoolean("main_started", false)
+-                    || current.optLong("main_start_frame", -1L) != mainStartFrame) return -1;
++            String failure = !mainState(current) ? "position-stage-unavailable"
++                : !current.optBoolean("main_started", false) ? "position-main-not-started"
++                : current.optLong("main_start_frame", -1L) != admittedFrame ? "position-main-frame-changed" : "";
++            if (!failure.isEmpty()) {
++                latchMainFaultSnapshot(expectedGeneration, admittedFrame, failure, current, true);
++                return -1;
++            }
++            lastMainCheckpoint = mainDiagnostic(current, "position-confirmed", generation, mainStartFrame).toString();
+             return Math.min(900000L, Math.max(0L, frame - mainStartFrame) * 1000L / contract.sampleRate);
+-        } catch (Exception unavailable) { return -1; }
++        } catch (Exception unavailable) {
++            latchMainFaultSnapshot(expectedGeneration, admittedFrame, "position-status-read-failure", unavailableMainStatus(expectedGeneration), false);
++            return -1;
++        }
++    }
++    private JSONObject appendMainDiagnostics(JSONObject result) {
++        try {
++            String fault = lastMainFault;
++            if (!fault.isEmpty()) result.put("last_main_fault", new JSONObject(fault));
++            String cleanup = lastMainCleanup;
++            if (!cleanup.isEmpty()) result.put("last_main_cleanup", new JSONObject(cleanup));
++        } catch (Exception ignored) { }
++        return result;
++    }
++    private synchronized void latchMainCleanup(long expectedGeneration, long admittedFrame, JSONObject receipt) {
++        if (generation != expectedGeneration || faultGeneration != expectedGeneration || faultFrame != admittedFrame
++                || mainStartFrame >= 0 && mainStartFrame != admittedFrame || receipt == null) return;
++        try {
++            String state = receipt.optString("state", "outcome_unknown");
++            if (!"confirmed".equals(state) && !"rejected".equals(state)) state = "outcome_unknown";
++            lastMainCleanup = new JSONObject().put("v", 1).put("g", expectedGeneration).put("main_start_frame", admittedFrame)
++                .put("state", state).put("reason", diagnosticToken(receipt.optString("reason"))).toString();
++        } catch (Exception ignored) { }
++    }
++    private synchronized void latchMainFault(long expectedGeneration, long admittedFrame, String reason) {
++        if (!mayLatchMainFault(expectedGeneration, admittedFrame)) return;
++        try {
++            JSONObject state;
++            try { state = new JSONObject(nativeBridge.status(clock.nowNs())); }
++            catch (Exception unavailable) { state = unavailableMainStatus(expectedGeneration); }
++            latchMainFaultSnapshot(expectedGeneration, admittedFrame, reason, state, false);
++        } catch (Exception ignored) { }
++    }
++    private boolean mayLatchMainFault(long expectedGeneration, long admittedFrame) {
++        return !closed && generation == expectedGeneration && admittedFrame >= 0
++            && (mainStartFrame < 0 || mainStartFrame == admittedFrame)
++            && !(faultGeneration == expectedGeneration && faultFrame == admittedFrame);
++    }
++    private JSONObject unavailableMainStatus(long expectedGeneration) {
++        JSONObject result = new JSONObject();
++        try { result.put("g", expectedGeneration).put("main_start_frame", JSONObject.NULL)
++            .put("stage", "unavailable").put("failure", "native-status-unavailable"); }
++        catch (Exception ignored) { }
++        return result;
++    }
++    private synchronized void latchMainFaultSnapshot(long expectedGeneration, long admittedFrame, String reason,
++            JSONObject state, boolean positionDecision) {
++        if (!mayLatchMainFault(expectedGeneration, admittedFrame)) return;
++        try {
++            // The position decision already matched the local owner's tuple.
++            // Its observation may describe a different native frame; that is
++            // diagnostic evidence, never cleanup authority for the other frame.
++            if (state.optLong("g", -1L) != expectedGeneration
++                    || !positionDecision && !state.isNull("main_start_frame") && state.optLong("main_start_frame", -1L) != admittedFrame) return;
++            if (mainStartFrame < 0 && lastMainCheckpoint.isEmpty()) return;
++            JSONObject fault = mainDiagnostic(state, reason, expectedGeneration, admittedFrame);
++            if (!lastMainCheckpoint.isEmpty()) {
++                JSONObject previous = new JSONObject(lastMainCheckpoint);
++                if (previous.optLong("g", -1L) == expectedGeneration
++                        && previous.optLong("main_start_frame", -1L) == admittedFrame) fault.put("previous", previous);
++            }
++            lastMainFault = fault.toString(); faultGeneration = expectedGeneration; faultFrame = admittedFrame;
++        } catch (Exception ignored) { }
++    }
++    private JSONObject mainDiagnostic(JSONObject state, String reason, long boundGeneration, long boundFrame) throws Exception {
++        JSONObject result = new JSONObject().put("v", 1).put("reason", diagnosticToken(reason))
++            .put("sampled_ns", clock.nowNs()).put("g", boundGeneration).put("main_start_frame", boundFrame)
++            .put("main_started", state.optBoolean("main_started", false))
++            .put("observed_main_start_frame", state.optLong("main_start_frame", -1L) < 0 ? JSONObject.NULL : state.optLong("main_start_frame"))
++            .put("stage", diagnosticToken(state.optString("stage"))).put("input", diagnosticToken(state.optString("input")))
++            .put("attempt", state.optLong("attempt", 0L)).put("failure", diagnosticToken(state.optString("failure")));
++        JSONObject nativeClock = state.optJSONObject("clock"), quality = state.optJSONObject("quality");
++        result.put("clock_reason", diagnosticToken(nativeClock == null ? "" : nativeClock.optString("reason")))
++            .put("quality_warning", diagnosticToken(quality == null ? "" : quality.optString("warning")));
++        Object age = state.opt("sample_age_ns");
++        if (age instanceof Number && ((Number)age).longValue() >= 0L) result.put("sample_age_ns", ((Number)age).longValue());
++        return result;
++    }
++    private static String diagnosticToken(String value) {
++        return value != null && value.matches("[A-Za-z0-9_-]{0,64}") ? value : "unavailable";
+     }
+     private JSONObject changeMainIfCurrent(long expectedGeneration, long admittedFrame, boolean defer) throws Exception {
+         for (int attempt = 0; attempt < 2; attempt++) {
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+index 963971dadd054a66d393cd11b320b8a084a11688..946124f4839a4a882b68d3806d5f4798021a7f34 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+@@ -250,7 +250,9 @@ final class ConditionAudioAndroidMediaBackendFactory
+         private final Listener listener;
+         private boolean released;
+         private long admittedFrame = -1;
++        private long admittedGeneration = -1;
+         private boolean mainEnded;
++        private boolean failureCleanup;
+
+         ContinuousMainBackend(ConditionAudioAndroidMediaBackendFactory factory,
+                 ConditionAudioContract.Provider provider, MediaPlayer background, Listener listener) {
+@@ -267,28 +269,41 @@ final class ConditionAudioAndroidMediaBackendFactory
+             listener.onPrepared();
+         }
+         @Override public void start() {
+-            BreathingSetupAudio.resumeLoop();
+-            long position = BreathingSetupAudio.mainPlaybackPositionMs();
+-            if (position < 0) throw new IllegalStateException("breathing-main-not-admitted");
+             if (admittedFrame < 0) {
+-                admittedFrame = BreathingSetupAudio.mainAdmissionFrame();
+-                if (admittedFrame < 0) throw new IllegalStateException("breathing-main-not-admitted");
++                BreathingSetupAudio.MainReservation reservation = BreathingSetupAudio.mainReservation();
++                if (reservation == null) throw new IllegalStateException("breathing-main-not-admitted");
++                admittedFrame = reservation.frame; admittedGeneration = reservation.generation;
+             }
++            BreathingSetupAudio.resumeLoop();
++            long position = BreathingSetupAudio.mainPlaybackPositionMs(admittedGeneration, admittedFrame);
++            if (position < 0) throw new IllegalStateException("breathing-main-not-admitted");
+             background.start(); listener.onActualStart(position);
+         }
+         @Override public long currentPlaybackPositionMs() {
+-            long position = BreathingSetupAudio.mainPlaybackPositionMs();
++            long position = BreathingSetupAudio.mainPlaybackPositionMs(admittedGeneration, admittedFrame);
+             if (position < 0) listener.onError("breathing-loop-unavailable");
+             return position;
+         }
+         @Override public long pause() {
+             BreathingSetupAudio.pauseLoop(); background.pause();
+-            return BreathingSetupAudio.mainPlaybackPositionMs();
++            return BreathingSetupAudio.mainPlaybackPositionMs(admittedGeneration, admittedFrame);
+         }
+         private void endMain() {
+             if (mainEnded || admittedFrame < 0) return;
++            if (failureCleanup) {
++                // The failure result may be uncertain: never automatically replay
++                // cancellation or fall through to end-main's full setup reset.
++                mainEnded = true;
++                BreathingSetupAudio.cancelFailedMain(admittedGeneration, admittedFrame);
++                return;
++            }
+             BreathingSetupAudio.endMain(admittedFrame); mainEnded = true;
+         }
++        @Override public void beforeFailure(String reason) {
++            if (released || mainEnded || failureCleanup) return;
++            failureCleanup = true;
++            BreathingSetupAudio.recordMainFault(admittedGeneration, admittedFrame, reason);
++        }
+         @Override public void stop() { try { background.stop(); } finally { endMain(); } }
+         @Override public void release() {
+             if (released) { endMain(); return; }
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
+index 9a63e8e039b216d3d016c6014644bfb54ffa8164..18f6a9947a47ad548212ce9d0b18b3316c176e83 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
+@@ -62,6 +62,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+         /** Pause must retain the prepared player and return its actual media position. */
+         long pause() throws Exception;
+         void stop() throws Exception;
++        /** Latch failure evidence and choose failure cleanup before any resource is released. */
++        default void beforeFailure(String reason) {}
+         void release();
+     }
+
+@@ -776,6 +778,11 @@ final class ConditionAudioRuntime implements AutoCloseable {
+             boundOperationId = activeOperationId.isEmpty() ? operationId : activeOperationId;
+             lifecycleEpoch += 1L;
+         }
++        // The backend may need to preserve valid calibration on a failed main;
++        // the original callback/owner epoch was checked before granting this hook.
++        if (failed != null) {
++            try { failed.beforeFailure(errorReason); } catch (RuntimeException ignored) { }
++        }
+         CleanupResult cleanup = release(failed, false);
+         final ReceiptContext receipt;
+         synchronized (authorityLock) {
+@@ -824,8 +831,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+                     final long observed;
+                     try {
+                         observed = active.currentPlaybackPositionMs();
+-                    } catch (IllegalStateException unavailable) {
+-                        // MediaPlayer's terminal callbacks retain authority over playback state.
++                    } catch (RuntimeException unavailable) {
++                        publishError(generation, operationId, epoch, "position-error");
+                         return;
+                     }
+                     if (observed < 0L) return;
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
+index 21bc7da11215a8eaa852016dfce91ea9a60565b3..8742f501ade78ad9bf89800cf939cc6073689d23 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
+@@ -83,6 +83,7 @@ public final class BreathingSetupAudioBackendTest {
+             check(bridge.lastEnd.getLong("main_start_frame") == 705600 && bridge.lastEnd.getLong("r") == 17,
+                 "terminal reset uses captured main frame plus fresh revision");
+             check(owner.positionMs() == -1, "preparation cannot retain the terminal main recording clock");
++            String firstFault = BreathingSetupAudio.status().getJSONObject("last_main_fault").toString();
+
+             bridge.mainFrame = 1411200; bridge.input = "controller";
+             owner.defer(() -> { }, () -> { }); player.frame = 1411200; now[0] += 14000000000L; owner.observe();
+@@ -91,9 +92,16 @@ public final class BreathingSetupAudioBackendTest {
+             // Another session already owns a later native admission before old cleanup arrives.
+             bridge.mainFrame = 2116800; bridge.revision = 23;
+             owner.defer(() -> { }, () -> { }); player.frame = 2116800; now[0] += 16000000000L; owner.observe();
+-            old.stop(); old.release();
++            bridge.nextStatusFailure = "stage";
++            check(BreathingSetupAudio.mainPlaybackPositionMs(bridge.generation, 1411200) == -1
++                && bridge.nextStatusFailure.equals("stage"), "old bound position read cannot sample or latch replacement main");
++            bridge.nextStatusFailure = "";
++            old.beforeFailure("late-old-player-error"); old.stop(); old.release();
+             check(bridge.endRequests == 1 && bridge.mainFrame == 2116800 && "controller".equals(bridge.input),
+                 "late old backend cleanup cannot reset the newer main admission");
++            check(BreathingSetupAudio.status().getJSONObject("last_main_fault").toString().equals(firstFault)
++                && !BreathingSetupAudio.status().has("last_main_cleanup"),
++                "late still-live old backend failure cannot latch or relabel replacement main");
+             ConditionAudioRuntime.MediaBackend current = factory.create(provider, listener(), "haupt-15");
+             current.prepare(false); current.start(); bridge.revision = 55;
+             current.pause(); bridge.staleRejects = 2;
+@@ -124,6 +132,77 @@ public final class BreathingSetupAudioBackendTest {
+                     scenario + " frees the media without ending a different main round");
+             }
+
++            authoredMain[0] = false;
++            bridge.mainFrame = 2822400; bridge.input = "polar-tilt";
++            owner.defer(() -> { }, () -> { }); player.frame = 2822400; now[0] += 16000000000L; owner.observe();
++            ConditionAudioRuntime.MediaBackend failed = factory.create(provider, new ConditionAudioRuntime.MediaBackend.Listener() {
++                public void onPrepared() {} public void onActualStart(long p) {} public void onProgress(long p) {}
++                public void onNaturalEnd(long p) {} public void onError(String reason) {}
++            }, "haupt-15");
++            failed.prepare(false); failed.start();
++            player.frame += 44100; now[0] += 1000000000L; owner.observe();
++            check(failed.currentPlaybackPositionMs() == 1000, "actual pre-error main checkpoint");
++            bridge.invalidated = true;
++            check(failed.currentPlaybackPositionMs() == -1, "failed native timeline is observable before release");
++            failed.beforeFailure("breathing-loop-unavailable");
++            JSONObject originalFault = BreathingSetupAudio.status().getJSONObject("last_main_fault");
++            check(originalFault.getString("reason").equals("position-stage-unavailable")
++                && originalFault.getString("stage").equals("waiting")
++                && originalFault.getJSONObject("previous").getString("stage").equals("main")
++                && originalFault.getLong("main_start_frame") == 2822400,
++                "fault freezes original native failure plus actual previous main checkpoint before cleanup");
++            bridge.invalidated = false; failed.release(); failed.release();
++            check(bridge.cancelRequests == 1 && bridge.endRequests == 4 && bridge.input.equals("polar-tilt")
++                && !player.released && player.playing,
++                "failure release cancels exact main once and retains selected model and shared PCM");
++            check(BreathingSetupAudio.status().getJSONObject("last_main_fault").toString().equals(originalFault.toString()),
++                "fault survives cleanup unchanged");
++            BreathingSetupAudio.status().getJSONObject("last_main_fault").put("reason", "client-mutated");
++            check(BreathingSetupAudio.status().getJSONObject("last_main_fault").toString().equals(originalFault.toString()),
++                "mutable status projections cannot edit the stored immutable fault");
++            bridge.mainFrame = 3528000; owner.defer(() -> {}, () -> {}); player.frame = 3528000; now[0] += 16000000000L; owner.observe();
++            failed.beforeFailure("late-old-player-error");
++            check(bridge.mainFrame == 3528000 && bridge.cancelRequests == 1
++                && BreathingSetupAudio.status().getJSONObject("last_main_fault").toString().equals(originalFault.toString()),
++                "late old callback cannot relabel or cancel replacement main");
++            ConditionAudioRuntime.MediaBackend unavailable = factory.create(provider, listener(), "haupt-15");
++            unavailable.prepare(false); unavailable.start(); bridge.statusUnavailable = true;
++            unavailable.beforeFailure("position-error"); unavailable.release(); unavailable.release();
++            JSONObject unavailableStatus = BreathingSetupAudio.status();
++            check(unavailableStatus.getJSONObject("last_main_fault").getString("stage").equals("unavailable")
++                && unavailableStatus.getJSONObject("last_main_fault").getString("reason").equals("position-error")
++                && unavailableStatus.getJSONObject("last_main_cleanup").getString("state").equals("outcome_unknown")
++                && bridge.cancelRequests == 1 && bridge.endRequests == 4,
++                "unavailable native status still latches a bound fault and unknown cleanup without replay or normal reset");
++            bridge.statusUnavailable = false;
++
++            for (String transientFailure : new String[]{"stage", "throws", "not-started", "frame"}) {
++                long boundFrame = player.frame + 705600; bridge.mainFrame = boundFrame;
++                owner.defer(() -> {}, () -> {}); player.frame = (int)boundFrame; now[0] += 16000000000L; owner.observe();
++                ConditionAudioRuntime.MediaBackend transientBackend = factory.create(provider, new ConditionAudioRuntime.MediaBackend.Listener() {
++                    public void onPrepared() {} public void onActualStart(long p) {} public void onProgress(long p) {}
++                    public void onNaturalEnd(long p) {} public void onError(String reason) {}
++                }, "haupt-15");
++                transientBackend.prepare(false); transientBackend.start();
++                bridge.nextStatusFailure = transientFailure;
++                check(transientBackend.currentPlaybackPositionMs() == -1, "first transient position read fails");
++                check(bridge.nextStatusFailure.isEmpty(), "the exact position read consumes one-shot failure");
++                transientBackend.beforeFailure("breathing-loop-unavailable");
++                JSONObject healthyReadback = BreathingSetupAudio.status();
++                check(healthyReadback.getString("stage").equals("main") && healthyReadback.getBoolean("main_started"),
++                    "second actual native status is healthy after the one-shot position failure");
++                JSONObject transientFault = healthyReadback.getJSONObject("last_main_fault");
++                String expectedReason = transientFailure.equals("stage") ? "position-stage-unavailable"
++                    : transientFailure.equals("throws") ? "position-status-read-failure"
++                    : transientFailure.equals("not-started") ? "position-main-not-started" : "position-main-frame-changed";
++                check(transientFault.getLong("main_start_frame") == boundFrame
++                    && transientFault.getString("reason").equals(expectedReason)
++                    && transientFault.getString("stage").equals(transientFailure.equals("stage") ? "waiting" : transientFailure.equals("throws") ? "unavailable" : "main")
++                    && transientFault.getJSONObject("previous").getString("stage").equals("main"),
++                    "exact failing position decision survives a second healthy native read: " + transientFailure);
++                transientBackend.release();
++            }
++
+             owner.close();
+             check(BreathingSetupAudio.mainRecordingPlan("haupt-15") == null, "retired player cannot advertise an executable plan");
+             BreathingSetupAudio.cancelDeferredExperimentStart();
+@@ -142,17 +221,25 @@ public final class BreathingSetupAudioBackendTest {
+         };
+     }
+     private static final class FakeNative implements BreathingSetupAudio.NativeBridge {
+-        long mainFrame = 705600, generation = 1, revision = 11; int endRequests, acceptedResets, staleRejects;
++        long mainFrame = 705600, generation = 1, revision = 11; int endRequests, acceptedResets, staleRejects, cancelRequests;
+         String input = "polar-tilt"; JSONObject lastEnd;
+-        boolean invalidated;
++        boolean invalidated, statusUnavailable;
++        String nextStatusFailure = "";
+         public String recoveryEffect(String id,long old,long target,String action,long now){return new JSONObject().put("accepted","setup-start".equals(action)).put("effect","setup-start".equals(action)).toString();}
+         public String configure(String j, String h) { return "{\"accepted\":true}"; }
+         public void observe(long g, long f, long n, boolean p) { generation = g; }
+         public String status(long n) {
++            String transientFailure = nextStatusFailure; nextStatusFailure = "";
++            if (transientFailure.equals("throws")) throw new IllegalStateException("one-shot unavailable status");
++            if (statusUnavailable) throw new IllegalStateException("modeled unavailable status");
++            boolean invalid = invalidated || transientFailure.equals("stage");
+             return new JSONObject().put("g", generation).put("r", revision).put("input", input)
+-                .put("main_start_frame", mainFrame < 0 ? JSONObject.NULL : mainFrame)
+-                .put("main_started", mainFrame >= 0 && !invalidated)
+-                .put("stage", invalidated ? "waiting" : mainFrame >= 0 ? "main" : "idle").toString();
++                .put("attempt", 3).put("failure", invalid ? "signal_gap" : "")
++                .put("clock", new JSONObject().put("reason", "healthy"))
++                .put("quality", new JSONObject().put("warning", invalid ? "timing" : ""))
++                .put("main_start_frame", mainFrame < 0 ? JSONObject.NULL : transientFailure.equals("frame") ? mainFrame + 705600 : mainFrame)
++                .put("main_started", mainFrame >= 0 && !invalid && !transientFailure.equals("not-started"))
++                .put("stage", invalid ? "waiting" : mainFrame >= 0 ? "main" : "idle").toString();
+         }
+         public String command(String j, long n) {
+             JSONObject request = new JSONObject(j);
+@@ -160,6 +247,11 @@ public final class BreathingSetupAudioBackendTest {
+                 check(request.length() == 5, "closed setup command envelope");
+                 return "{\"accepted\":true,\"state\":\"confirmed\"}";
+             }
++            if ("cancel-main".equals(request.optString("op"))) {
++                cancelRequests++;check(request.getLong("g") == generation && request.getLong("main_start_frame") == mainFrame,
++                    "failure cleanup uses original generation/frame");
++                mainFrame = -1; revision++; return "{\"accepted\":true}";
++            }
+             lastEnd = request; endRequests++;
+             check(lastEnd.length() == 6 && lastEnd.getInt("v") == 1 && "end-main".equals(lastEnd.getString("op")),
+                 "closed terminal command envelope");
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
+index 83fce818f73a78a02aabc392dd2e589ad42aa1a4..eb9b507453622b2757996c1b5a76493f00118332 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
+@@ -29,7 +29,117 @@ public final class BreathingSetupAudioNativeTest {
+         terminalRetirementCannotPlayReturningPreparation(json, executable);
+         queuedMainSurvivesOneLatePmdPacket(json, executable);
+         rejectedMainCancellationRetriesOnlyConclusiveRevisionRaces(json, executable);
+-        System.out.println("BreathingSetupAudioNativeTest PASS (real Rust admission/ledger, 9 groups)");
++        failedMainPreservesRealParticipantModel(json, executable);
++        manualPauseRecoversUsableSignalBeforeExplicitJavaResume(json, executable);
++        System.out.println("BreathingSetupAudioNativeTest PASS (real Rust admission/ledger, 11 groups)");
++    }
++
++    private static void manualPauseRecoversUsableSignalBeforeExplicitJavaResume(String json, String executable) throws Exception {
++        java.lang.reflect.Field selected = BreathingSetupAudio.class.getDeclaredField("selected"); selected.setAccessible(true);
++        boolean previousSelection = selected.getBoolean(null); selected.setBoolean(null, true);
++        try (Fixture f = new Fixture(json, executable)) {
++            f.start();
++            for (int frame = 1764; frame <= 2116800; frame += 1764) {
++                f.advance(frame, 40000000L); double t = (frame % 705600) / 44100.0;
++                f.acc(t < 4 ? t / 4 : t < 8 ? 1 : t < 12 ? (12 - t) / 4 : 0);
++            }
++            BreathingSetupAudio.command(f.request("begin-main"));
++            int mainFrame = (int)f.state().getLong("main_start_frame");
++            BreathingSetupAudio.deferExperimentStart(() -> {}, () -> {});
++            for (int frame = 2118564; frame <= mainFrame; frame += 1764) { f.advance(frame, 40000000L); f.acc(0.5); }
++            ConditionAudioContract.Provider provider = new ConditionAudioContract.Provider("background", "packaged-native-app-provider",
++                "phase-audio/background.mp3", BreathingSetupAudioContract.sha256(new byte[]{1,2,3}), 3, "audio/mpeg");
++            ConditionAudioAndroidMediaBackendFactory factory = new ConditionAudioAndroidMediaBackendFactory(new android.content.res.AssetManager());
++            try {
++                factory.preload(new ConditionAudioContract.Provider[]{provider}, new ConditionAudioRuntime.StartupPreloader.Listener() {
++                    public void onTrackPending(ConditionAudioContract.Provider p) {} public void onTrackReady(ConditionAudioContract.Provider p) {}
++                    public void onTrackFailed(ConditionAudioContract.Provider p, String reason) { throw new AssertionError(reason); }
++                });
++                ConditionAudioRuntime.MediaBackend backend = factory.create(provider, new ConditionAudioRuntime.MediaBackend.Listener() {
++                    public void onPrepared() {} public void onActualStart(long p) {} public void onProgress(long p) {}
++                    public void onNaturalEnd(long p) {} public void onError(String reason) { throw new AssertionError(reason); }
++                }, "haupt-15");
++                backend.prepare(false); backend.start(); check(backend.pause() == 0 && !f.player.playing, "actual Java Pause parks PCM without ending main");
++                f.advance(mainFrame, 40000000L);
++                f.bridge.exchange(new JSONObject().put("kind","acc").put("sensor",100000000000L+f.clock.now)
++                    .put("host",f.clock.now).put("source",f.bridge.nano).put("now",f.clock.now).put("mg",new JSONArray().put(0).put(0).put(5000)));
++                check(!f.bridge.exchange(new JSONObject().put("kind","usable-signal").put("now",f.clock.now)).getBoolean("usable"),
++                    "paused invalid raw signal cannot enable Continue");
++                for (int tick=0;tick<40;tick++) {f.advance(mainFrame,40000000L);f.acc(0.5);}
++                JSONObject paused=f.state(), usable=f.bridge.exchange(new JSONObject().put("kind","usable-signal").put("now",f.clock.now));
++                check(!paused.getBoolean("ready")&&!paused.getBoolean("playing")&&usable.getBoolean("usable")&&!usable.getBoolean("driver_output")
++                    &&paused.getString("calibration").equals("ready")&&paused.getLong("experiment_elapsed_ms")==0,
++                    "real Rust paused model gains usable recovery while ordinary ready/output/progress stay paused");
++                backend.start();check(f.player.playing,"explicit Java Resume starts the retained PCM despite paused setup.ready false");
++                f.advance(mainFrame+1764,40000000L);f.acc(0.5);
++                check(f.state().getLong("experiment_elapsed_ms")==40&&f.state().getString("calibration").equals("ready"),
++                    "real Rust resumed head charges only actual post-resume audio frames and retains model");
++                backend.stop();backend.release();
++            } finally {factory.closePreloads();}
++        } finally { selected.setBoolean(null,previousSelection); }
++    }
++
++    private static void failedMainPreservesRealParticipantModel(String json, String executable) throws Exception {
++        java.lang.reflect.Field selected = BreathingSetupAudio.class.getDeclaredField("selected"); selected.setAccessible(true);
++        boolean previousSelection = selected.getBoolean(null); selected.setBoolean(null, true);
++        try {
++            for (String terminal : new String[]{"error", "normal", "retired-source", "uncertain"}) {
++                try (Fixture f = new Fixture(json, executable)) {
++                    check(!f.state().has("last_main_fault") && !f.state().has("last_main_cleanup"),
++                        "replacement audio owner cannot relabel previous owner's diagnostics");
++                    f.start();
++                    for (int frame = 1764; frame <= 2116800; frame += 1764) {
++                        f.advance(frame, 40000000L); double t = (frame % 705600) / 44100.0;
++                        f.acc(t < 4 ? t / 4 : t < 8 ? 1 : t < 12 ? (12 - t) / 4 : 0);
++                    }
++                    check(f.state().getString("calibration").equals("ready"), "real participant fit precedes main backend");
++                    BreathingSetupAudio.command(f.request("begin-main"));
++                    long mainFrame = f.state().getLong("main_start_frame"), generation = f.state().getLong("g");
++                    BreathingSetupAudio.deferExperimentStart(() -> {}, () -> {});
++                    for (int frame = 2118564; frame <= mainFrame; frame += 1764) { f.advance(frame, 40000000L); f.acc(0.5); }
++                    check(f.state().getBoolean("main_started"), "real main reaches the original shared audio frame");
++                    ConditionAudioContract.Provider provider = new ConditionAudioContract.Provider("background", "packaged-native-app-provider",
++                        "phase-audio/background.mp3", BreathingSetupAudioContract.sha256(new byte[]{1,2,3}), 3, "audio/mpeg");
++                    ConditionAudioAndroidMediaBackendFactory factory = new ConditionAudioAndroidMediaBackendFactory(new android.content.res.AssetManager());
++                    try {
++                        factory.preload(new ConditionAudioContract.Provider[]{provider}, new ConditionAudioRuntime.StartupPreloader.Listener() {
++                            public void onTrackPending(ConditionAudioContract.Provider p) {} public void onTrackReady(ConditionAudioContract.Provider p) {}
++                            public void onTrackFailed(ConditionAudioContract.Provider p, String reason) { throw new AssertionError(reason); }
++                        });
++                        ConditionAudioRuntime.MediaBackend backend = factory.create(provider, new ConditionAudioRuntime.MediaBackend.Listener() {
++                            public void onPrepared() {} public void onActualStart(long p) {} public void onProgress(long p) {}
++                            public void onNaturalEnd(long p) {} public void onError(String reason) {}
++                        }, "haupt-15");
++                        backend.prepare(false); backend.start(); check(backend.currentPlaybackPositionMs() == 0, "real healthy main checkpoint captured");
++                        if (terminal.equals("retired-source")) f.bridge.recoveryEffect("", generation, generation, "fault", f.clock.now);
++                        if (terminal.equals("normal")) backend.stop();
++                        else backend.beforeFailure("media-player-error");
++                        if (terminal.equals("uncertain")) f.bridge.uncertainCancellation = true;
++                        backend.release(); backend.release();
++                        JSONObject after = f.state();
++                        if (terminal.equals("normal")) {
++                            check(after.getString("input").equals("automatic") && after.getString("calibration").equals("idle"),
++                                "normal backend terminal still resets actual Rust setup");
++                        } else {
++                            JSONObject fault = after.getJSONObject("last_main_fault");
++                            check(fault.getLong("g") == generation && fault.getLong("main_start_frame") == mainFrame
++                                && fault.getJSONObject("previous").getString("stage").equals("main"), "immutable original fault retains real pre-error checkpoint");
++                            if (terminal.equals("retired-source")) check(!after.getBoolean("ready") && !after.getString("calibration").equals("ready"),
++                                "failure cleanup cannot resurrect actually retired native source/model");
++                            else check(after.getString("calibration").equals("ready") && after.getString("input").equals("polar-tilt")
++                                && after.isNull("main_start_frame") && after.getLong("g") == generation,
++                                "actual Java failure release retains real participant model and clears only main reservation");
++                            check(f.bridge.cancellationAttempts <= 1 && (terminal.equals("retired-source") || f.bridge.cancellationAttempts == 1),
++                                "error and lost cancellation results never replay: " + terminal + " attempts=" + f.bridge.cancellationAttempts);
++                            JSONObject cleanup = after.getJSONObject("last_main_cleanup");
++                            check(cleanup.getLong("g") == generation && cleanup.getLong("main_start_frame") == mainFrame
++                                && cleanup.getString("state").equals(terminal.equals("uncertain") ? "outcome_unknown" : "confirmed"),
++                                "separate bounded cleanup retains exact original receipt, including unknown");
++                        }
++                    } finally { factory.closePreloads(); }
++                }
++            }
++        } finally { selected.setBoolean(null, previousSelection); }
+     }
+
+     private static void explicitPreparationEndWaitsForRealPlayerAndNativePark(String json,String executable)throws Exception {
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
+index 71d27a4546b73ebb450edf2900f319292a8a0c68..aec01f73620cd6b23bd0c2de2f04f581ad37a22d 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
+@@ -34,6 +34,31 @@ public final class ConditionAudioRuntimeTest {
+         stoppedReceiptSurvivesNewPrepareRace();
+         appLifetimeOwnerIsUniqueThroughBlockedClose();
+         closeReleasesPreloadsOnceAndRejectsLateReadiness();
++        failureHookPrecedesRelease();
++    }
++
++    private static void failureHookPrecedesRelease() throws Exception {
++        for (String failure : new String[]{"callback", "start", "position"}) {
++            ReceiptLog receipts = new ReceiptLog(); FakeFactory factory = new FakeFactory();
++            ConditionAudioRuntime runtime = ConditionAudioRuntime.createForTest(inventory(), factory, receipts);
++            try {
++                runtime.submit(ConditionAudioContract.Command.prepare(1L, "fault-prepare", "condition-alpha"));
++                FakeBackend backend = factory.awaitBackend(1); backend.awaitPrepare(); backend.listener.onPrepared();
++                receipts.await(ConditionAudioContract.Event.PREPARED, 1L);
++                backend.throwStart = failure.equals("start"); backend.throwPosition = failure.equals("position");
++                runtime.submit(ConditionAudioContract.Command.start(1L, "fault-start")); backend.awaitStart();
++                if (!failure.equals("start")) {
++                    backend.listener.onActualStart(0L); receipts.await(ConditionAudioContract.Event.ACTUAL_START, 1L);
++                    if (failure.equals("callback")) backend.listener.onError("media-player-error");
++                }
++                receipts.await(ConditionAudioContract.Event.ERROR, 1L);
++                check(backend.failureReason.equals(failure.equals("callback") ? "media-player-error" : failure + "-error")
++                    && backend.failureBeforeRelease && backend.failureCount == 1,
++                    "failure hook captures " + failure + " before cleanup");
++                backend.listener.onError("late-error"); Thread.sleep(20L);
++                check(backend.failureCount == 1, "retired backend cannot latch a later fault");
++            } finally { runtime.close(); }
++        }
+     }
+
+     private static void explicitPauseResumeRetainsPlayerAndPosition() throws Exception {
+@@ -755,6 +780,7 @@ public final class ConditionAudioRuntimeTest {
+         @Override public long pause() { return 1234L; }
+         @Override public long currentPlaybackPositionMs() {
+             positionReadThread = Thread.currentThread();
++            if (throwPosition) throw new IllegalStateException("deterministic-position-failure");
+             return playbackPositionMs;
+         }
+         final ConditionAudioContract.Provider provider;
+@@ -767,6 +793,12 @@ public final class ConditionAudioRuntimeTest {
+         volatile Thread platformThread;
+         volatile Thread positionReadThread;
+         volatile long playbackPositionMs = -1L;
++        volatile boolean throwStart, throwPosition, failureBeforeRelease;
++        volatile int failureCount;
++        volatile String failureReason = "";
++        public void beforeFailure(String reason) {
++            failureReason = reason; failureCount++; failureBeforeRelease = releaseCount == 0;
++        }
+         final boolean throwStop;
+         final boolean throwRelease;
+         boolean releaseBlocked;
+@@ -796,6 +828,7 @@ public final class ConditionAudioRuntimeTest {
+             startCount += 1;
+             platformThread = Thread.currentThread();
+             notifyAll();
++            if (throwStart) throw new IllegalStateException("deterministic-start-failure");
+         }
+
+         @Override public synchronized void stop() {
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
+index 10f655eaaef0d3e95595f1a0b6cb957b78539989..219c6fd45b820a7a3c971ca44bbe1902d84954be 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
+@@ -247,6 +247,7 @@ public final class ExperimentSessionGatewayProtocolTest {
+         ExperimentSessionGatewayProtocol privateController=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,42,true,
+             (action,payload)->{calls++;return new JSONObject().put("v",1).put("id",payload.optString("id")).put("state","confirmed")
+                 .put("breath_setup",1).put("apk",new JSONObject().put("v",1)).put("meta_update",metaUpdate()).put("meta_update_control",1).put("meta_update_preparation",1).put("setup",new JSONObject().put("input","automatic"))
++                .put("pd",new JSONObject().put("v",1).put("native",new JSONObject().put("required",true).put("usable_fresh",false)))
+                 .put("y",new JSONObject().put("ar",true).put("ad",new JSONObject().put("frame_type",1)));});
+         JSONObject setupReply=privateController.exchangeLan(request("a1111111111111111111111111111111","breath-setup",setupBody));
+         if(!"confirmed".equals(new JSONObject(setupReply.getString("payload")).getString("state")))
+@@ -261,12 +262,14 @@ public final class ExperimentSessionGatewayProtocolTest {
+         if(relayStatus.getJSONObject("y").has("ad")||!relayStatus.getJSONObject("y").getBoolean("ar"))throw new AssertionError("signed enrolled relay must strip ACC diagnostic and preserve nonprivate recovery bit");
+         JSONObject privateLanStatus=new JSONObject(privateController.exchangeLan(request("a6666666666666666666666666666666","status","{}")).getString("payload"));
+         if(!privateLanStatus.has("apk"))throw new AssertionError("private authenticated LAN omitted installed APK identity");
++        if(!privateLanStatus.getJSONObject("pd").getJSONObject("native").getBoolean("required"))throw new AssertionError("trusted private status omitted authoritative input diagnostics");
+         if(!privateLanStatus.getJSONObject("meta_update").toString().equals(metaUpdate().toString()))throw new AssertionError("private LAN changed full updater projection");
+         if(!privateLanStatus.getJSONObject("y").has("ad"))throw new AssertionError("private LAN must retain authenticated ACC diagnostic");
+         JSONObject guestStatus=new JSONObject(guest.exchangeLan(request("a5555555555555555555555555555555","status","{}")).getString("payload"));
+         if(relayStatus.has("breath_setup")||relayStatus.has("setup")||guestStatus.has("breath_setup")||guestStatus.has("setup"))
+             throw new AssertionError("unavailable route advertised native setup controls");
+         if(relayStatus.has("apk")||guestStatus.has("apk"))throw new AssertionError("nonprivate route disclosed installed APK identity");
++        if(relayStatus.has("pd")||guestStatus.has("pd"))throw new AssertionError("nonprivate route disclosed private input diagnostics");
+         if(relayStatus.has("meta_update")||guestStatus.has("meta_update")||relayStatus.has("meta_update_control")||guestStatus.has("meta_update_control")||relayStatus.has("meta_update_preparation")||guestStatus.has("meta_update_preparation"))throw new AssertionError("nonprivate route disclosed updater state");
+         denied(()->privateController.exchangeLan(request("c6666666666666666666666666666666","meta-update","{}")));
+         if(guestStatus.getJSONObject("y").has("ad"))throw new AssertionError("nonprivate LAN must strip ACC diagnostic even from an overbroad owner result");
+diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
+index 3258d7935015e2c4fd6b78197ad34e752147697f..ce2142073666e4683b63b6178135ab3bdb964070 100644
+--- a/docs/EXPERIMENT_SESSION_CONTROL.md
++++ b/docs/EXPERIMENT_SESSION_CONTROL.md
+@@ -13,6 +13,40 @@ still requires fresh input. A late or temporarily unready main-thread boundary
+ callback may rearm its same intent for a future full cycle at most twice. It
+ cannot start a completed interval or consume the pending interval's 900 seconds.
+
++An admitted Running Polar main keeps advancing from the observed audio frames
++through temporary sample silence or quality masks. Unusable samples remain
++unavailable; the driver retains its last confirmed phase. Waiting admission
++still requires fresh input. Actual source/model/audio-generation retirement and
++clock faults still invalidate the main. Acquisition health retains strict raw
++Start/Resume freshness and a separate five-second ongoing unusable-data
++deadline. Quality rejection must not refresh usable-sample timestamps.
++
++Five consecutive seconds without a source-qualified usable breathing sample
++pauses through the existing native session/audio/writer effects. A late recovered
++packet cannot erase a matured interruption while the worker is busy. Shorter
++recovered gaps do not pause. Fresh raw traffic cannot replace quality acceptance.
++The private input projection adds `usable_fresh`, `invalid_timeout_ms:5000` and
++`unusable_age_ms`; `last_pause.reason` identifies `breathing-data-unusable`.
++The private Wi-Fi snapshot explicitly preserves these typed fields and the
++required/fresh/pause-latched readiness flags. Its diagnostics object `pd` is
++private to enrolled private-LAN members: guest/relay/nonprivate status removes
++it, and compact BLE excludes it before its byte-budget/capability fallback.
++Diagnostics do not authorize session control.
++An intentional paused Running clock may assess current source/model-owned ACC
++quality for manual Continue, without advancing audio, training, driver output or
++main elapsed time. Continue requires current usable data at receipt and dispatch;
++returning samples do not resume automatically. Actual source/clock retirement
++still retires invalid models and may require a new preparation/calibration.
++
++The continuous backend binds its original audio generation and reserved frame.
++On failure it latches bounded, immutable `last_main_fault` at the failing
++observation (including a closed read-failure reason) before releasing resources.
++It cancels only that reservation; `last_main_cleanup` records the outcome, and
++an unknown result is not replayed or replaced with terminal cleanup. A later
++successful status read cannot overwrite the original fault. Normal terminal
++save/end retains reset semantics. These optional private diagnostics are not a
++new control authority or proof of a particular historical hardware trigger.
++
+ Internal `defer-main` and `cancel-main` commands require the current audio
+ generation, semantic revision and exact reserved frame. Cancellation preserves
+ a still-valid model, selected input and audio observation. Terminal `end-main`
+@@ -455,6 +489,31 @@ one native call. Drift, timeout or an unknown call outcome cannot retry. Pause
+ uses the actual running owner directly. The native reducer remains authoritative
+ for frame/presentation/clock admission; the UI handoff never synthesizes them.
+
++## Buffered raw Polar recording admission
++
++Raw ECG and ACC capture uses the original Java packet receipt separately from
++the sample's original source timestamp. A 73-sample, 130 Hz ECG packet spans
++about 562 ms; its early samples are not stale current breath assessments.
++The JNI ingress forwards that existing receipt only to capture admission.
++The typed recording, JSONL and participant CSV schemas remain unchanged.
++
++Raw packet samples must precede or equal that same-clock receipt and be no more
++than one second older. The current Java/elapsed clock pair, receipt observation
++and healthy playing audio retain their 250 ms coherence bounds. Capture also
++requires the current uninterrupted playback window and the original main's
++inclusive start/exclusive end. Pause, source replacement and real audio barriers
++retire that window. Live tilt/classifier freshness and producers without packet
++receipt provenance retain their existing short admission bounds.
++
++Focused host tests retain all 73 ECG and 36 ACC observations through the actual
++writer and participant CSV and reject pre-start, future, stale, cross-pause and
++retired-source observations. These checks do not prove sample-exact coverage at
++the final experimental boundary: finalization closes producer admission and
++drains records already accepted. A packet still buffered on the sensor may
++arrive after that cutoff and cannot be recovered by the admission fix. Complete
++terminal-tail coverage needs a separately qualified stream/packet cutoff or
++drain acknowledgment; a one-second receipt-gap check alone cannot establish it.
++
+ ## Historical recording validation and save timings
+
+ The recording actor owns an in-memory inventory of successfully validated
+diff --git a/tools/checks/Test-ExperimentSessionCommandGateway.ps1 b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
+index 40ba472db748783bbae134cd08aab4cd556ac048..fe437664031e322c1a22f5bad1b901436fabbfeb 100644
+--- a/tools/checks/Test-ExperimentSessionCommandGateway.ps1
++++ b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
+@@ -34,6 +34,8 @@ if($LASTEXITCODE-ne0){throw 'Gateway original receipt/dedupe tests failed'}
+ if($LASTEXITCODE-ne0){throw 'Selected gateway breathing boundary lifecycle tests failed'}
+ & python (Join-Path $PSScriptRoot 'test_native_start_rejection_cleanup.py') --repo $repo --json-jar $JsonJar
+ if($LASTEXITCODE-ne0){throw 'Definitive native Start rejection cleanup tests failed'}
++& python (Join-Path $PSScriptRoot 'test_experiment_wifi_snapshot.py') --json-jar $JsonJar
++if($LASTEXITCODE-ne0){throw 'Serialized full Wi-Fi authoritative pause/readiness projection tests failed'}
+ & python (Join-Path $PSScriptRoot 'test_experiment_gateway_ble_journal.py') --repo $repo --json-jar $JsonJar
+ if($LASTEXITCODE-ne0){throw 'Gateway mixed BLE/network original receipt tests failed'}
+ & python (Join-Path $PSScriptRoot 'test_experiment_ble_phone_admission.py') --repo $repo --json-jar $JsonJar
+diff --git a/tools/checks/Test-NativeRendererConditionAudio.ps1 b/tools/checks/Test-NativeRendererConditionAudio.ps1
+index 05020fccc3fe645cf8c259880075950704e05bb6..cdc0562ec099e15d46e66d32501f8572ba7b7210 100644
+--- a/tools/checks/Test-NativeRendererConditionAudio.ps1
++++ b/tools/checks/Test-NativeRendererConditionAudio.ps1
+@@ -91,7 +91,12 @@ final class BreathingSetupAudio {
+     static boolean continuousMain(String scenario) { return false; }
+     static String mainRecordingPlan(String scenario) { throw new AssertionError(); }
+     static long mainPlaybackPositionMs() { throw new AssertionError(); }
++    static long mainPlaybackPositionMs(long generation, long frame) { throw new AssertionError(); }
+     static long mainAdmissionFrame() { throw new AssertionError(); }
++    static final class MainReservation { long generation, frame; }
++    static MainReservation mainReservation() { throw new AssertionError(); }
++    static void recordMainFault(long generation, long frame, String reason) { throw new AssertionError(); }
++    static void cancelFailedMain(long generation, long frame) { throw new AssertionError(); }
+     static void resumeLoop() { throw new AssertionError(); }
+     static void pauseLoop() { throw new AssertionError(); }
+     static void endMain(long frame) { throw new AssertionError(); }
+diff --git a/tools/checks/test_experiment_gateway_breathing_boundary.py b/tools/checks/test_experiment_gateway_breathing_boundary.py
+index 1bb466e00e05277f9ab2adaa03b755a92067391c..703560d72067d4b0d0657d1fad2de8e103c2cb30 100644
+--- a/tools/checks/test_experiment_gateway_breathing_boundary.py
++++ b/tools/checks/test_experiment_gateway_breathing_boundary.py
+@@ -326,7 +326,11 @@ final class GatewayBreathingBoundaryTest {
+   check(h.dispatches==0&&h.state().equals("rejected"),"delayed main cannot borrow a later cycle grant");
+   h=fresh();h.start();NativeRendererMetaUpdate.allowed=false;h.boundary();
+   check(h.dispatches==0&&h.state().equals("rejected"),"delayed main rechecks native cycle grant");
+-  System.out.println("PASS "+checks+" selected production gateway boundary checks: wait/dedupe, once-only dispatch, failed/uncertain admission, owner/epoch/carrier/mode/phase/audio races and reentrant retirement; deterministic effects only");
++  h=fresh();h.phase="PAUSED";BreathingSetupAudio.inputReady=false;BreathingSetupAudio.playing=false;
++  JSONObject resumed=h.ownerExchange("command",new JSONObject().put("id",ID).put("op","resume"));
++  check(resumed.getString("state").equals("confirmed")&&h.dispatches==1&&BreathingSetupAudio.begins==0,
++   "manual Resume dispatches to native without borrowing Start's setup.ready/playing boundary guards");
++  System.out.println("PASS "+checks+" selected production gateway boundary checks: wait/dedupe, once-only dispatch, failed/uncertain admission, owner/epoch/carrier/mode/phase/audio races, paused unready Resume dispatch and reentrant retirement; deterministic effects only");
+  }
+ }
+ '''
+diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
+index 32d2691e9da83595744129f5ff1b6cf226b7e2de..4dc6ed18c48b9f41465d6e5bba1ec25360b5800d 100644
+--- a/tools/checks/test_experiment_trusted_phones.py
++++ b/tools/checks/test_experiment_trusted_phones.py
+@@ -106,6 +106,7 @@ final class RemoteJoinHarness {
+   PolarSensorRuntime.diagnostic=new JSONObject().put("frame_type",1).put("frame_samples",8);
+   check(read(g,a,"status",new JSONObject()).getJSONObject("y").getJSONObject("ad").getInt("frame_type")==1,"signed trusted private status receives bounded ACC diagnostic");
+   JSONObject installedStatus=read(g,a,"status",new JSONObject()),apk=installedStatus.getJSONObject("apk");
++  check(installedStatus.has("pd")&&read(g,b,"status",new JSONObject()).has("pd"),"trusted active/waiting members retain private input diagnostics");
+   check(apk.getInt("v")==1&&apk.getString("package_name").equals("synthetic.app")&&apk.getLong("version_code")==61&&apk.getString("version_name").equals("0.1.61"),"signed private status contains actual cached installed PackageManager identity");
+   check(apk.getString("build_id").equals(installedStatus.getJSONObject("build").getString("packaging_fingerprint")),"actual status build ID matches same APK asset");
+   int packageReads=android.content.pm.PackageManager.packageInfoReads,assetReads=android.content.res.AssetManager.reads,priorDispatches=dispatches;
+@@ -113,9 +114,11 @@ final class RemoteJoinHarness {
+   check(android.content.pm.PackageManager.packageInfoReads==packageReads&&android.content.res.AssetManager.reads==assetReads&&dispatches==priorDispatches,"actual status polls neither reopen identity sources nor dispatch experiment effects");
+   JSONObject relayStatus=new JSONObject(g.exchange(auth(a,"status",new JSONObject())).getString("payload"));
+   check(!relayStatus.has("apk"),"relay cannot disclose installed APK identity");
++  check(!relayStatus.has("pd"),"relay cannot disclose private input diagnostics");
+   check(!relayStatus.getJSONObject("y").has("ad")&&relayStatus.getJSONObject("y").getBoolean("ar"),"signed enrolled relay excludes ACC diagnostic while retaining recovery intent");
+   JSONObject guestStatus=read(g,guest,"status",new JSONObject());
+   check(!guestStatus.has("apk"),"guest cannot disclose installed APK identity");
++  check(!guestStatus.has("pd"),"untrusted guest cannot disclose private input diagnostics");
+   check(guestStatus.optJSONObject("y")==null||!guestStatus.getJSONObject("y").has("ad"),"guest status must not expose raw ACC diagnostic");
+   PolarSensorRuntime.diagnostic=null;check(!read(g,a,"status",new JSONObject()).getJSONObject("y").has("ad"),"unavailable/retired diagnostic is omitted from trusted status");
+   deny(()->read(g,guest,"controller-access",operation("1111111111111111","claim",0)));
+diff --git a/tools/checks/test_experiment_wifi_snapshot.py b/tools/checks/test_experiment_wifi_snapshot.py
+index 1bca3b4e6df19dbb9094283f3dae25df10c29042..bc13af287faee3d2272f6564ba418cf4ed704a05 100644
+--- a/tools/checks/test_experiment_wifi_snapshot.py
++++ b/tools/checks/test_experiment_wifi_snapshot.py
+@@ -1,5 +1,7 @@
+ """Run actual Wi-Fi producer, gateway serializer and Polar receipt bodies with inert I/O."""
+ import argparse
++import json
++import shutil
+ import os
+ from pathlib import Path
+ import subprocess
+@@ -15,6 +17,8 @@ def main():
+     p.add_argument('--jdk-bin', type=Path)
+     p.add_argument('--source-ref', help='Read gateway/receipt bodies from an exact Git ref for retained red proof')
+     p.add_argument('--case', choices=('gateway', 'scan', 'epoch', 'all'), default='all')
++    p.add_argument('--pwa-module', type=Path, help='Optional actual quest-rehearsal.js consumer for cross-owner serialized contract proof')
++    p.add_argument('--status-output', type=Path, help='Create-new serialized production snapshot fixture output')
+     args = p.parse_args()
+     repo = Path(__file__).resolve().parents[2]
+     root = repo / 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java' / PACKAGE
+@@ -78,7 +82,8 @@ public final class WifiSnapshotHarness {
+  class Delegate implements WifiDelegate {
+   int legacyReads;boolean replace,noStopHealth;JSONObject raw=response(9,900),setup;
+   ExperimentSessionWifiSnapshot wifiObservation;long wifiGeneration,wifiEpoch;
+-  class RemotePending {ExperimentSessionControlCapability.Fence sessionFence;String operation,nativeId,browserId;long serverGeneration;int requestedBias;}
++  class RemotePending {ExperimentSessionControlCapability.Fence sessionFence;String operation,nativeId,browserId;long serverGeneration,nativeOwnerEpoch;int requestedBias;}
++  String rejectRemoteSessionDetail(RemotePending p,String reason){throw new AssertionError("Unselected session rejection cannot execute in read-only snapshot fixture");}
+   RemotePending remotePending;Object remoteTerminal;String remoteSetupPendingId="";Object remoteContext=new Object();
+   java.lang.ref.WeakReference<BreathCompositionPanelModule> remotePanel=new java.lang.ref.WeakReference<>(null);
+   Delegate()throws Exception{ControlPanelActivity.raw=raw;}
+@@ -112,9 +117,11 @@ public final class WifiSnapshotHarness {
+   check(status.getJSONObject("build").getInt("version_code")==61,"Wi-Fi installed identity projected");
+   check(status.getJSONObject("polar_health").getJSONObject("ecg").getBoolean("fresh")&&!status.getJSONObject("polar_health").has("raw"),"active status retains closed live ECG health without raw owner fields");
+   JSONObject ble=new JSONObject().put("v",1).put("p","IDLE").put("polar_health",new JSONObject().put("v",1))
+-   .put("power",new JSONObject().put("v",1)).put("y",new JSONObject().put("ar",true).put("health",new JSONObject().put("v",1)));
++   .put("power",new JSONObject().put("v",1)).put("pd",new JSONObject(status.getJSONObject("pd").toString()))
++   .put("y",new JSONObject().put("ar",true).put("health",new JSONObject().put("v",1)));
+   JSONObject compact=new JSONObject(new String(polar.projectBoundedStatus(ble,null),"UTF-8"));
+-  check(!compact.has("polar_health")&&!compact.has("power")&&!compact.getJSONObject("y").has("health")&&compact.getJSONObject("y").getBoolean("ar"),"private health and power never consume BLE bytes or change existing readiness");
++  check(!compact.has("polar_health")&&!compact.has("power")&&!compact.has("pd")&&!compact.getJSONObject("y").has("health")&&compact.getJSONObject("y").getBoolean("ar")
++   &&compact.toString().getBytes("UTF-8").length<=480,"private diagnostics/health/power never consume BLE bytes or change existing readiness");
+   JSONObject diagnostic=status.getJSONObject("pd"),nativeInput=diagnostic.getJSONObject("native"),javaInput=diagnostic.getJSONObject("java");
+   check(nativeInput.getBoolean("diagnostics_observed")&&"acc-stale".equals(nativeInput.getString("reason"))&&nativeInput.getLong("accepted_age_ms")==1234,"current native reason/age retained");
+   check("acc-stale".equals(nativeInput.getJSONObject("last_pause").getString("reason")),"original pause retained");
+@@ -181,6 +188,32 @@ public final class WifiSnapshotHarness {
+    .put("runtime_epoch",epoch).put("polar_input",new JSONObject().put("required",false).put("fresh",false).put("pause_latched",false));
+   return idle;
+  }
++ static JSONArray pauseContract()throws Exception {
++  JSONArray snapshots=new JSONArray();
++  for(int recovery=0;recovery<3;recovery++) {
++   WifiSnapshotHarness h=new WifiSnapshotHarness();JSONObject raw=response(9,900);
++   JSONObject nativeStatus=raw.getJSONObject("readback");
++   nativeStatus.put("control_state","paused").put("presentation","immersive-active").put("scenario_id","haupt-15").put("duration_ms",900000);
++   JSONObject input=nativeStatus.getJSONObject("polar_input");
++   input.put("fresh",true).put("usable_fresh",recovery==1).put("invalid_timeout_ms",5000)
++    .put("unusable_age_ms",recovery==1?JSONObject.NULL:5100);
++   input.getJSONObject("last_pause").put("reason","breathing-data-unusable").put("usable_fresh_at_detection",false);
++   if(recovery==2){input.remove("usable_fresh");input.remove("invalid_timeout_ms");input.remove("unusable_age_ms");}
++   h.delegate.raw=raw;ControlPanelActivity.raw=raw;
++   // The outer selected private owner advertises this existing feature flag.
++   JSONObject wire=new JSONObject(h.snapshot().put("participant_arm",1).toString());
++   JSONObject projected=wire.getJSONObject("pd").getJSONObject("native");
++   check(wire.getString("p").equals("PAUSED")&&wire.getString("h").equals("vr-session"),"real native paused presentation survives Java serialization");
++   check(projected.getBoolean("required")&&projected.getBoolean("fresh")&&projected.getBoolean("pause_latched"),"required/fresh/pause_latched survive production full snapshot roundtrip");
++   if(recovery<2) {
++    check(projected.getBoolean("usable_fresh")== (recovery==1)&&projected.getLong("invalid_timeout_ms")==5000,"five-second authoritative readiness survives Java roundtrip");
++    check(recovery==1?projected.isNull("unusable_age_ms"):projected.getLong("unusable_age_ms")==5100,"nullable unusable age is preserved without zero synthesis");
++   }else check(projected.isNull("usable_fresh")&&projected.isNull("invalid_timeout_ms")&&projected.isNull("unusable_age_ms"),"legacy optional fields remain unavailable, never forged");
++   check(!projected.getJSONObject("last_pause").getBoolean("usable_fresh_at_detection"),"original usable freshness at pause detection survives");
++   snapshots.put(wire);
++  }
++  return snapshots;
++ }
+  static void rawEpochs()throws Exception {
+   for(Object bad:new Object[]{7.5,"7",Boolean.TRUE,JSONObject.NULL,0L,-1L,8L}) {
+    WifiSnapshotHarness h=new WifiSnapshotHarness();JSONObject grant=h.snapshot().getJSONObject("q");
+@@ -217,7 +250,8 @@ public final class WifiSnapshotHarness {
+  }
+  public static void main(String[]args)throws Exception {
+   if(!"scan".equals(args[0])){
+-   if(!"epoch".equals(args[0])){new WifiSnapshotHarness().gateway();observation();}
++   if(!"epoch".equals(args[0])){new WifiSnapshotHarness().gateway();observation();
++    java.nio.file.Files.write(java.nio.file.Paths.get(args[1]),pauseContract().toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));}
+    rawEpochs();
+   }
+   if(!"gateway".equals(args[0])&&!"epoch".equals(args[0]))scan();
+@@ -252,7 +286,32 @@ final class PolarReceiptHarness {
+         sources.append(helper)
+         exe = lambda name: str(args.jdk_bin / (name + '.exe')) if args.jdk_bin else name
+         subprocess.run([exe('javac'), '--release', '8', '-encoding', 'UTF-8', '-cp', str(args.json_jar), '-d', str(out), *map(str, sources), str(fixture)], check=True)
+-        subprocess.run([exe('java'), '-cp', str(out) + os.pathsep + str(args.json_jar), 'io.github.mesmerprism.rustyquest.native_renderer.WifiSnapshotHarness', args.case], check=True)
++        contract = out / 'snapshot-contract.json'
++        subprocess.run([exe('java'), '-cp', str(out) + os.pathsep + str(args.json_jar), 'io.github.mesmerprism.rustyquest.native_renderer.WifiSnapshotHarness', args.case, str(contract)], check=True)
++        if args.status_output:
++            args.status_output.parent.mkdir(parents=True, exist_ok=True)
++            with args.status_output.open('x', encoding='utf-8') as target:
++                json.dump(json.loads(contract.read_text(encoding='utf-8')), target, indent=2)
++        if args.pwa_module:
++            # Copy actual unchanged modules under an ESM package boundary; the
++            # public site need not carry Node-specific packaging metadata.
++            pwa = out / 'pwa'
++            pwa.mkdir()
++            (pwa / 'package.json').write_text('{"type":"module"}', encoding='utf-8')
++            for module_file in args.pwa_module.parent.glob('*.js'):
++                shutil.copyfile(module_file, pwa / module_file.name)
++            consumer = r'''
++import fs from 'node:fs'; import { pathToFileURL } from 'node:url'; import assert from 'node:assert/strict';
++const { polarSessionPause, rehearsalActions }=await import(pathToFileURL(process.argv[2]).href);
++const [waiting,recovered,legacy]=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
++assert.equal(polarSessionPause(waiting)?.waiting,true);
++assert.match(polarSessionPause(waiting).message,/5 s/);assert.match(polarSessionPause(waiting).message,/Gurtposition.*Hautkontakt.*Batterie/);
++assert.equal(rehearsalActions(waiting).play,undefined);
++assert.equal(polarSessionPause(recovered)?.waiting,false);assert.equal(rehearsalActions(recovered).play,'resume');
++assert.equal(polarSessionPause(legacy),null);assert.equal(rehearsalActions(legacy).play,'resume');
++console.log('PASS actual Java Snapshot/gateway serialized JSON -> actual PWA pause message/manual Resume contract, including old-field fallback');
++'''
++            subprocess.run(['node', '--input-type=module', '-e', consumer, str(contract), str((pwa / args.pwa_module.name).resolve())], check=True)
+
+
+ if __name__ == '__main__':

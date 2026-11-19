@@ -155,6 +155,32 @@ and the Meta Developer builds use their established package IDs.
 
 ## Shared breathing setup
 
+### Main signal pause and raw packet recording
+
+After the Start-recovery source below, apply
+[main-continuity-recovery.patch](main-continuity-recovery.patch). It reconstructs
+native commit `d114c54027995cff5095763ed11fc464cef959fb`, tree
+`6cb5b7e2a07c22e3fcdabe412904ec776f8083f3`. The patch is151,048bytes,
+SHA256 `d492a926bc148c5f529448886247cb41564f60374a4ca3e4083f529998006a66`;
+independent temporary-index reconstruction passes.
+
+An admitted Polar main retains its last diagnosis through short unusable-data
+gaps. Five consecutive seconds without a usable receipt pauses the native
+session/audio/writer clock. Continue requires usable data and an explicit
+operator action, including quality assessment while intentionally paused.
+Strict Start admission and real source/model/audio-clock retirement remain.
+The private Wi-Fi snapshot forwards the readiness fields to the phone; guest,
+relay and compact BLE exclude private diagnostics. Error cleanup cancels only
+its original main reservation and latches the exact failing observation before
+release. A normal terminal save still resets preparation.
+
+Raw ECG/ACC recording uses the original packet receipt for its bounded buffer
+window, independently of live breathing freshness. The writer/CSV regression
+retains all73 ECG and36 ACC samples. The final sensor-buffered tail after writer
+cutoff remains unqualified; this is not a sample-exact900-second capture claim.
+See the [Developer35 record](apks/README.md#developer35-main-signal-recovery-candidate--2026-11-19)
+for signed bytes, installed startup checks and outstanding wearer testing.
+
 ### Start recovery and retained calibration
 
 Apply [main-start-recovery.patch](main-start-recovery.patch) after the
