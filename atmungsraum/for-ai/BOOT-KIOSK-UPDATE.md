@@ -1,5 +1,26 @@
 # Autoboot, kiosk and Meta update qualification — 2026-11-16
 
+## Controlled32-to33 test staged — 2026-11-19
+
+Developer33 (`0.2.32-dev`, Meta build1470412299491115) is current/Complete
+for Quest2. The production source is identical to32; helper3 is unchanged.
+It was published while installed32/PID20269 stayed alive. Neither the headset
+Store nor the personally used phone was accessed; no restart/update/launch
+command was issued. The public latest-version hint is33, minimum27 unchanged.
+
+On wearer return, observe the PWA's first refreshed/reconnected response before
+any Store visit or restart. Test a PWA-triggered check while32 stays running.
+If Meta still offers32 despite published33, record that response, then isolate
+a real cold process restart without opening the Store. Observe the fresh
+startup SDK check and actual package replacement/relaunch separately. A menu
+visit or timed wait cannot be substituted for a confirmed new installed code.
+If Meta still offers32, leave that mismatch explicit and offer a retry/manual
+route; do not enter a restart loop or claim the target was delivered.
+
+The optional PWA [manual guide](MANUAL-UPDATE-HELP.md) is presentation only.
+Its authentic screenshot route awaits attended capture. This controlled probe
+adds no automatic restart mode, helper change or new update-detection logic.
+
 ## Actual startup prompt ownership — 2026-11-19
 
 During this-PC bench38 first launch, pending runtime permission dialogs exceeded

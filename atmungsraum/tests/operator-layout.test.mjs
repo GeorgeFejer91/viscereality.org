@@ -5,6 +5,26 @@ import { navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning
 
 const connected = { connected: true, participantRequired: true, participantComplete: true };
 
+test('manual update help is read-only navigation even when disconnected, recording or recovering', () => {
+  for (const context of [{ connected: false }, connected,
+    { ...connected, active: true }, { ...connected, recovery: true },
+    { ...connected, waitingForControl: true }]) {
+    assert.equal(resolveOperatorView('update-help', context), 'update-help');
+  }
+  for (const from of ['settings', 'update']) {
+    const origin = { step: from, returnTo: 'input' };
+    const help = navigateOperatorView(origin, { type: 'go', step: 'update-help' });
+    assert.equal(help.step, 'update-help');
+    assert.equal(help.returnTo, from);
+    const restored = restoreOperatorView('#update-help', { operatorStep: help.step,
+      operatorReturnTo: help.returnTo, operatorHelpReturnTo: help.helpReturnTo });
+    assert.deepEqual(navigateOperatorView(restored, { type: 'return' }), origin);
+  }
+  const help = navigateOperatorView({ step: 'settings', returnTo: 'input' }, { type: 'go', step: 'update-help' });
+  assert.deepEqual(navigateOperatorView(help, { type: 'go', step: 'settings' }), { step: 'settings', returnTo: 'input' });
+  assert.equal(navigateOperatorView({ step: 'update-help' }, { type: 'return' }).step, 'settings');
+});
+
 test('verified offline archives remain reachable beside a preparation receipt without granting setup navigation', () => {
   const context = { connected: false, recovery: true, offlineArchives: true };
   assert.equal(resolveOperatorView('recordings', context), 'recordings');

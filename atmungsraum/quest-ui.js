@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=10';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=11';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=21';
 import { pairPhone } from './quest-pairing.js?v=9';
@@ -427,6 +427,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     }
   });
   let utilityReturnFocus = null;
+  let manualHelpReturnFocus = null;
+  byId('manual-update-step').addEventListener('change', event => {
+    for (const paragraph of document.querySelectorAll('[data-manual-update-step]')) {
+      paragraph.hidden = paragraph.dataset.manualUpdateStep !== event.target.value;
+    }
+  });
 
   function livePreviewVisible() {
     return ['calibration', 'tracking'].includes(displayedStep) && location.hash !== '#daten';
@@ -442,7 +448,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event,
       rehearsal.state.status?.participant_arm === 1);
     const hash = `#${localView.step}`;
-    if (location.hash !== hash) history.pushState({ operatorStep: localView.step, operatorReturnTo: localView.returnTo }, '', hash);
+    if (location.hash !== hash) history.pushState({ operatorStep: localView.step,
+      operatorReturnTo: localView.returnTo, operatorHelpReturnTo: localView.helpReturnTo }, '', hash);
   }
   function paintOperatorLayout(context) {
     const nativeActive = context.active || Boolean(context.status && ['ARMED', 'RUNNING', 'PAUSED', 'FINALIZING', 'SAVING'].includes(context.status.p));
@@ -506,7 +513,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (['input', 'calibration', 'tracking'].includes(step)) move('operator-input-status', body);
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
       if (step === 'settings') connectionView.after(byId('operator-common'));
-      else if (step !== 'questionnaire') move('operator-common', body);
+      else if (!['questionnaire', 'update-help'].includes(step)) move('operator-common', body);
       if (step === 'questionnaire' && toolbarDialog.open) toolbarDialog.close();
       if (step !== 'settings') settingsConnection.open = false;
       if (step !== 'settings') {
@@ -518,6 +525,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       else if (preparationRecovery.parentElement !== byId('operator-common')) byId('quest-recovery').after(preparationRecovery);
       if (step !== 'update') apkDetails.open = false;
       for (const id of Object.values(operatorSteps)) byId(id).hidden = id !== page.id;
+      if (displayedStep === 'update-help' && manualHelpReturnFocus?.closest('.screen') === page) {
+        utilityReturnFocus = manualHelpReturnFocus;
+      }
       displayedStep = step;
       if (['connect', 'recordings'].includes(step)) {
         driveActionsHost().append(driveOpen, driveStatusHost);
@@ -590,6 +600,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   document.addEventListener('click', event => {
     const control = event.target.closest('[data-operator-go], [data-operator-back], [data-operator-return]');
     if (!control || control.disabled || control.getAttribute('aria-current') === 'page') return;
+    if (control.dataset.operatorGo === 'update-help') manualHelpReturnFocus = control;
     if (toolbarDialog.open && toolbarDialog.contains(control)) toolbarDialog.close();
     navigateLocal(control.hasAttribute('data-operator-back') ? { type: 'back' }
       : control.hasAttribute('data-operator-return') ? { type: 'return' }
