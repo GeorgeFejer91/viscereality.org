@@ -1,5 +1,40 @@
 # Project
 
+### Active: publish Meta32 and test the PWA update — 2026-11-19
+
+The user explicitly requests publishing signed Developer32 through Meta and
+updating the Quest through the PWA. This supersedes the older held27-to28
+sequence for the present attended test;28 stays unpublished. Reuse this goal
+and retain explicit gaps in canonical Polar/recording/relay acceptance.
+
+- [x] Freshly verify the approved32 digest and current Meta Developer27 channel;
+  Pixel control is active and native27 is `IDLE/rec:false/pending:false`.
+- [x] Upload exact signed32 to the existing private Developer channel, preserve
+  Quest2 targeting and confirm processing/current build.
+- [ ] Trigger the update from the actual Pixel PWA and observe Meta/helper
+  behavior without a host install or launch substituting for the updater.
+- [ ] Confirm installed32 bytes, Meta attribution, retained helper/trust and
+  app/PWA recovery; record any required headset confirmation separately.
+- [ ] Align the public latest-version hint after Meta confirmation; publish
+  the release/test evidence through exact Pages and live checks.
+
+Candidate `0.2.31-dev`/32, SHA256
+`e93da23aa044d1f43b69c31e17c45f4fe456b54ccb71b7abe521c54f603463db`,
+native `fe22d7d4`/tree `a99d4eb8`, retains the approved signed package.
+No new source rebuild or helper change is planned. The public required floor
+remains27 while the new candidate is qualified. The actual PWA update tests
+the installed27 coordinator; it cannot establish the behavior of32's repaired
+coordinator until a later successor test.
+
+Meta publication is confirmed: app1459506690581676, Developer channel
+1529361979246951, build1470180652847613, `0.2.31-dev`/32, Quest2,
+processing `Complete`. The existing teen/adult audience was reconfirmed.
+The actual Pixel PWA sent one `check-and-update` at14:20:23UTC with operation
+`ac34d6e795114658`. Native27 admitted a fresh SDK attempt but GetVersion still
+reported available27/current, revision5. Installed bytes/process remain27.
+This is a publication success and a pending delivery test, not an installation
+result. The public latest hint is being aligned to32; the required floor stays27.
+
 ### Active: reconcile latest source and pending updater repair — 2026-11-19
 
 The user requests synchronization of George's current source and reconciliation
