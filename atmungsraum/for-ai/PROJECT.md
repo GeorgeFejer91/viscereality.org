@@ -48,7 +48,7 @@ Git. The original native checkout still holds all four unfinished files unchange
   and reached its actual Android first-run permission prompt. After a true
   process cold start, saved membership rejoined and recenter received a native
   confirmation over authenticated LAN. No experiment or Meta update has started.
-- [ ] After the startup follow-up, restore the known Meta27 launch and the
+- [x] After the startup follow-up, restore the known Meta27 launch and the
   operator's saved connection. Preserve the existing27-to-held28 acceptance gate.
 
 Attended follow-up: the two-sided826276 code exchange saved enrollment. The
@@ -79,9 +79,15 @@ Bounded next repair, inside this same validation goal:
 - [x] Build signed Developer32 and bench39 packages from the reviewed source;
   actual900-second session closure, v3 signatures,16KiB alignment, source
   capsules,74 unchanged audio entries,10 WebRTC assets and retained loaders pass.
-- [ ] Commit/publish the separate startup repair overlay. No Meta publication yet.
-- [ ] Leave a real bench39 startup permission prompt pending beyond60seconds,
-  then verify actual foreground recovery after the wearer's response.
+- [x] Commit/publish the separate startup repair overlay. PR152 merged as
+  `ea5b47ec`; exact Pages44534871112 succeeded. Root independently verified
+  both live patches and all four affected documents against committed Git bytes.
+  No Meta publication occurred.
+- [x] Leave a real bench39 startup permission prompt pending beyond60seconds,
+  then verify actual foreground recovery after the wearer's response. Android's
+  GrantPermissionsActivity stayed top-resumed at99seconds, with the same app
+  process and running kiosk service. The wearer allowed the requests and reported
+  the stimulus returned; the same process resumed native frames and kiosk armed.
 
 Startup native commit `fe22d7d402d2edfa912412777720685c571b4f5b`, tree
 `a99d4eb89b05b170e89a10bfb45f11044807ecbb`, follows the updater repair.
@@ -102,6 +108,31 @@ install-handoff12, startup observation42+14, existing kiosk and terminal pending
 controls pass. Root independently reran the actual12-case handoff harness and
 confirmed no production delta. The prior patch still reconstructs the exact
 immutable signed-build tree.
+
+Bench39 in-place install has exact signed-byte readback. Fresh native38 was
+`IDLE/rec:false/pending:false` before disconnect/install/cold launch. Only bench
+runtime permissions were subsequently revoked while stopped for the deliberate
+test; main27 permissions and global Location were unchanged. All requested
+permissions were granted by the wearer after the long-prompt observation.
+
+Corrected connection evidence: receiving a native39 HTTP status did not prove
+PWA attachment. The saved build was still38, and the pinned-build guard required
+Bluetooth rediscovery. An initial chooser was empty; the user reports the Quest
+may have been out of range. A separate PC scan saw the exact020101 discovery
+service, and a later phone chooser showed Quest2. Selecting it reused existing
+membership without another approval. Actual PWA connection, bridge and control
+indicators became confirmed and the saved fingerprint became39's84425498... .
+The native process stayed unchanged across permission completion and reconnect.
+Do not infer a LAN or TURN transport result from those UI confirmations.
+
+The normal Meta-installed27 was cold-launched after stopping bench39; Meta
+installer and exact version27 are retained. The wearer confirmed041772 on the
+headset and the phone side confirmed the same code. Fresh authenticated native27
+readback confirms `IDLE/rec:false/pending:false`, active phone control and kiosk
+`ready-armed`; the Pixel saved27's exact build identity again. Helper3 and Wi-Fi
+ADB are retained. No experiment, calibration, recording or Meta update ran.
+Next: resume the existing held27-to28 update acceptance gate, then qualify the
+reconciled canonical candidate; do not imply Meta delivery from the bench result.
 
 ### Active: full lab validation and UI repairs — 2026-11-18
 

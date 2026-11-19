@@ -24,9 +24,28 @@ Both use the retained Developer v3 signer
 Actual signed 900000ms session closure, signatures, 16 KiB alignment and clean
 source capsules pass. All 74 audio entries, ten WebRTC assets, exact release
 protocol and applicable LSL/OpenXR/SDK loaders match the qualified predecessor.
-The lifecycle/watchdog regressions and independent review pass. Physical prompt
-acceptance remains pending; neither package has been installed or published to
-Meta. Installed/published Developer27 and held28 remain the update-test baseline.
+The lifecycle/watchdog regressions and independent review pass. Developer32
+remains local and uninstalled. Bench39
+was installed in place on this-PC Quest2 with exact signed-byte readback after
+fresh native38 `IDLE/rec:false/pending:false` confirmation. Its existing runtime
+permissions and saved trust were initially retained. For the attended first-run
+test, only bench permissions were revoked while stopped. The real Android
+permission dialog remained top-resumed after 99 seconds, with the same process
+and kiosk service running. The wearer then granted access and the stimulus
+returned in that same process; native frames advanced and kiosk was armed again.
+
+The Pixel initially retained build38 and needed fresh Bluetooth discovery before
+it could attach39. An empty scan may have been caused by range, as reported by
+the user. A subsequent chooser showed Quest2; selecting it reused the saved
+membership. The PWA confirmed connection, bridge and active control and saved
+39's correct fingerprint. A native status response alone had not established
+that earlier. Specific LAN/relay transport qualification remains separate.
+
+Neither package has been published to Meta. Installed/published Developer27
+and held28 remain the update-test baseline. Bench39 is stopped and normal
+Meta27 has been relaunched. Explicit matching-code confirmation restored the
+Pixel's Meta27 pairing. Fresh native27 readback confirms `IDLE`, no recording or
+pending command, active phone control and kiosk ready-armed. Helper3 is retained.
 
 ## Reconciled Developer 31 local candidate — 2026-11-19
 
