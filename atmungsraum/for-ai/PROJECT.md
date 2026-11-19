@@ -18,17 +18,19 @@
 - [ ] Finish the smartphone release gate and verify the exact Pages deployment,
   live runtime and installed Pixel.
 - [ ] Confirm audible play, level change and stop on Quest 2 with the paired
-  phone. Keep the existing Developer 32 process available for the controlled
-  updater test below until a separate bench window is available.
+  phone. The USB headset has Developer 27 and bench 37 installed. Its
+  [USB validation](HOTEL-WIFI-HANDOFF.md#current-usb-validation) records the
+  captive Quest Wi-Fi and unavailable authenticated phone connection.
+  The separate Developer 32 updater test remains open.
 
 The native change is [background-music.patch](../quest/background-music.patch).
 Apply it after the Developer 32 source overlays. Native source `f6bcfd58` /
 tree `06e8bf8b` passes 104 Remote-join and 74 trusted-phone assertions. The
-browser HMAC tests, cached/idle startup suite and focused landscape/200% layout
-checks pass. The Node suite reports 353 passed and 10 skipped Java bridge cases.
-The [signed bench candidate](../quest/apks/README.md#background-music-bench-41--2026-11-19)
-is ready for the headset check. Developer 32 was observed running before
-publication, with the earlier bench 37 still installed.
+browser HMAC and cached/idle startup suites pass. All 363 Node tests pass
+with the native assembly and Java bridges enabled. The independent
+844×390/200% dialog check confirms loading, failure, cancellation and focus
+return. The [signed bench candidate](../quest/apks/README.md#background-music-bench-41--2026-11-19)
+is ready for headset qualification.
 
 ### Active: publish Meta32 and test the PWA update — 2026-11-19
 
