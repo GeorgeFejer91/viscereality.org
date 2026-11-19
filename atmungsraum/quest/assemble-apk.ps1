@@ -175,6 +175,19 @@ $featureDir = Join-Path $runRoot 'features'
 Copy-Item -LiteralPath (Join-Path $QuestRepo 'fixtures/native-app-features') -Destination $featureDir -Recurse
 $assetInput = [IO.Path]::GetRelativePath($QuestRepo, $audio).Replace('\','/')
 $assetInputs = @($assetInput)
+$musicSource = Join-Path $PSScriptRoot '../assets/audio/background/ji3ji3.mp3'
+$packageMusic = ($Developer -or $PhonePairing) -and !$MainStudyAudio
+if ($packageMusic) {
+    $gatewaySources = 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
+    $musicGateway = Join-Path $QuestRepo "$gatewaySources/ExperimentSessionCommandGateway.java"
+    if (!(Select-String -LiteralPath $musicGateway -SimpleMatch 'atmungsraum-music/ji3ji3.mp3' -Quiet)) {
+        throw 'Apply the Atmungsraum background-music native patch before assembly.'
+    }
+    $musicAssets = Join-Path $runRoot 'atmungsraum-music'
+    $null = New-Item -ItemType Directory -Path $musicAssets
+    Copy-Item -LiteralPath $musicSource -Destination $musicAssets
+    $assetInputs += [IO.Path]::GetRelativePath($QuestRepo, $musicAssets).Replace('\','/')
+}
 if ($WebRtc) {
     if (!$Developer -and !$PhonePairing) { throw 'WebRtc requires the enrolled phone gateway.' }
     $rtcAssets = Join-Path $runRoot 'atmungsraum-webrtc'
@@ -511,6 +524,18 @@ if ($CanonicalRelease) {
 }
 $archive = [IO.Compression.ZipFile]::OpenRead($apk.FullName)
 try {
+    if ($packageMusic) {
+        $track = $archive.GetEntry('assets/atmungsraum-music/ji3ji3.mp3')
+        if (!$track -or $track.Length -ne $track.CompressedLength) {
+            throw 'The signed APK must contain the uncompressed background track.'
+        }
+        $stream = $track.Open()
+        try {
+            if ((Get-FileHash -InputStream $stream).Hash -cne (Get-FileHash -LiteralPath $musicSource).Hash) {
+                throw 'The signed APK background track must match the supplied track.'
+            }
+        } finally { $stream.Dispose() }
+    }
     $loaderEntry = $archive.GetEntry('lib/arm64-v8a/libopenxr_loader.so')
     if (!$loaderEntry) { throw 'APK is missing the ARM64 OpenXR loader.' }
     $loaderStream = $loaderEntry.Open()

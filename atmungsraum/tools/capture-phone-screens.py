@@ -22,7 +22,7 @@ DEFAULT_APK = apk_fixture()
 GATEWAY = """
 // Keep the actual pure access contract; replace transport, never its UI gates.
 import { canControlQuest } from './quest-gateway.js?review-contract=1';
-export { canControlQuest, companionAccessDenied, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
+export { backgroundMusicStatus, canControlQuest, companionAccessDenied, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
 // Every cache-versioned import shares one fixture, just as it reaches one Quest.
 export const owner = window.reviewOwner ??= {
   serial: 'DEMO-QUEST', device: 'd'.repeat(32), epoch: '7', native_epoch: '8',
@@ -93,6 +93,7 @@ function snapshot() {
       : settings.metaUpdate ? {meta_update:settings.metaUpdate} : {}),
     ...(settings.metaUpdate ? {meta_update_control:1} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
+    ...(settings.music ? {background_music:{...settings.music}} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: settings.participantArm !== false, f: fresh }, a: settings.tracks ?? ['track-ready', 'track-ready'],
     o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5,
@@ -329,6 +330,13 @@ export async function joinQuest({ endpoint }) {
         : settings.receiptState ? {v:1,id,state:settings.receiptState}
           : receipts[id] ?? {v:1,id,state:'outcome_unknown'};
     }),
+    backgroundMusic: settings.music ? controlled(value => {
+      (window.reviewMusicCommands ??= []).push(structuredClone(value));
+      const { playing, volume } = value;
+      Object.assign(settings.music, playing === undefined ? { volume } : { state: playing ? 'starting' : 'off' });
+      settings.music.revision++;
+      return { ...settings.music };
+    }) : null,
     kiosk: settings.kiosk ? controlled(value => {
       (window.reviewKioskCommands ??= []).push(structuredClone(value));
       if(value.op === 'receipt') return settings.kioskReceipt ?? {id:value.id,state:'pending',detail:'Waiting'};

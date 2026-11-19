@@ -1,5 +1,35 @@
 # Project
 
+### Active: Quest background music controls — 2026-11-19
+
+- [x] Add the German Settings dialog with Play, Stop and a 0–100% volume
+  slider. Show native loading and failure states and gate changes on current
+  phone control.
+- [x] Reuse the supplied `ji3ji3.mp3` as a separate Quest playback loop.
+  Fresh native owners start off at 35%. Native-owner retirement and removal of
+  the last trusted phone release playback. Ordinary phone reconnects read the
+  current music state.
+- [x] Reproduce missing playback controls before implementation. Cover bounded
+  payloads, active membership, late preparation callbacks, timeout and stop.
+  Review found blocking preparation on the main looper. The final path
+  prepares asynchronously and rechecks admission before starting audio.
+- [x] Build and inspect signed bench 41. Verify the v3 signer, 16 KiB
+  alignment, ARM64 OpenXR loader, exact music bytes and signed session closure.
+- [ ] Finish the smartphone release gate and verify the exact Pages deployment,
+  live runtime and installed Pixel.
+- [ ] Confirm audible play, level change and stop on Quest 2 with the paired
+  phone. Keep the existing Developer 32 process available for the controlled
+  updater test below until a separate bench window is available.
+
+The native change is [background-music.patch](../quest/background-music.patch).
+Apply it after the Developer 32 source overlays. Native source `f6bcfd58` /
+tree `06e8bf8b` passes 104 Remote-join and 74 trusted-phone assertions. The
+browser HMAC tests, cached/idle startup suite and focused landscape/200% layout
+checks pass. The Node suite reports 353 passed and 10 skipped Java bridge cases.
+The [signed bench candidate](../quest/apks/README.md#background-music-bench-41--2026-11-19)
+is ready for the headset check. Developer 32 was observed running before
+publication, with the earlier bench 37 still installed.
+
 ### Active: publish Meta32 and test the PWA update — 2026-11-19
 
 The user explicitly requests publishing signed Developer32 through Meta and

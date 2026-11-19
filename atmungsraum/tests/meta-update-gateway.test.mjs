@@ -7,7 +7,7 @@ const owner = { device: 'a'.repeat(32), serial: 'TEST', epoch: '7', native_epoch
 const controller = 'b'.repeat(32), key = 'c'.repeat(64), build = 'd'.repeat(64);
 const mac = text => createHmac('sha256', key).update(text).digest('hex');
 
-async function peer({ version = 2, control = 1, waiting = false, preparation = undefined } = {}) {
+async function peer({ version = 2, control = 1, waiting = false, preparation = undefined, music, musicReply } = {}) {
   const calls = [];
   const fetcher = async (_url, init) => {
     if (!init.body) return Response.json({ ...owner, v: 1, enabled: true, remote_available: true });
@@ -18,8 +18,14 @@ async function peer({ version = 2, control = 1, waiting = false, preparation = u
       build: { v: 1, packaging_fingerprint: build }, p: 'IDLE', g: 0, r: 0, ms: 0, pending: false, rec: false,
       o: { v: 1, s: 'observed', e: '8', a: 5, i: '1', g: 0, r: 0 }, meta_update_control: control,
       ...(preparation === undefined ? {} : { meta_update_preparation: preparation }),
+      ...(music === undefined ? {} : { background_music: music }),
       meta_update: { v: version }, controller_access: { v: 1, role: waiting ? 'waiting' : 'active', active_phone: 'Test', revision: 2 } };
-    else {
+    else if (action === 'background-music') {
+      const body = JSON.parse(request.payload);
+      calls.push(body);
+      value = musicReply ?? { ...music, ...(typeof body.playing === 'boolean'
+        ? { state: body.playing ? 'starting' : 'off' } : { volume: body.volume }), revision: music.revision + 1 };
+    } else {
       assert.equal(action, 'meta-update'); calls.push(JSON.parse(request.payload));
       value = { v: 1, id: calls.at(-1).id, state: 'accepted', cycle: '2', revision: '8', attempt: '20', reason: '' };
     }
@@ -61,4 +67,36 @@ test('legacy advertisement and a waiting controller cannot invoke the update act
   const { gateway, calls } = await peer({ waiting: true });
   assert.throws(() => gateway.metaUpdate({ v: 1, id: 'f'.repeat(16), op: 'receipt' }));
   assert.equal(calls.length, 0); gateway.close();
+});
+
+test('enrolled music control sends only bounded playback and gain changes and requires matching native readback', async () => {
+  const music = { v: 1, state: 'off', volume: 35, revision: 0 };
+  const { gateway, calls } = await peer({ music });
+  const play = { v: 1, playing: true };
+  const mute = { v: 1, volume: 0 };
+  assert.deepEqual(await gateway.backgroundMusic(play), { ...music, state: 'starting', revision: 1 });
+  assert.deepEqual(await gateway.backgroundMusic(mute), { ...music, volume: 0, revision: 1 });
+  for (const bad of [{ ...play, volume: 12 }, { ...play, url: 'https://example.org' }, { ...play, playing: 1 },
+    ...[-1, 101, 0.5, '12'].map(volume => ({ v: 1, volume }))]) {
+    await assert.rejects(gateway.backgroundMusic(bad));
+  }
+  assert.deepEqual(calls, [play, mute]);
+  gateway.close();
+
+  const mismatch = await peer({ music, musicReply: { ...music, revision: 1 } });
+  await assert.rejects(mismatch.gateway.backgroundMusic(play), /nicht bestätigt/);
+  mismatch.gateway.close();
+});
+
+test('older APKs, malformed music status and waiting phones cannot send music commands', async () => {
+  const music = { v: 1, state: 'off', volume: 35, revision: 0 };
+  for (const options of [{}, { music: { ...music, volume: 101 } }]) {
+    const { gateway } = await peer(options);
+    assert.equal(gateway.backgroundMusic, null);
+    gateway.close();
+  }
+  const { gateway, calls } = await peer({ music, waiting: true });
+  await assert.rejects(gateway.backgroundMusic({ v: 1, playing: true }));
+  assert.deepEqual(calls, []);
+  gateway.close();
 });

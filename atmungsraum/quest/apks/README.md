@@ -1,5 +1,24 @@
 # Atmungsraum Quest 2 APKs
 
+## Background music bench 41 — 2026-11-19
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version
+`0.2.40-music-bench`, code 41, 73,277,159 bytes. SHA-256
+`da11546a24b331959560772675eb1f1f8125d83f3289d3c5411f5bf4cb83734f`.
+Local v3 bench certificate SHA-256
+`a2b77cdb4d784aac3d1a92113a7da63772da07852be5e5597534ff8b4a0e8672`.
+
+Native source `f6bcfd58b060e6ea21aef7c9152d5adf1b33a11d`, tree
+`06e8bf8bb7b23c407bc78474e4177f47aae3c1e9`. Reconstruct the Developer 32
+tree described below, then apply [background-music.patch](../background-music.patch).
+Assemble with `-BundledAssets -PhonePairing -WebRtc` and the version above.
+The existing track is stored as `assets/atmungsraum-music/ji3ji3.mp3`, SHA-256
+`6c83316b326b105465cb8c4b434a926f789d9aaf3014543ec477d5e6e0e546fa`.
+Signature, 16 KiB alignment, original ARM64 OpenXR loader, exact music bytes,
+74 unchanged authored guidance entries and signed 900-second session closure
+pass. The APK is local. Audible Quest and paired-phone acceptance are pending.
+Developer 32 remains the private Meta channel build.
+
 ## Meta Developer 32 publication — 2026-11-19
 
 The user explicitly selected code32 for this private distribution/update test,

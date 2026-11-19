@@ -1,0 +1,354 @@
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index 9427584f81d8be4be4059561f1355bf58a1d029c..593dce7a30f30c15ac15261318f40277defa9b32 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -3,6 +3,10 @@ package io.github.mesmerprism.rustyquest.native_renderer;
+ import android.content.Context;
+ import android.content.SharedPreferences;
+ import android.content.pm.PackageManager;
++import android.content.res.AssetFileDescriptor;
++import android.content.res.AssetManager;
++import android.media.MediaPlayer;
++import java.io.IOException;
+ import android.os.Handler;
+ import android.os.Looper;
+ import android.os.SystemClock;
+@@ -32,6 +36,7 @@ public final class ExperimentSessionCommandGateway {
+     private final boolean privateLanData;
+     private final boolean sceneRecenter;
+     private final boolean phonePairingEnabled;
++    private BackgroundMusic backgroundMusic;
+     private ExperimentTrustedPhones trustedPhones;
+     private volatile int trustedPhoneCount;
+     private ExperimentPhonePairing phonePairing;
+@@ -338,6 +343,7 @@ public final class ExperimentSessionCommandGateway {
+         if(phonePairingEnabled){
+             requireMain();requirePhoneRegistry();
+             try{trustedPhones.clear();trustedPhoneCount=0;}catch(Exception failure){throw new IllegalStateException("phone-revocation-not-persisted",failure);}
++            if (backgroundMusic != null) backgroundMusic.stop();
+             retireMemberProtocols();retireControlEffects();controlModeChanged();return;
+         }
+         requireMain();preferences.edit().putBoolean("trusted-lan",false).remove("key").remove("controller").commit();
+@@ -383,6 +389,7 @@ public final class ExperimentSessionCommandGateway {
+     }
+     private void reconcile() {
+         if(!featurePackaged(context)||identity<=0||epoch<=0)return;
++        if (privateLanData && phonePairingEnabled) backgroundMusic = BackgroundMusic.open(context.getAssets(), main);
+         BreathingSetupAudio.installAppLifetime(context);
+         carrier.attachCommandGateway(true);
+         gatewayEpoch=(new java.security.SecureRandom().nextLong()&0xfffffffffffffL)+1;
+@@ -436,6 +443,7 @@ public final class ExperimentSessionCommandGateway {
+             if(phonePairing!=null)phonePairing.retire();phonePairing=null;
+         }
+         boolean remote = remoteAvailable();
++        if (!remote && backgroundMusic != null) backgroundMusic.stop();
+         installPhonePairing();
+         if (!remote && wifiSetup != null) wifiSetup.close();
+         if (!remote && webRtc != null) webRtc.close();
+@@ -502,6 +510,10 @@ public final class ExperimentSessionCommandGateway {
+         session.clear();polar.clear();
+     }
+     private void retire() {
++        if (backgroundMusic != null) {
++            backgroundMusic.stop();
++            backgroundMusic = null;
++        }
+         main.removeCallbacks(lanBindRetry);
+         discovery.close();
+         retireControllers();
+@@ -523,7 +535,9 @@ public final class ExperimentSessionCommandGateway {
+     }
+     public boolean revokeTrustedPhone(String controller)throws Exception {
+         requireMain();requirePhoneRegistry();long before=trustedPhones.revision();
+-        boolean removed=trustedPhones.remove(controller);reconcileMemberProtocols();
++        boolean removed=trustedPhones.remove(controller);
++        if (removed && trustedPhones.size() == 0 && backgroundMusic != null) backgroundMusic.stop();
++        reconcileMemberProtocols();
+         if(before!=trustedPhones.revision())retireControlEffects();return removed;
+     }
+     public boolean releaseActiveController(){
+@@ -579,6 +593,113 @@ public final class ExperimentSessionCommandGateway {
+             if(!next.containsKey(entry.getKey()))entry.getValue().retire();
+         }catch(Exception failure){retireMemberProtocols();throw new IllegalStateException("phone-protocols-unavailable",failure);}
+     }
++    /** Optional app-owned loop. All commands and MediaPlayer callbacks run on the main thread. */
++    static final class BackgroundMusic {
++        private static final String TRACK = "atmungsraum-music/ji3ji3.mp3";
++        private final AssetManager assets;
++        private final Handler main;
++        private final Runnable preparationTimeout = () -> release("failed");
++        private MediaPlayer player;
++        private String state = "off";
++        private int volume = 35;
++        private long revision;
++
++        private BackgroundMusic(AssetManager assets, Handler main) {
++            this.assets = assets;
++            this.main = main;
++        }
++
++        static BackgroundMusic open(AssetManager assets, Handler main) {
++            try (AssetFileDescriptor track = assets.openFd(TRACK)) {
++                return track.getLength() > 0 ? new BackgroundMusic(assets, main) : null;
++            } catch (IOException absent) {
++                return null;
++            }
++        }
++
++        JSONObject status() throws Exception {
++            return new JSONObject().put("v", 1).put("state", state)
++                .put("volume", volume).put("revision", revision);
++        }
++
++        JSONObject apply(JSONObject request, LocalEnrollmentGuard admission) throws Exception {
++            Object playing = request.opt("playing");
++            Object level = request.opt("volume");
++            if (request.length() != 2 || !Integer.valueOf(1).equals(request.opt("v"))
++                    || !(playing instanceof Boolean || level instanceof Integer
++                        && (Integer) level >= 0 && (Integer) level <= 100)) {
++                throw new IllegalArgumentException("closed-background-music-request-required");
++            }
++            if (Boolean.TRUE.equals(playing)) {
++                if (player == null) start(admission);
++            } else if (Boolean.FALSE.equals(playing)) {
++                stop();
++            } else if (volume != (Integer) level) {
++                if ("playing".equals(state)) {
++                    try {
++                        setGain(player, (Integer) level);
++                    } catch (RuntimeException unavailable) {
++                        release("failed");
++                        throw unavailable;
++                    }
++                }
++                volume = (Integer) level;
++                revision++;
++            }
++            return status();
++        }
++
++        private void start(LocalEnrollmentGuard admission) {
++            try {
++                player = new MediaPlayer();
++                state = "starting";
++                revision++;
++                try (AssetFileDescriptor track = assets.openFd(TRACK)) {
++                    player.setDataSource(track.getFileDescriptor(), track.getStartOffset(), track.getLength());
++                }
++                player.setLooping(true);
++                player.setOnPreparedListener(ready -> {
++                    if (player != ready) return;
++                    main.removeCallbacks(preparationTimeout);
++                    try {
++                        admission.check();
++                        setGain(ready, volume);
++                        ready.start();
++                        state = "playing";
++                        revision++;
++                    } catch (Exception unavailable) {
++                        release("failed");
++                    }
++                });
++                player.setOnErrorListener((failed, reason, detail) -> {
++                    if (player == failed) release("failed");
++                    return true;
++                });
++                main.postDelayed(preparationTimeout, 10_000L);
++                player.prepareAsync();
++            } catch (IOException | RuntimeException unavailable) {
++                release("failed");
++            }
++        }
++
++        private static void setGain(MediaPlayer player, int volume) {
++            float gain = volume / 100f;
++            player.setVolume(gain, gain);
++        }
++
++        void stop() { release("off"); }
++
++        private void release(String nextState) {
++            if (player == null && state.equals(nextState)) return;
++            main.removeCallbacks(preparationTimeout);
++            MediaPlayer old = player;
++            player = null;
++            state = nextState;
++            revision++;
++            if (old != null) old.release();
++        }
++    }
++
+     private void retireControlEffects(){
+         retireCalibrationInstruction();
+         retireProbeInstruction();
+@@ -788,6 +909,14 @@ public final class ExperimentSessionCommandGateway {
+                         admittedEffect.check();
+                         return result;
+                     }
++                    if ("background-music".equals(action)) {
++                        if (!enrolled || !remoteAvailable() || backgroundMusic == null) {
++                            throw new SecurityException("background-music-unavailable");
++                        }
++                        revalidateEffect();
++                        controlMode.readSnapshot().requireRemoteCommands();
++                        return backgroundMusic.apply(payload, admittedEffect);
++                    }
+                     if ("kiosk".equals(action)) {
+                         if(!privateLanData||!enrolled||!remoteAvailable())throw new SecurityException("kiosk-controller-unavailable");
+                         revalidateEffect();
+@@ -829,6 +958,7 @@ public final class ExperimentSessionCommandGateway {
+                         }
+                         if(enrolled)response.put("apk",apkIdentity==null?JSONObject.NULL:new JSONObject(apkIdentity.toString()));
+                         if(enrolled)response.put("kiosk",BreathCompositionPanelModule.remoteKioskProjection());
++                        if (enrolled && backgroundMusic != null) response.put("background_music", backgroundMusic.status());
+                         if(enrolled){JSONObject update=NativeRendererMetaUpdate.status();if(update!=null){response.put("meta_update",update);if(update.optInt("v")==2){response.put("meta_update_control",1);if(update.opt("can_end_preparation") instanceof Boolean)response.put("meta_update_preparation",1);}}}
+                         response.put("ecg_preview", enrolled ? 1 : 0);
+                         if (!enrolled) response.put("recordings", 0);
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+index 7c9960b3cfcbd92fdf6de95c7ba3dd4b13226504..e6b8406b4969c887baf9817e1545c6ddea847541 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+@@ -218,7 +218,8 @@ public final class ExperimentSessionGatewayProtocol {
+                 || "breath-monitor".equals(action) || lan && ("recordings".equals(action)
+                     || privateLan && ("ecg-preview".equals(action) || "scenario-arm".equals(action)
+                         || "participant-arm".equals(action) || "recenter".equals(action)
+-                        || "breath-setup".equals(action) || "kiosk".equals(action) || "meta-update".equals(action)));
++                        || "breath-setup".equals(action) || "kiosk".equals(action) || "meta-update".equals(action)
++                        || "background-music".equals(action)));
+             if(!hex(nonce,32) || !allowedAction
+                     || !constant(hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload),string(request,"mac")))
+                 throw new SecurityException("authentication-failed");
+@@ -237,6 +238,7 @@ public final class ExperimentSessionGatewayProtocol {
+             result.remove("breath_setup");
+             result.remove("setup");
+             result.remove("kiosk");
++            result.remove("background_music");
+             result.remove("apk");
+             result.remove("meta_update");
+             result.remove("meta_update_control");
+diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
+index 85acb547103f384bd2ccafe896694952387d2246..e01e43ee7f7575bd285682585c9b763643b712a7 100644
+--- a/tools/checks/test_experiment_remote_join.py
++++ b/tools/checks/test_experiment_remote_join.py
+@@ -48,6 +48,28 @@ STUBS['android/content/pm/PackageInfo.java']='package android.content.pm;public
+ STUBS['android/content/res/AssetManager.java']='package android.content.res;public class AssetManager {public java.io.InputStream open(String name)throws java.io.IOException {if(!name.equals("android-build-identity.json"))throw new java.io.IOException();return new java.io.ByteArrayInputStream("{~schema~:~rusty.quest.android_build_identity.v1~,~source_commit~:~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~}".replace((char)126,(char)34).getBytes(java.nio.charset.StandardCharsets.UTF_8));}}'
+ STUBS['android/content/Context.java']=STUBS['android/content/Context.java'].replace('public Context getApplicationContext()', 'public android.content.res.AssetManager getAssets(){return new android.content.res.AssetManager();}public Context getApplicationContext()')
+ STUBS['android/content/pm/PackageManager.java']=STUBS['android/content/pm/PackageManager.java'].replace('public static final int GET_META_DATA=128;', 'public static final int GET_META_DATA=128;public PackageInfo getPackageInfo(String p,int f){return new PackageInfo();}')
++STUBS['android/content/res/AssetManager.java'] = STUBS['android/content/res/AssetManager.java'].replace(
++    'public java.io.InputStream open', 'public static boolean music; public AssetFileDescriptor openFd(String name)throws java.io.IOException {if (!music || !name.equals("atmungsraum-music/ji3ji3.mp3")) throw new java.io.IOException();return new AssetFileDescriptor();}public java.io.InputStream open')
++STUBS['android/content/res/AssetFileDescriptor.java'] = """package android.content.res;
++public class AssetFileDescriptor implements java.io.Closeable {
++ public java.io.FileDescriptor getFileDescriptor(){return new java.io.FileDescriptor();}public long getStartOffset(){return 7;}public long getLength(){return 42;}public void close(){}
++}"""
++STUBS['android/media/MediaPlayer.java'] = """package android.media;
++public class MediaPlayer {
++ public interface OnPreparedListener { void onPrepared(MediaPlayer player); }
++ public interface OnErrorListener { boolean onError(MediaPlayer player,int reason,int detail); }
++ public static MediaPlayer last;
++ public boolean looping,playing,released; public float gain; public OnErrorListener error; public OnPreparedListener prepared;
++ public MediaPlayer(){last=this;}
++ public void setDataSource(java.io.FileDescriptor fd,long offset,long length){if(offset!=7||length!=42)throw new IllegalArgumentException();}
++ public void setOnErrorListener(OnErrorListener listener){error=listener;}
++ public void setLooping(boolean value){looping=value;} public void prepareAsync(){}
++ public void setOnPreparedListener(OnPreparedListener listener){prepared=listener;}
++ public void setVolume(float l,float r){if(l!=r)throw new IllegalArgumentException();gain=l;}
++ public void start(){playing=true;}
++ public boolean isPlaying(){return playing;}
++ public void release(){playing=false;released=true;}
++}"""
+ STUBS['android/app/Activity.java']='package android.app;public class Activity extends android.content.Context {}'
+ STUBS['android/os/BatteryManager.java']='package android.os;public class BatteryManager {public static final int BATTERY_PROPERTY_CAPACITY=4,BATTERY_PROPERTY_STATUS=6,BATTERY_STATUS_CHARGING=2,BATTERY_STATUS_DISCHARGING=3,BATTERY_STATUS_NOT_CHARGING=4,BATTERY_STATUS_FULL=5;public int getIntProperty(int p){return Integer.MIN_VALUE;}}'
+ STUBS['android/hardware/BatteryState.java']='package android.hardware;public class BatteryState {public boolean isPresent(){return false;}public float getCapacity(){return Float.NaN;}}'
+@@ -129,7 +151,55 @@ final class RemoteJoinHarness {
+   Thread network=new Thread(call,"network");network.start();Runnable task=android.os.Handler.queue.poll(2,java.util.concurrent.TimeUnit.SECONDS);
+   check(task!=null,"HTTP request did not cross actual onMain wrapper");task.run();network.join(2000);check(!network.isAlive(),"HTTP owner request stalled");return call.get();
+  }
++ static void backgroundMusic()throws Exception {
++  android.content.res.AssetManager assets=new android.content.res.AssetManager();
++  android.os.Handler main=new android.os.Handler(android.os.Looper.getMainLooper());
++  ExperimentSessionCommandGateway.LocalEnrollmentGuard admission=()->{};
++  check(ExperimentSessionCommandGateway.BackgroundMusic.open(assets,main)==null,"missing track must not advertise support");
++  android.content.res.AssetManager.music=true;
++  ExperimentSessionCommandGateway.BackgroundMusic music=ExperimentSessionCommandGateway.BackgroundMusic.open(assets,main);
++  check(music.status().getString("state").equals("off")&&music.status().getInt("volume")==35,"new owner starts silent");
++  JSONObject volume=new JSONObject().put("v",1).put("volume",65);
++  check(music.apply(volume,admission).getInt("volume")==65&&android.media.MediaPlayer.last==null,"volume while off must not create a player");
++  try {music.apply(new JSONObject().put("v",1).put("volume",101),admission);throw new AssertionError("out-of-range music");}
++  catch(IllegalArgumentException expected){}
++  try {music.apply(new JSONObject().put("v",1).put("playing",true).put("volume",1),admission);throw new AssertionError("open music payload");}
++  catch(IllegalArgumentException expected){}
++  JSONObject play=new JSONObject().put("v",1).put("playing",true);
++  check(music.apply(play,admission).getString("state").equals("starting"),"preparation is not playback");
++  android.media.MediaPlayer player=android.media.MediaPlayer.last;
++  check(!player.playing,"Android has not yet prepared the track");
++  player.prepared.onPrepared(player);
++  check(music.status().getString("state").equals("playing")&&player.looping&&player.playing&&Math.abs(player.gain-.65f)<.0001,"loops at the selected gain");
++  music.apply(play,admission);
++  check(android.media.MediaPlayer.last==player,"repeated Play must not duplicate the player");
++  music.apply(new JSONObject().put("v",1).put("volume",0),admission);
++  check(player.playing&&player.gain==0f,"volume zero mutes the existing loop");
++  long revision=music.status().getLong("revision");
++  player.error.onError(player,1,0);
++  check(player.released&&music.status().getString("state").equals("failed")&&music.status().getLong("revision")>revision,"native failure releases and publishes stopped state");
++  music.apply(play,admission);
++  player=android.media.MediaPlayer.last;
++  music.apply(new JSONObject().put("v",1).put("playing",false),admission);
++  player.prepared.onPrepared(player);
++  check(player.released&&!player.playing&&music.status().getString("state").equals("off"),"late preparation cannot undo Stop");
++  music.apply(play,()->{throw new SecurityException("owner retired");});
++  player=android.media.MediaPlayer.last;
++  player.prepared.onPrepared(player);
++  check(player.released&&!player.playing&&music.status().getString("state").equals("failed"),"retired admission cannot start playback");
++  music.apply(play,admission);
++  player=android.media.MediaPlayer.last;
++  android.os.Handler.delayed.remove().run();
++  check(player.released&&!player.playing&&music.status().getString("state").equals("failed"),"preparation has a bounded lifetime");
++  music.apply(play,admission);
++  player=android.media.MediaPlayer.last;
++  player.prepared.onPrepared(player);
++  music.stop();
++  check(player.released&&!player.playing&&music.status().getString("state").equals("off"),"owner cleanup releases the player");
++  android.content.res.AssetManager.music=false;
++ }
+  public static void main(String[] args)throws Exception {
++  backgroundMusic();
+   android.content.Context context=new android.content.Context();check(ExperimentSessionBuildIdentity.read(context).getInt("version_code")==61,"actual PackageManager build version projection");check(ExperimentSessionBuildIdentity.read(context).getString("source_commit").equals("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),"actual asset public source projection");ExperimentControlMode mode=ExperimentControlMode.process();
+   ExperimentSessionCommandGateway g=ExperimentSessionCommandGateway.process(context,new ExperimentSessionCommandGateway.WifiDelegate(){
+    public ExperimentSessionWifiSnapshot.Read wifiSnapshot()throws Exception {
+diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
+index 04e5adfeb9b2fd53da08bac8215b10bc35240733..32d2691e9da83595744129f5ff1b6cf226b7e2de 100644
+--- a/tools/checks/test_experiment_trusted_phones.py
++++ b/tools/checks/test_experiment_trusted_phones.py
+@@ -61,6 +61,7 @@ final class RemoteJoinHarness {
+    .put("pairing_id",reply.getString("pairing_id")).put("proof",hex(hmac(proofKey,utf8(transcript+"|"+action))));
+  }
+  public static void main(String[] args)throws Exception {
++  android.content.res.AssetManager.music=true;
+   android.content.Context context=new android.content.Context();String legacyController="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",legacyKey=new String(new char[64]).replace('\0','b');
+   context.prefs.values.put("controller",legacyController);context.prefs.values.put("key",legacyKey);context.prefs.values.put("trusted-lan",true);
+   ExperimentSessionCommandGateway g=ExperimentSessionCommandGateway.process(context,new ExperimentSessionCommandGateway.WifiDelegate(){
+@@ -121,6 +122,16 @@ final class RemoteJoinHarness {
+   deny(()->read(g,a,"command",ping("1111111111111111")));
+   JSONObject claim=operation("2222222222222222","claim",0),claimed=read(g,a,"controller-access",claim);
+   check(claimed.getString("role").equals("active")&&claimed.getLong("revision")==1,"first authenticated claim");
++  JSONObject playMusic=new JSONObject().put("v",1).put("playing",true);
++  check(installedStatus.getJSONObject("background_music").getString("state").equals("off")
++      &&!relayStatus.has("background_music")&&!guestStatus.has("background_music"),"music capability stays on enrolled private status");
++  deny(()->read(g,b,"background-music",playMusic));
++  deny(()->read(g,guest,"background-music",playMusic));
++  deny(()->g.exchange(auth(a,"background-music",playMusic)));
++  check(read(g,a,"background-music",playMusic).getString("state").equals("starting"),"active signed LAN command starts preparation");
++  android.media.MediaPlayer track=android.media.MediaPlayer.last;
++  track.prepared.onPrepared(track);
++  check(read(g,b,"status",new JSONObject()).getJSONObject("background_music").getString("state").equals("playing"),"enrolled status observes actual native playback");
+   JSONObject update=new JSONObject().put("v",1).put("id","aabbccddeeff0011").put("op","check-and-update").put("cycle","1").put("revision","2");
+   deny(()->read(g,b,"meta-update",update));deny(()->read(g,guest,"meta-update",update));
+   deny(()->g.exchange(auth(a,"meta-update",update)));
+@@ -170,6 +181,7 @@ final class RemoteJoinHarness {
+   check(status(g,b).getString("role").equals("active"),"another member survives independent revocation");
+   g.nativeOwnerChanged(2,8,true);String freshEpoch=g.identity().getString("epoch");
+   deny(()->g.exchangeLan(auth(b,"status",new JSONObject())));b.put("epoch",freshEpoch);
++  check(track.released&&!track.playing,"native retirement releases the active music player");
+   check(status(g,b).getString("role").equals("waiting")&&g.trustedPhones().getJSONArray("members").length()==1,"native lifetime retires protocol and control but preserves membership");
+   java.security.KeyPairGenerator keys=java.security.KeyPairGenerator.getInstance("EC");keys.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
+   java.security.KeyPair phoneKey=keys.generateKeyPair();

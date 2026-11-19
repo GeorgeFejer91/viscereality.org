@@ -418,6 +418,20 @@ html[data-mode="quest"] .setup-actions #corner-actions { position: static; displ
 :is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) .actions { width: 100%; }
 :is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) button { width: 100%; }
 #toolbar-dialog .screen-body { display: grid; gap: var(--gap); }
+#music-volume-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 8px;
+}
+#music-volume-control label { min-inline-size: 0; }
+#music-volume {
+  grid-column: 1 / -1;
+  inline-size: 100%;
+  min-block-size: 48px;
+  margin: 0;
+  accent-color: var(--site-blue);
+}
 #toolbar-dialog .operator-tool svg, #operator-toolbar .utility-label { display: none; }
 #drive-dialog { line-height: 1.25; }
 #drive-dialog #quest-drive-form { gap: 8px; }
@@ -582,6 +596,7 @@ html[data-layout="reflow"][data-mode] body main {
   background: linear-gradient(transparent var(--operator-toolbar-height), #000b var(--operator-toolbar-height));
 }
 
+#music-dialog[open] { block-size: fit-content; grid-template-rows: auto auto auto; }
 html[data-mode="quest"] main {
   --gap: clamp(6px, min(2vw, 1.3dvh), 16px);
   --inset: max(clamp(8px, min(3vw, 2dvh), 20px), env(safe-area-inset-left), env(safe-area-inset-right));
@@ -636,6 +651,7 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
   #apk-details-dialog { width: min(720px, calc(100vw - 2 * var(--dialog-inset))); }
   #drive-dialog { padding-block: 10px; }
   #drive-dialog[open] { gap: 6px; }
+  #settings-screen .operator-body,
   #input-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #input-screen .preview-controls { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
   #breathing-preview .operator-body, #running-screen .operator-body {

@@ -31,6 +31,12 @@ export function canControlQuest(status) {
   catch { return false; }
 }
 
+export function backgroundMusicStatus(value) {
+  return value?.v === 1 && ['off', 'starting', 'playing', 'failed'].includes(value.state)
+    && Number.isInteger(value.volume) && value.volume >= 0 && value.volume <= 100
+    && Number.isSafeInteger(value.revision) && value.revision >= 0 ? value : null;
+}
+
 export function questEndpoint(input) {
   const candidate = input.trim();
   const match = /^(?:http:\/\/)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::8766\/v1\/gateway)?$/.exec(candidate);
@@ -383,6 +389,19 @@ export async function joinQuest({ endpoint, serial, device, identity_kind, build
           return controlled('breath-setup', { v: 1, id, op: 'receipt' }, requestSignal);
         } : null,
       recenter: enrollment ? (command, requestSignal) => controlled('recenter', command, requestSignal) : null,
+      backgroundMusic: enrollment && backgroundMusicStatus(initial.background_music) ? async (request, requestSignal) => {
+        if (request?.v !== 1 || Object.keys(request).length !== 2
+          || !(typeof request.playing === 'boolean' || Number.isInteger(request.volume) && request.volume >= 0 && request.volume <= 100)) {
+          throw Error('Ungültige Musikanfrage.');
+        }
+        const applied = backgroundMusicStatus(await controlled('background-music', request, requestSignal));
+        const expected = request.playing ? ['starting', 'playing'] : ['off'];
+        if (!applied || (typeof request.playing === 'boolean'
+          ? !expected.includes(applied.state) : request.volume !== applied.volume)) {
+          throw Error('Die Quest hat die Musikeinstellung nicht bestätigt.');
+        }
+        return applied;
+      } : null,
       kiosk: enrollment && initial.kiosk?.v === 1 ? (command, requestSignal) => {
         if (command?.v !== 1 || typeof command.id !== 'string' || !/^[a-f0-9]{16}$/.test(command.id)
           || !['receipt', 'retry'].includes(command.op)
