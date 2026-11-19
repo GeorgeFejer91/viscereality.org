@@ -1,5 +1,41 @@
 # Project
 
+### Active: reconcile latest source and pending updater repair — 2026-11-19
+
+The user requests synchronization of George's current source and reconciliation
+of the four unfinished updater files before attended testing. Reuse the lab
+validation goal below. Preserve Meta code 27, helper 3, held successor 28 and
+the original dirty native checkout while qualifying this source increment.
+
+- [x] Sync the clean website worktree to main `c0569ab`; preserve the previous branch.
+- [x] Reconstruct Developer 30 from fixed27-r2 plus `webrtc-native.patch` and
+  match exact native tree `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485`.
+- [x] Reproduce the ambiguous duplicate-download target failure against that
+  source with the preserved regression before changing production code.
+- [x] Port the pending coordinator, duplicate/service tests and documentation;
+  targeted checks pass 162 duplicate and 63 native-cycle cases.
+- [x] Complete updater, WebRTC compatibility and PWA regression checks; review.
+  All16 updater suites, actual production javac,11-source closure and gateway/
+  pairing controls pass. All361 web/assembly tests pass with zero skips and
+  real WebCrypto-to-Java fixtures. Independent review has no remaining findings.
+- [ ] Commit and publish a separate repair overlay with exact reconstruction
+  evidence; retain the immutable Developer 30 and held 28 records.
+- [ ] Prepare the qualified source for the next attended hardware check.
+  No new APK installation, Meta publication or policy increase is established
+  by the source reconciliation itself.
+
+Reconciled native commit `a7289a89d0ab092a0d5a9a89a6ef67f7cb36ff57`, tree
+`310ee8870fce0de0108cc05891abdd309d976b09`. The separate
+[`updater-reconciliation.patch`](../quest/updater-reconciliation.patch) applies
+after the unchanged WebRTC overlay. Its23,933bytes/SHA256
+`91d9ff51790246392eec5f03c98d9fbfb7123a99e0549defc5bd0bcbed5c2302`
+reconstruct that exact tree using an isolated Git index. Its only production
+delta removes unsafe adoption of the offered version from targetless SDK207
+duplicate progress; bounded cancellation, fresh version and owned completion
+are required with helper3 as well. No helper binary changed. Code31 is building
+locally with the canonical profile and retained Developer signer; no31 artifact
+or hardware result is claimed yet. Private evidence is retained outside Git.
+
 ### Active: full lab validation and UI repairs — 2026-11-18
 
 The Codex validation goal uses this checklist. Repeat affected checks on the

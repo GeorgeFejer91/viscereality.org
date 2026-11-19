@@ -1,0 +1,211 @@
+diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateCoordinator.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateCoordinator.java
+index 240d7d09..8cc06ac8 100644
+--- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateCoordinator.java
++++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateCoordinator.java
+@@ -249,7 +249,8 @@ final class NativeRendererMetaUpdateCoordinator {
+             if(duplicatePhase==1){
+                 if(message.progressStatus!=1&&!activeDownload&&message.progressStatus!=5){fail("duplicate-download-status-unavailable");return;}
+                 if(!fence.valid(attempt)){fail("duplicate-download-owner-or-floor-changed");return;}
+-                if(fence.queuedExitSelected()){install(now,true);return;}
++                // SDK207 progress has no target/job identity. Even with a selected
++                // helper, the channel offer cannot identify this existing job.
+                 duplicatePhase=2;reason="restarting-duplicate-download";issue(CANCEL,now);return;
+             }
+             if(!activeDownload&&message.progressStatus!=5) {
+diff --git a/docs/META_PLATFORM_UPDATE.md b/docs/META_PLATFORM_UPDATE.md
+index 2f1eed2c..950daa75 100644
+--- a/docs/META_PLATFORM_UPDATE.md
++++ b/docs/META_PLATFORM_UPDATE.md
+@@ -44,36 +44,23 @@ instead latch existing external-install uncertainty; they never cancel.
+ Unknown/uninstall states, invalid counters and stale replies cannot cancel.
+ This check does not identify or adopt the existing installer's target version.
+ 
+-With monitor3 helper selected, the preferred recovery instead persists a pending target
+-bound to the known higher channel offer and remembered floor, takes irreversible
+-native admission, and requires positive helper ARM plus the existing main-looper
+-kiosk latch. It then closes only its own idle app: stop its kiosk service, finish
+-its own activities/task and terminate its own process. Main execution repeats
+-owner/cycle/actual-PM checks and a five-second monotonic deadline; timed-out
+-queued actions are expired and cannot later close the app. The final PM lookup
+-is followed by another deadline check before any exit effect. Ordinary
+-intentionalExit/cancel-watch is deliberately not used: the helper watch remains
+-armed. Persistence/ARM/latch/exit failure never proceeds with a cooperative exit
+-and retains the applicable pending/irreversible block. The reason is
+-`queued-meta-update-handoff`, with installing/blocked status, not SDK-install proof.
++SDK207 progress exposes no transfer version, payload hash or job identity.
++An existing payload below the current channel offer and the offered payload
++can report identical DownloadQueued state and full byte counters. Neither
++observation authorizes persisting that offered target, arming the helper or
++closing the app. Selecting monitor3 does not change this ambiguity.
+ 
+-This selected lane issues neither SDK Cancel nor SDK Install. It does not
+-assert which version the existing job contains. Only actual package replacement
+-at/above the target and same-signer helper resolution permits replacement launch;
+-the fresh process still verifies its pending target and policy. The helper's
+-monitor3 capability continuously observes actual replacement and trusted
+-launch-ready or explicit cancellation. It has no fixed download/installation
+-expiry or fixed Meta launch grace. The five-second main command deadline above
+-only expires stale callbacks; it never limits download monitoring.
+-
+-Without helper selected, recovery issues `CancelAppDownload` for the current app only. A matched
++Recovery therefore issues `CancelAppDownload` for the current app only,
++including when monitor3 helper is selected. A matched
+ positive cancel reply must have no SDK error and AppInstallResult Success7.
+ Only then is a fresh GetVersion issued. It must retain actual installed/owner
+ identity and a channel offer satisfying the remembered required floor before
+ one new owned StartAppDownload is allowed. Neither cancellation nor progress
+ proves a downloaded update. Positive owned Download Success7 and a progress
+ request issued after that success remain mandatory before the unchanged
+-durable pending/native admission/helper/kiosk/install sequence. A second
++durable pending/native admission/helper/kiosk/install sequence. The selected
++helper is armed only through that owned completion path; ambiguous duplicate
++progress never selects cooperative queued exit. A second
+ duplicate is terminal. Probe/cancel/version stages each have15-second deadlines;
+ owned downloads retain their10-minute/45-second total/stall checks. There is no
+ retry loop, Meta database/global queue clearing, uninstall or permission change.
+@@ -81,8 +68,13 @@ retry loop, Meta database/global queue clearing, uninstall or permission change.
+ Recovery exposes checking reasons `checking-duplicate-download` and
+ `restarting-duplicate-download`. Unconfirmed cancellation, invalid state,
+ repeated duplicates, changed owner/floor or timeout remain blocked with explicit
+-reasons. This implements the documented request/response contracts; actual
+-device queued-exit/cancellation and later install/relaunch require separate
++reasons. Previously retained uncertain pending receipts still require actual
++package identity at or above their exact target and fresh startup verification;
++a below-target replacement cannot clear them. The helper's monitor3 capability
++continues observing actual replacement and trusted launch-ready or explicit
++cancellation without a fixed download/installation expiry or Meta launch grace.
++This implements the documented request/response contracts; actual
++device cancellation and later install/relaunch require separate
+ qualification. See the [official native API contract](https://developers.meta.com/vr/documentation/native/ps-in-app-update-apis/).
+ 
+ Native `nativeCycleState()` supplies the cycle snapshot and
+diff --git a/tools/checks/test_meta_update_duplicate_recovery.py b/tools/checks/test_meta_update_duplicate_recovery.py
+index f2cf988e..117ef69c 100644
+--- a/tools/checks/test_meta_update_duplicate_recovery.py
++++ b/tools/checks/test_meta_update_duplicate_recovery.py
+@@ -24,6 +24,59 @@ TEST = HARNESS + r'''
+  static Harness cancel(){Harness h=duplicate();h.reply(4,0,0,null,null,0,0,5);return h;}
+  static Harness retry(){Harness h=cancel();h.reply(6,0,7,null,null,0,0,0);h.version("15","16");return h;}
+  static Harness queued(){Harness h=new Harness();h.queuedSelected=true;h.rememberAvailable=true;h.begin();h.version("15","16");h.messages.add(error(h,3,4,409,"DUPLICATE_REQUEST"));h.tick(h.clock+1);return h;}
++ static Harness selectedCancel(){Harness h=queued();h.reply(4,0,0,null,null,8246427,8246427,2);return h;}
++ static void owned(Harness h){h.reply(6,0,7,null,null,0,0,0);h.version("15","16");h.reply(3,0,7,null,null,0,0,0);h.reply(4,0,0,null,null,0,0,5);h.tick(h.clock+1000);h.reply(4,0,0,null,null,0,0,5);}
++ static void selectedRecovery()throws Exception {
++  for(int existingPayload:new int[]{26,27})for(int status:new int[]{1,2,3,5}) {
++   // Existing payload identity is vendor state, absent from SDK207's reply.
++   Harness h=new Harness();h.installed=25;h.c=new NativeRendererMetaUpdateCoordinator(25,42,h,h,h,h);
++   h.queuedSelected=true;h.rememberAvailable=true;h.begin();h.version("25","27");
++   h.messages.add(error(h,3,8,0,"DUPLICATE_REQUEST"));h.tick(h.clock+1);
++   h.reply(4,0,0,null,null,8246427,8246427,status);
++   check(h.pending==null&&!h.nativeInstall&&!h.handoffSeen&&!h.queuedExitSeen,
++     "indistinguishable existing payload "+existingPayload+" never adopts offered27 from progress status "+status);
++   check(Collections.frequency(h.requests,6)==1&&!h.requests.contains(5),"selected helper requires one bounded cancel before owned download");
++  }
++  Harness h=selectedCancel();owned(h);h.state("installing",false);
++  check(h.pending.target==16&&h.handoffSeen&&h.nativeInstall&&!h.queuedExitSeen&&Collections.frequency(h.requests,5)==1,
++    "selected helper arms only after owned success plus postcompletion progress and uses ordinary SDK install");
++  h=selectedCancel();h.save=false;owned(h);h.state("update_required",false);
++  check(!h.nativeInstall&&!h.handoffSeen&&!h.queuedExitSeen&&!h.requests.contains(5),"owned install persistence failure never arms or exits");
++  for(String failure:new String[]{"install-kiosk-handoff-unavailable-restart-required","meta-update-helper-monitor-capability-required"}) {
++   h=selectedCancel();h.handoff=false;h.handoffFailure=failure;owned(h);h.state("restart_required",false);
++   check(h.pending!=null&&h.nativeInstall&&!h.queuedExitSeen&&!h.requests.contains(5)&&h.c.snapshot().reason.equals(failure),"owned helper/kiosk failure preserves uncertainty without exit or SDK install");
++  }
++  for(int status:new int[]{4,7}){h=queued();h.reply(4,0,0,null,null,-1,-1,status);h.state("restart_required",false);
++   check(h.externalObserved&&!h.requests.contains(6)&&!h.queuedExitSeen,"selected helper never cancels observed external installing/queued state");}
++  for(int result:new int[]{0,1,2,3,4,5,6,8}){h=selectedCancel();h.reply(6,0,result,null,null,0,0,0);h.state("update_required",false);
++   check(h.pending==null&&!h.handoffSeen&&!h.queuedExitSeen&&Collections.frequency(h.requests,3)==1,"non-success cancel cannot adopt or retry a selected-helper target");}
++  h=selectedCancel();h.messages.add(error(h,6,-1002,0,"UNKNOWN"));h.tick(h.clock+1);h.state("update_required",false);
++  check(h.pending==null&&!h.requests.contains(5)&&!h.queuedExitSeen,"malformed cancel payload remains bounded with no target adoption");
++  h=selectedCancel();h.tick(h.clock+15000);h.state("update_required",false);
++  check(h.pending==null&&!h.handoffSeen&&Collections.frequency(h.requests,6)==1,"cancel timeout never arms helper or loops");
++  h=selectedCancel();long ack=h.ids.get(6);h.busyOnPoll=true;h.reply(6,0,7,null,null,0,0,0);
++  int issued=h.requests.size();h.tick(h.clock+700000);check(h.requests.size()==issued&&h.pending==null,"unreadable owner holds original cancel reply and pauses deadlines");
++  h.busy=h.busyOnPoll=false;h.tick(h.clock+1);check(Collections.frequency(h.requests,6)==1&&Collections.frequency(h.requests,2)==2,"same cancel ACK resumes fresh version once");
++  h.messages.add(new NativeRendererMetaUpdateCoordinator.Message(ack,6,0,7,null,null,0,0,0));h.tick(h.clock+1);
++  check(Collections.frequency(h.requests,2)==2,"late duplicate cancel ACK cannot dispatch another version request");
++  h.version("15","16");h.messages.add(error(h,3,8,0,"DUPLICATE_REQUEST"));h.tick(h.clock+1);h.state("update_required",false);
++  check(h.pending==null&&!h.queuedExitSeen&&Collections.frequency(h.requests,6)==1,"second selected-helper duplicate is terminal");
++  h=selectedCancel();h.installed=16;h.reply(6,0,7,null,null,0,0,0);h.state("restart_required",false);
++  check(h.externalObserved&&!h.queuedExitSeen&&Collections.frequency(h.requests,3)==1,"PM replacement during cancellation never starts another download");
++  h=selectedCancel();h.reply(6,0,7,null,null,0,0,0);h.required=17;h.version("15","16");h.state("update_required",false);
++  check(h.pending==null&&Collections.frequency(h.requests,3)==1,"higher floor between cancel and fresh version remains authoritative");
++  h=selectedCancel();h.busyOnPoll=true;h.reply(6,0,7,null,null,0,0,0);h.valid=false;h.tick(h.clock+1);
++  check(h.pending==null&&Collections.frequency(h.requests,2)==1&&!h.queuedExitSeen,"retired owner cannot resume a held cancel ACK");
++  // Recovery from an already-written historical ambiguous receipt remains exact:
++  // actual26 is below target27, and only actual27 plus fresh verification clears it.
++  h=new Harness();h.pending=new NativeRendererMetaUpdateCoordinator.Pending(27,42,1);h.installed=26;h.required=27;
++  h.c=new NativeRendererMetaUpdateCoordinator(26,43,h,h,h,h);h.state("restart_required",false);
++  check(h.pending!=null&&h.pending.target==27&&h.requests.isEmpty(),"actual26 retains uncertain target27 receipt without granting session or SDK work");
++  h.installed=27;h.c=new NativeRendererMetaUpdateCoordinator(27,44,h,h,h,h);h.state("waiting",false);
++  check(h.pending==null,"actual27 clears exact historical pending target without granting session");
++  h.begin();h.version("27","27");h.state("updated",true);
++  check(h.requests.equals(Arrays.asList(1,2)),"actual27 startup still needs fresh version verification");
++ }
+  public static void main(String[] args)throws Exception {
+   Harness h=duplicate();h.state("checking",false);check(h.c.snapshot().reason.equals("checking-duplicate-download"),"duplicate enters bounded fresh progress inspection");
+   check(errorField(h,"stage").equals(3)&&errorField(h,"code").equals(4)&&errorField(h,"http").equals(409)&&errorField(h,"installResult").equals("DUPLICATE_REQUEST"),"last matched original SDK error retained exactly");
+@@ -58,12 +111,7 @@ TEST = HARNESS + r'''
+   for(int code:new int[]{-1001,-1002,-1003}){h=new Harness();h.rememberAvailable=true;h.begin();h.version("15","16");h.messages.add(error(h,3,code,999,"DUPLICATE_REQUEST"));h.tick(h.clock+1);check(!h.requests.contains(6)&&errorField(h,"code").equals(code)&&errorField(h,"http").equals(0),"adapter errors remain distinct and cannot authorize duplicate recovery");}
+   h=new Harness();h.begin();h.messages.add(new NativeRendererMetaUpdateCoordinator.Message(999,2,4,0,null,null,0,0,0));h.tick(h.clock+1);check(errorField(h,"code")==null,"unmatched errors never update last matched diagnostics");
+   h=new Harness();check(errorField(h,"code")==null,"new attempt clears previous error provenance");
+-  h=queued();h.reply(4,0,0,null,null,0,0,5);h.state("installing",false);check(h.queuedExitSeen&&h.c.snapshot().reason.equals("queued-meta-update-handoff")&&!h.requests.contains(5)&&!h.requests.contains(6)&&h.releases==0,"selected helper exits for Meta queue without SDK cancel/install or session grant");
+-  h=queued();h.save=false;h.reply(4,0,0,null,null,0,0,5);h.state("update_required",false);check(!h.queuedExitSeen&&!h.nativeInstall&&!h.handoffSeen,"failed pending persistence never arms or exits");
+-  h=queued();h.handoff=false;h.reply(4,0,0,null,null,0,0,5);h.state("restart_required",false);check(!h.queuedExitSeen&&h.pending!=null&&h.nativeInstall,"helper ARM/kiosk failure preserves sticky pending and never exits");
+-  h=queued();h.handoff=false;h.handoffFailure="meta-update-helper-monitor-capability-required";h.reply(4,0,0,null,null,0,0,5);check(!h.queuedExitSeen&&h.c.snapshot().reason.equals("meta-update-helper-monitor-capability-required"),"legacy helper2 capability failure is clear and never closes app");
+-  h=queued();h.queuedExit=false;h.reply(4,0,0,null,null,0,0,5);h.state("restart_required",false);check(h.pending!=null&&!h.requests.contains(5)&&!h.requests.contains(6),"declined main-looper exit never falls back to SDK install/cancel");
+-  h=queued();h.required=17;h.reply(4,0,0,null,null,0,0,5);h.state("update_required",false);check(!h.queuedExitSeen&&!h.nativeInstall&&!h.requests.contains(6),"new higher required target cannot be satisfied by older offered queued handoff");
++  selectedRecovery();
+   h=queued();h.valid=false;h.reply(4,0,0,null,null,0,0,5);check(!h.queuedExitSeen&&!h.nativeInstall,"unsafe/retired native owner never receives queued exit");
+   h=queued();h.installed=16;h.reply(4,0,0,null,null,0,0,5);h.state("restart_required",false);check(!h.queuedExitSeen&&!h.requests.contains(6),"PM change is external uncertainty rather than cooperative exit authority");
+   h=new Harness();h.queuedSelected=true;h.rememberAvailable=true;h.begin();h.version("15","16");h.messages.add(error(h,3,4,409,"SUCCESS"));h.tick(h.clock+1);check(!h.queuedExitSeen&&!h.requests.contains(5),"error SUCCESS never authorizes selected helper exit or SDK install");
+diff --git a/tools/checks/test_meta_update_service.py b/tools/checks/test_meta_update_service.py
+index 10e726f7..1cae3400 100644
+--- a/tools/checks/test_meta_update_service.py
++++ b/tools/checks/test_meta_update_service.py
+@@ -15,7 +15,7 @@ public class MetaServiceTest {
+   NativeRendererMetaUpdateCoordinator.Pending pending;
+   NativeRendererMetaUpdateService service=new NativeRendererMetaUpdateService(this,this,this);
+   public NativeRendererMetaUpdateService.Cycle read(){return new NativeRendererMetaUpdateService.Cycle(cycle,revision,attempt,!busyReadyHint&&!prep&&!parking&&!checking&&!installPhase,allowed,busyReadyHint?"owner-not-parked":parking?"setup-park-pending":prep?"session-active":"",!denyPrep&&!checking&&!parking&&!installPhase);}
+-  int busyOp,preparedBegins; boolean busyReadyHint,busyQueued;int helperHandoffs;
++  int busyOp,preparedBegins,downloads; boolean busyReadyHint,busyQueued,busyAfterCancel;int helperHandoffs;
+   public boolean observed(int op,long a,long c,long r){
+    if(op==busyOp)throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();
+    return operation(op,a,c,r);
+@@ -33,7 +33,7 @@ public class MetaServiceTest {
+   public long loadedCode(){return 15;}public long actualCode(){return actual;}public boolean ownerValid(){return valid;}
+   public long afterPolicyTime(long before){return Math.max(before,clock);}
+   public NativeRendererMetaUpdatePolicy.Value policy()throws Exception{clock+=policyDelay;if(retirePolicy)valid=false;if(offline||policyOffline)throw new Exception();return new NativeRendererMetaUpdatePolicy.Value(minimum,99);}
+-  public NativeRendererMetaUpdateCoordinator.Transport transport(long token){leases++;if(retireTransport)valid=false;return new NativeRendererMetaUpdateCoordinator.Transport(){long seq;Queue<NativeRendererMetaUpdateCoordinator.Message> q=new ArrayDeque<>();public long request(int t)throws Exception{types.add(t);effects++;if(offline)throw new Exception();long id=++seq;if(t!=1||!holdInit)q.add(new NativeRendererMetaUpdateCoordinator.Message(id,t,t==3&&downloadFails?1:0,t==3||t==5?7:0,"15",Long.toString(latest),0,0,t==4?5:0,duplicateDownload?409:0,duplicateDownload&&t==3?"DUPLICATE_REQUEST":"UNKNOWN"));return id;}public NativeRendererMetaUpdateCoordinator.Message poll(){return q.poll();}public void close(){closes++;}};}
++  public NativeRendererMetaUpdateCoordinator.Transport transport(long token){leases++;if(retireTransport)valid=false;return new NativeRendererMetaUpdateCoordinator.Transport(){long seq;Queue<NativeRendererMetaUpdateCoordinator.Message> q=new ArrayDeque<>();public long request(int t)throws Exception{types.add(t);effects++;if(offline)throw new Exception();long id=++seq;boolean failed=t==3&&downloadFails&&(!duplicateDownload||++downloads==1);if(t!=1||!holdInit)q.add(new NativeRendererMetaUpdateCoordinator.Message(id,t,failed?1:0,t==3||t==5||t==6?7:0,"15",Long.toString(latest),0,0,t==4?5:0,duplicateDownload?409:0,duplicateDownload&&t==3?"DUPLICATE_REQUEST":"UNKNOWN"));if(t==6&&busyAfterCancel)busyOp=3;return id;}public NativeRendererMetaUpdateCoordinator.Message poll(){return q.poll();}public void close(){closes++;}};}
+   public boolean handoff(long a,long target,long c,long r){helperHandoffs++;return handoff;}public void diagnostic(int a,int b,long c,long d){}
+   public long required(){return required;}public boolean require(long value){required=Math.max(required,value);saves++;return true;}
+   public NativeRendererMetaUpdateCoordinator.Pending load(){return pending;}public boolean save(NativeRendererMetaUpdateCoordinator.Pending p){pending=p;return true;}public boolean clear(){pending=null;return true;}
+@@ -64,7 +64,7 @@ public class MetaServiceTest {
+   String retryBody="{\"v\":1,\"id\":\"2222222222222222\",\"op\":\"check-and-update\",\"cycle\":\"1\",\"revision\":\""+h.revision+"\"}";
+   h.service.request(retryBody);check(!h.service.status().has("sdk_error"),"accepted next attempt clears previous optional SDK error diagnostics before work");
+   h=new H();h.latest=16;h.downloadFails=h.duplicateDownload=h.helperSelected=true;h.service.firstFrame();h.tick();
+-  check(h.queuedExits==1&&h.pending.target==16&&!h.allowed&&h.installPhase&&!h.types.contains(5)&&!h.types.contains(6)&&h.service.status().getString("reason").equals("queued-meta-update-handoff"),"selected helper duplicate lane delegates exact queued exit without SDK cancel/install or session admission");
++  check(h.queuedExits==0&&h.pending.target==16&&!h.allowed&&h.installPhase&&Collections.frequency(h.types,5)==1&&Collections.frequency(h.types,6)==1&&h.downloads==2,"selected helper duplicate requires cancel plus one owned download before ordinary install; never delegates ambiguous queued exit");
+   h=new H();h.latest=16;h.downloadFails=h.duplicateDownload=h.helperSelected=true;h.handoff=false;h.service.firstFrame();h.tick();
+   check(h.queuedExits==0&&h.pending!=null&&!h.allowed&&h.service.status().getString("state").equals("restart_required"),"failed positive helper/kiosk handoff never delegates cooperative exit");
+   h=new H();h.latest=16;h.downloadFails=h.duplicateDownload=h.helperSelected=true;h.handoff=false;h.helperFailure="meta-update-helper-monitor-capability-required";h.service.firstFrame();h.tick();
+@@ -111,11 +111,15 @@ public class MetaServiceTest {
+   gap.busyOp=5;gap.tick();
+   check(gap.effects==previousEffects+2&&!gap.allowed&&gap.closes==2,"final grant remains pending after transport close during owner contention");
+   gap.busyOp=0;gap.tick();check(gap.allowed&&gap.preparedBegins==1&&gap.closes==2&&gap.effects==previousEffects+2,"same attempt grants once after recovery");
+-  H queued=new H();queued.latest=16;queued.downloadFails=queued.duplicateDownload=queued.helperSelected=queued.busyQueued=true;
+-  queued.service.firstFrame();queued.tick();int issued=queued.effects;
+-  check(queued.queuedExits==0&&queued.helperHandoffs==1&&queued.pending!=null&&queued.installPhase,"queued exit owner unknown preserves exact journal/native admission/confirmed helper");
+-  queued.tick();check(queued.effects==issued&&queued.helperHandoffs==1&&queued.queuedExits==0,"no repeated handoff or SDK call while exit unavailable");
+-  queued.busyQueued=false;queued.tick();check(queued.effects==issued&&queued.queuedExits==1&&queued.helperHandoffs==1&&!queued.types.contains(5),"same queued exit resumes once without installing through SDK");
++  H queued=new H();queued.service.firstFrame();queued.tick();queued.latest=16;
++  queued.downloadFails=queued.duplicateDownload=queued.helperSelected=queued.busyAfterCancel=true;
++  String duplicateBody="{\"v\":1,\"id\":\"4444444444444444\",\"op\":\"check-and-update\",\"cycle\":\"1\",\"revision\":\""+queued.revision+"\"}";
++  String duplicateAccepted=queued.service.request(duplicateBody);queued.tick();int issued=queued.effects;
++  check(queued.queuedExits==0&&queued.helperHandoffs==0&&queued.pending==null&&!queued.installPhase&&Collections.frequency(queued.types,6)==1,"unreadable cancel owner preserves original attempt without target persistence or helper arm");
++  queued.tick();check(queued.effects==issued&&queued.helperHandoffs==0&&queued.queuedExits==0,"no SDK retry or handoff while cancel owner unavailable");
++  queued.busyOp=0;queued.tick();
++  check(queued.queuedExits==0&&queued.helperHandoffs==1&&Collections.frequency(queued.types,5)==1&&Collections.frequency(queued.types,6)==1&&queued.downloads==2,"same cancellation attempt resumes once through owned download and helper-armed SDK install");
++  check(queued.service.request(duplicateBody).equals(duplicateAccepted)&&queued.service.status().getString("attempt").equals(new JSONObject(duplicateAccepted).getString("attempt")),"duplicate recovery retains exact original command reply and attempt");
+   GeneratedOutro.verify();
+   System.out.println("PASS "+checks+" repeatable native-cycle service checks");
+  }
