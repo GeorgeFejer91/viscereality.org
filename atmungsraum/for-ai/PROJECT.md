@@ -59,8 +59,10 @@ Acceptance is partial: Meta install, automatic relaunch and PWA recovery pass;
 the PWA-only check did not detect the release while27 stayed open. The later
 success followed both Store inspection and a process restart, so caching is a
 hypothesis and those two effects remain unisolated. This does not establish32's
-repaired coordinator against a later available successor. The current installed
-app is32; retain it for that controlled test. The latest32/minimum27 policy
+repaired coordinator against a later available successor. That delivery run
+ended with installed32. The USB-connected headset on this PC has a separate
+[current validation record](HOTEL-WIFI-HANDOFF.md#current-usb-validation).
+The latest32/minimum27 policy
 merged through PR154 (`74e21d8`), exact Pages44543524004 succeeded and live
 policy bytes match Git. Remaining canonical Polar/recording/relay gates stay open.
 
