@@ -204,6 +204,9 @@ to the real operator and recovery flow.
 - Measure nested aside/details bounds as well as the outer page. A bounded
   grid must not shrink an APK/recovery panel over its neighbors. Only lock a
   panel's measured minimum height while its ancestor page is actually visible.
+- On participant entry, let the update warning take its current content
+  height, including while the phone keyboard is open. Shorter warnings give
+  the form back its space without changing the focused input or its caret.
 - Browser history stores/restores each local utility return target. Back must
   not retain a later settings page's return target or return to itself.
 - Paused, finalizing and saving are native operational states, not routine

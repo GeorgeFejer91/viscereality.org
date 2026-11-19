@@ -546,7 +546,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (['input', 'calibration', 'tracking'].includes(step)) move('operator-input-status', body);
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
       if (step === 'settings') connectionView.after(byId('operator-common'));
-      else if (!['questionnaire', 'update-help'].includes(step)) move('operator-common', body);
+      else if (!['questionnaire', 'update-help'].includes(step)) {
+        move('operator-common', body);
+        if (step === 'participant') byId('operator-common').style.minBlockSize = '';
+      }
       if (step === 'questionnaire' && toolbarDialog.open) toolbarDialog.close();
       if (step !== 'settings') settingsConnection.open = false;
       if (step !== 'settings') {
@@ -700,7 +703,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const nativeRecovering = status?.setup?.stage === 'recovering';
     const metaUpdate = metaUpdateView(status);
     const common = byId('operator-common');
-    const updateKey = status && metaUpdate.advertised ? `${rehearsal.gateway?.owner.device}/${rehearsal.gateway?.owner.epoch}/${rehearsal.gateway?.owner.native_epoch}/${displayedStep}/${common.clientWidth}/${getComputedStyle(common).fontSize}` : '';
+    // An update warning on the participant page should give back its space
+    // when the detail shortens, especially while the keyboard is open.
+    const updateKey = status && metaUpdate.advertised && displayedStep !== 'participant'
+      ? `${rehearsal.gateway?.owner.device}/${rehearsal.gateway?.owner.epoch}/${rehearsal.gateway?.owner.native_epoch}/${displayedStep}/${common.clientWidth}/${getComputedStyle(common).fontSize}` : '';
     if (updateGeometryKey !== updateKey) {
       common.style.minBlockSize = '';
       updateGeometryKey = updateKey;

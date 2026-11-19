@@ -13,7 +13,7 @@ from playwright.sync_api import expect, sync_playwright
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 from layout_render_fixtures import capture_companion_permission, capture_layout, go, initial, module, mutations
-from release_fixtures import apk_fixture
+from release_fixtures import apk_fixture, meta_update_fixture
 
 AUDIT = (TOOLS.parent / "for-ai" / "scripts" / "gui-layout.js").read_text(encoding="utf-8")
 CASES = (
@@ -870,6 +870,45 @@ def capture_participant_keyboard(review):
         page.context.close()
 
 
+def check_participant_notice_height(review):
+    apk = apk_fixture()
+    notice = meta_update_fixture(apk, state="failed", reason="offline")
+    page = review.page(initial(c, {"apk": apk, "metaUpdate": notice}),
+                       viewport={"width": 844, "height": 411})
+    try:
+        page.locator("#operator-connect-next").click()
+        expect(page.locator("#participant-screen")).to_be_visible()
+        page.set_viewport_size({"width": 411, "height": 844})
+        surname = page.locator("#patient-surname")
+        surname.fill("Tes")
+        surname.evaluate("node => node.setSelectionRange(1, 2)")
+        page.set_viewport_size({"width": 411, "height": 428})
+        page.clock.run_for(3500)
+        common = page.locator("#participant-screen #operator-common")
+        expect(page.locator("#operator-meta-detail")).to_contain_text("Internetverbindung")
+        short = common.bounding_box()["height"]
+
+        def change_notice(reason):
+            page.evaluate("""reason => Object.assign(reviewQuest.metaUpdate, {
+              reason, revision: String(BigInt(reviewQuest.metaUpdate.revision) + 1n),
+            })""", reason)
+            page.clock.run_for(2400)
+
+        change_notice("duplicate-download-status-unavailable")
+        expect(page.locator("#operator-meta-detail")).to_contain_text("Meta-Bibliothek")
+        assert common.bounding_box()["height"] > short + 8
+        change_notice("offline")
+        expect(page.locator("#operator-meta-detail")).to_contain_text("Internetverbindung")
+        restored = common.bounding_box()["height"]
+        assert abs(restored - short) <= 2, (short, restored)
+        expect(surname).to_be_focused()
+        expect(surname).to_have_value("Tes")
+        assert surname.evaluate("node => [node.selectionStart, node.selectionEnd]") == [1, 2]
+        assert mutations(page)["session"] == []
+    finally:
+        page.context.close()
+
+
 def check_stretch(samples):
     findings = []
     for name, intermediate in samples.items():
@@ -921,6 +960,7 @@ def verify():
         capture_companion_permission(review)
         capture_focused_viewport_change(review)
         capture_participant_keyboard(review)
+        check_participant_notice_height(review)
         failures.extend(review.errors)
         failures.extend(check_stretch(review.samples))
         for name, sample in review.samples.items():
