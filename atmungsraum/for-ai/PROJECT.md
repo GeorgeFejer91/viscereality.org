@@ -6,6 +6,9 @@ The Codex validation goal uses this checklist. Repeat affected checks on the
 latest applicable release, and fix and retest any confirmed UI failure against
 the current GUI rules and original input driver.
 
+For the hotel network blocker and the exact restart checks, see the
+[hotel Wi-Fi handoff](HOTEL-WIFI-HANDOFF.md).
+
 The user's 2026-11-18 portability requirement applies to every independent
 installation of the Atmungsraum PWA and other compatible headsets and phones
 of the same classes as the lab devices. The user selects the intended headset
