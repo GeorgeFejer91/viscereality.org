@@ -651,6 +651,16 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
   #apk-details-dialog { width: min(720px, calc(100vw - 2 * var(--dialog-inset))); }
   #drive-dialog { padding-block: 10px; }
   #drive-dialog[open] { gap: 6px; }
+  #music-dialog[open] {
+    width: min(720px, calc(100vw - 2 * var(--dialog-inset)));
+    padding-block: 8px;
+    gap: 6px;
+  }
+  #music-dialog .screen-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    align-items: center;
+  }
+  #music-message { grid-column: 1 / -1; }
   #settings-screen .operator-body,
   #input-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #input-screen .preview-controls { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
