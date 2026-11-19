@@ -57,7 +57,7 @@ any restart and screenshot capture wait for the user's return.
 - [x] Prepare an optional read-only manual-update page from Settings/Update,
   using existing PWA navigation and style; reserve screenshot integration without
   displaying invented images or unfinished screenshot placeholders.
-- [ ] Review/qualify/publish the help and evidence; verify exact Pages/live bytes.
+- [x] Review/qualify/publish the help and evidence; verify exact Pages/live bytes.
 - [ ] On wearer return, check PWA detection without Store access or restart;
   if needed, isolate restart alone and confirm actual delivery/relaunch.
 - [ ] Capture the real manual Quest update route later and add verified images.
@@ -77,9 +77,24 @@ behavior is unchanged. Forward-only private observations retain32/PID20269
 through publication; no headset Store, phone access or update/restart command.
 First PWA detection and restart-only comparison remain attended work.
 
-The help's independent scoped review found no actionable issue;18 navigation
-tests pass independently. Full fixture-backed suite passes362/362 without
-skips. Final responsive reruns and exact Pages/live publication are pending.
+The help's independent scoped review found no actionable issue. The full Node
+suite passes364/364 with zero skips; the strict smartphone gate passes429 GUI
+states; the guide passes30 renders; and Update passes35 renders plus8 targeted
+regression states. Context/diff checks pass and independent review reports no
+issues. [PR161](https://github.com/GeorgeFejer91/viscereality.org/pull/161)
+merged as `7158214e86d55fab5df1885a92148e74f4e870d5`; exact
+[Pages run44562177409](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44562177409)
+succeeded and the five runtime files, three guide/docs files and policy33
+matched Git byte-for-byte live.
+
+The preceding notice-only [PR160](https://github.com/GeorgeFejer91/viscereality.org/pull/160)
+merged as `4d22cbb5c01543854a44727b8269cfd4d33cd4e1`; exact Pages
+run44558218628 succeeded and root already verified all three live files.
+The forward-only observer ended cleanly at15:36UTC with32/PID20269 unchanged;
+owned logcat and leases were released. The phone remained untouched, with no
+headset Store visit and no restart or install action. The guide is prepared
+text-only. Authentic screenshots, the attended PWA first check, restart-only
+isolation and delivery remain unchecked. Keep the overall goal open.
 Private build/observation/render evidence remains outside Git. The optional
 guide ships text only; genuine headset screenshot capture remains unchecked.
 
