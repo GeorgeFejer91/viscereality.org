@@ -26,20 +26,25 @@ attribution/UID are verified, without a new launch. The prior SDK StartDownload
 attempt fails and OCMS rejects a duplicate StartDelayed request. Existing-job
 target and completion are not exposed by the SDK progress API.
 
-Selected helper builds may therefore hand off an exact duplicate update at a
-fresh, valid, parked boundary: persist the required newer target, admit native
-irreversible maintenance, receive positive same-signer helper arm confirmation
-and install the existing main-looper kiosk latch, then cooperatively close only
-the current app/process. The helper observes actual package replacement and the
-expected newer code before its launch fallback. The monitor amendment below
-replaces helper2's earlier fixed duration/grace limits.
-This route uses `installing` with reason `queued-meta-update-handoff`; it does
-not claim a successful SDK Install request or infer completion from a duplicate,
-bytes or progress status. Normal SDK installation still requires its own matched
-DownloadSuccess plus a subsequently issued valid progress response. Known floors
-and uncertain installations remain blocked. Active recording/preparation/writer
-boundaries cannot use the close path. Helper-off builds retain a bounded
-cancel/requery/new-download recovery with all original success gates.
+The earlier selected-helper route could hand off an unidentified queued payload
+while persisting the currently offered version as its target. The attended
+25-to-27 attempt exposed why that is unsafe: Meta first installed cached26, and
+the user then pressed Update for27. SDK207 progress has no target/job identity;
+the same full counters can describe either payload.
+
+The 2026-11-19 [reconciled source](../quest/README.md#reconciled-updater-source--2026-11-19)
+therefore uses bounded cancel/requery/new-download recovery even when helper3 is
+selected. Require a matched positive cancel ACK, fresh installed/offer/floor
+validation, one owned DownloadSuccess and a subsequent fresh progress response
+before the existing durable target/native/helper/kiosk/SDK install sequence.
+Duplicate progress never arms the helper or closes the app. External installing
+states remain uncertainty, never cancel permission. Keep the existing queued
+handoff protocol/status compatibility for older builds; it is not selected by
+ambiguous duplicate progress in the repair. Active recording and writer guards
+are unchanged. The monitor amendment below still governs helper3's observation
+and relaunch after an authorized install. This repair is source-qualified;
+installed/published27 still contains the earlier behavior until a qualified
+successor is delivered.
 
 Optional private v2 status `sdk_error` is null or the closed shape
 `{v:1,stage,code,http,install_result}`. Stage is1–6, code is a nonzero signed32-bit

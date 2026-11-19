@@ -35,6 +35,31 @@ evidence. The APK log identifies the signed release by one version and hash.
 
 ## WebRTC candidate
 
+### Reconciled updater source — 2026-11-19
+
+Apply `webrtc-native.patch` to fixed27-r2 first, then apply
+[`updater-reconciliation.patch`](updater-reconciliation.patch). The two overlays
+reconstruct tree `310ee8870fce0de0108cc05891abdd309d976b09`, native commit
+`a7289a89d0ab092a0d5a9a89a6ef67f7cb36ff57`. The separate repair overlay is
+23,933 bytes, SHA-256
+`91d9ff51790246392eec5f03c98d9fbfb7123a99e0549defc5bd0bcbed5c2302`.
+This preserves the exact code 30 source/artifact record below.
+
+SDK 207 progress cannot identify an existing download's target. The repaired
+coordinator therefore cancels an ambiguous duplicate, requires a positive cancel
+ACK and a fresh version check, and admits one new owned download. Only its
+matched success and subsequent fresh progress can reach the existing
+native/persistence/helper/kiosk/SDK install sequence. Selecting helper 3 does not
+permit adopting the offered version as an unidentified queued payload's target.
+The original dirty source checkout is preserved; no helper update is needed.
+
+The defect is reproduced against exact Developer 30 before the repair.
+All 16 updater host suites, production Java compilation, 11-source closure
+checks, native pairing/gateway controls and all 361 web/assembly tests with
+zero skips pass. Independent review is clean. This is source qualification,
+not proof of a headset update. Developer 31 is the next local build candidate;
+Meta code 27, helper 3 and the held code 28 acceptance order remain unchanged.
+
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
 tree is `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485`. Commit it in an isolated

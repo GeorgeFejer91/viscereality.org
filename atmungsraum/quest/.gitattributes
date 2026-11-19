@@ -1,5 +1,6 @@
 native-source.patch text eol=lf
 webrtc-native.patch text eol=lf -whitespace
+updater-reconciliation.patch text eol=lf -whitespace
 # The resolver validates the exact bytes of the provider manifest and assets.
 build-assets/provider/** -text
 build-assets/provider/**/*.json whitespace=cr-at-eol
