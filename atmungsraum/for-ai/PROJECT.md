@@ -51,6 +51,11 @@ and Quest → phone → Drive data flow. Keep the existing lifecycle owner here.
 - [x] Build/install the corrected local Developer35 candidate and verify signed
   bytes, JNI, duration closure and actual private readiness projection. See the
   [APK record](../quest/apks/README.md#developer35-main-signal-recovery-candidate--2026-11-19).
+- [x] Publish the verified35 source overlay and recording-evidence checks in
+  PR167, merge `47af9616af107560dd023a5ea2e673d27d1219c4`, Pages44603934428.
+  All6 affected live files match committed bytes, including the151,048byte
+  patch SHA256 `d492a926bc148c5f529448886247cb41564f60374a4ca3e4083f529998006a66`.
+  Meta remains33/latest and27/floor;35 is installed locally only.
 - [ ] Run wearer calibration, five-second pause/recovery, and the full main/data
   flow on35. The user explicitly requests waiting for their next go-ahead;
   leave calibration and the session stopped meanwhile.
