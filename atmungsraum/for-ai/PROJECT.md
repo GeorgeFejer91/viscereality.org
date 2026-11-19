@@ -18,9 +18,11 @@ the original dirty native checkout while qualifying this source increment.
   All16 updater suites, actual production javac,11-source closure and gateway/
   pairing controls pass. All361 web/assembly tests pass with zero skips and
   real WebCrypto-to-Java fixtures. Independent review has no remaining findings.
-- [ ] Commit and publish a separate repair overlay with exact reconstruction
+- [x] Commit and publish a separate repair overlay with exact reconstruction
   evidence; retain the immutable Developer 30 and held 28 records.
-- [ ] Prepare the qualified source for the next attended hardware check.
+- [x] Prepare the qualified source and signed Developer31 candidate for the
+  next attended hardware check. Signature/alignment, unchanged74 audio and
+  three loaders,10 WebRTC assets and actual900-second signed session pass.
   No new APK installation, Meta publication or policy increase is established
   by the source reconciliation itself.
 
@@ -32,9 +34,62 @@ after the unchanged WebRTC overlay. Its23,933bytes/SHA256
 reconstruct that exact tree using an isolated Git index. Its only production
 delta removes unsafe adoption of the offered version from targetless SDK207
 duplicate progress; bounded cancellation, fresh version and owned completion
-are required with helper3 as well. No helper binary changed. Code31 is building
-locally with the canonical profile and retained Developer signer; no31 artifact
-or hardware result is claimed yet. Private evidence is retained outside Git.
+are required with helper3 as well. No helper binary changed. Source PR151 merged
+as `e54de249`; exact Pages44525274968 succeeded and the live patch hash matches.
+The signed [Developer31 candidate and this-PC bench38](../quest/apks/README.md)
+are built locally.31 SHA256
+`3f318be948cd3cee12570f56ed898d939b38b30fc5c14dfd452d0d98dd9589c6`.
+No31 install or Meta publication is claimed. Private evidence is retained outside
+Git. The original native checkout still holds all four unfinished files unchanged.
+
+- [x] Complete the attended bench38 pairing/native-receipt check.
+  Pixel6a loaded the current standalone release and controlled native27 at
+  fresh `IDLE/rec:false/pending:false`. Bench38 installed with matching bytes
+  and reached its actual Android first-run permission prompt. After a true
+  process cold start, saved membership rejoined and recenter received a native
+  confirmation over authenticated LAN. No experiment or Meta update has started.
+- [ ] After the startup follow-up, restore the known Meta27 launch and the
+  operator's saved connection. Preserve the existing27-to-held28 acceptance gate.
+
+Attended follow-up: the two-sided826276 code exchange saved enrollment. The
+first permission flow exceeded the kiosk's60-second prompt suppression;
+three own-surface departures selected terminal exit while startup permission
+delivery was still pending. There was no crash. A warm Activity relaunch kept
+a retired Polar runtime; a true bench-process cold start recovered it. The
+phone automatically rejoined the saved bench membership, fresh native38 status
+confirmed `IDLE/rec:false/pending:false`, and the real recenter control reported
+native confirmation. The observed route was authenticated LAN HTTP, not a
+qualified WebRTC relay. Keep first-run and warm-relaunch issues open.
+
+Bounded next repair, inside this same validation goal:
+
+- [x] Add a RED permission/kiosk regression: an actual pending permission or
+  Location prompt for the exact current native Activity stays protected beyond
+ 60seconds; another, retired or finishing Activity cannot hold that protection.
+- [x] Expose the startup owner's actual pending-prompt observation and use it
+  in the own-app kiosk observer before departure/escape counting. Preserve the
+  existing bounded prompt API for other callers, default-off compositions and
+  normal triple-escape once the actual prompt finishes. No timer proves completion.
+- [x] Run startup-permission, kiosk and actual production compilation
+  checks; independent review.94 lifecycle,42 actual observer/watchdog and14
+  optional-class controls pass, including120seconds and subsequent ordinary
+  escape. Kiosk policy/static and production javac pass. All16 updater suites
+  remain the previously qualified source baseline; recheck during packaging.
+- [x] Build signed Developer32 and bench39 packages from the reviewed source;
+  actual900-second session closure, v3 signatures,16KiB alignment, source
+  capsules,74 unchanged audio entries,10 WebRTC assets and retained loaders pass.
+- [ ] Commit/publish the separate startup repair overlay. No Meta publication yet.
+- [ ] Leave a real bench39 startup permission prompt pending beyond60seconds,
+  then verify actual foreground recovery after the wearer's response.
+
+Startup native commit `fe22d7d402d2edfa912412777720685c571b4f5b`, tree
+`a99d4eb89b05b170e89a10bfb45f11044807ecbb`, follows the updater repair.
+Its [`startup-permission-kiosk.patch`](../quest/startup-permission-kiosk.patch)
+is 30,378 bytes/SHA256
+`d432a1435e0c114e45f856cd927b097733a78ed79450ea42f321706561caf70b`.
+Local Developer32/bench39 packaging is complete. Exact package records are in
+the [APK log](../quest/apks/README.md); neither is Meta-published. No helper,
+required-version or PWA-runtime change is implied. Preserve held28 and installed27.
 
 ### Active: full lab validation and UI repairs — 2026-11-18
 

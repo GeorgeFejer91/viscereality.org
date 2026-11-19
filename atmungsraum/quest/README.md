@@ -60,6 +60,30 @@ zero skips pass. Independent review is clean. This is source qualification,
 not proof of a headset update. Developer 31 is the next local build candidate;
 Meta code 27, helper 3 and the held code 28 acceptance order remain unchanged.
 
+### Actual startup-permission kiosk protection
+
+For the subsequent startup repair, apply
+[`startup-permission-kiosk.patch`](startup-permission-kiosk.patch) after both
+overlays above. It reconstructs native commit
+`fe22d7d402d2edfa912412777720685c571b4f5b`, tree
+`a99d4eb89b05b170e89a10bfb45f11044807ecbb`. The patch is 30,378 bytes, SHA256
+`d432a1435e0c114e45f856cd927b097733a78ed79450ea42f321706561caf70b`.
+
+The attended bench38 permission dialogs outlived the existing60-second generic
+prompt protection and kiosk selected its triple-departure exit. The repair
+observes actual pending permission/Location ownership for the exact current
+native Activity, independent of a timeout or whether kiosk was armed when the
+prompt began. Completed, retired, foreign and finishing owners cannot retain
+protection. Optional/default-off compositions and generic timed callers retain
+their existing behavior. A present selected observer that is temporarily
+unavailable suppresses recovery until observation recovers or the owner retires.
+
+The regression is RED on the prior source and GREEN with 94 lifecycle, 42 actual
+watchdog and 14 optional-observer controls. The kiosk policy gate, production
+compilation and independent review pass. Signed Developer 32 and bench 39
+packages pass their actual 900-second session closure, v3 signature and 16 KiB
+alignment checks; first-run hardware acceptance remains pending.
+
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
 tree is `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485`. Commit it in an isolated

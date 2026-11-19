@@ -1,0 +1,294 @@
+diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
+index 58e9d4a3..ff690271 100644
+--- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
++++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
+@@ -109,6 +109,31 @@ public final class NativeRendererSelfKioskApplication extends Application {
+ 
+     boolean isResumed(String component) { return Boolean.TRUE.equals(resumed.get(component)); }
+ 
++    /** Main-looper observation of the optional startup owner's exact current native actor. */
++    boolean ownsStartupSystemPrompt() {
++        if (android.os.Looper.myLooper() != android.os.Looper.getMainLooper())
++            throw new IllegalStateException("startup-prompt-observation-main-owner-required");
++        WeakReference<Activity> reference = activities.get(NativeRendererForegroundGuardPolicy.NATIVE_ACTIVITY);
++        Activity host = reference == null ? null : reference.get();
++        if (host == null || !own(host) || !NativeRendererActivityComponents.isNative(host)
++                || host.isFinishing() || host.isDestroyed()) return false;
++        try {
++            android.content.pm.ApplicationInfo info = host.getPackageManager().getApplicationInfo(
++                host.getPackageName(), android.content.pm.PackageManager.GET_META_DATA);
++            if (info.metaData == null || !Boolean.TRUE.equals(
++                    info.metaData.get("rusty.quest.experiment.phone_pairing.enabled"))) return false;
++        } catch (Exception unavailableSelection) { return false; }
++        try {
++            Class<?> owner = Class.forName("io.github.mesmerprism.rustyquest.native_renderer.ExperimentStartupPermissions");
++            return Boolean.TRUE.equals(owner.getMethod("ownsSystemPrompt", Activity.class).invoke(null, host));
++        } catch (ClassNotFoundException disabledComposition) {
++            return false;
++        } catch (ReflectiveOperationException | LinkageError unavailableObservation) {
++            // A selected owner that cannot be sampled supplies no evidence that its prompt ended.
++            return true;
++        }
++    }
++
+     boolean hasWindowFocus(String component) {
+         WeakReference<Activity> reference = activities.get(component);
+         Activity activity = reference == null ? null : reference.get();
+diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java
+index eab64faf..144c8b5b 100644
+--- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java
++++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java
+@@ -131,7 +131,8 @@ public final class NativeRendererSelfKioskService extends Service {
+         KeyguardManager keyguard = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+         boolean protectedState = power == null || !power.isInteractive()
+             || (keyguard != null && keyguard.isKeyguardLocked());
+-        boolean suppressed = protectedState || coordinator.selfRecoverySuppressed(now);
++        boolean suppressed = protectedState || coordinator.selfRecoverySuppressed(now)
++            || app.ownsStartupSystemPrompt();
+         boolean panelFocused = app.hasWindowFocus(
+             NativeRendererForegroundGuardPolicy.CONTROL_PANEL_ACTIVITY);
+         boolean immersiveFocused = !panelFocused
+diff --git a/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java
+index 64e97dc3..b2da6d5b 100644
+--- a/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java
++++ b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java
+@@ -102,6 +102,10 @@ final class ExperimentStartupPermissions {
+     public static boolean busy(Activity host){
+         requireMain();return !current(host)||owner.get()!=host||!resumed||pending||locationPending||!settled||deliveryPending||deliveryPosted;
+     }
++    /** Actual dispatched OS surface, including its pause; no estimated completion deadline. */
++    public static boolean ownsSystemPrompt(Activity host){
++        requireMain();return host!=null&&owner.get()==host&&promptOwned&&(pending||locationPending)&&current(host);
++    }
+     private static List<String> missing(Activity host)throws Exception{
+         Set<String> declared=new HashSet<String>();
+         String[] permissions=host.getPackageManager().getPackageInfo(host.getPackageName(),PackageManager.GET_PERMISSIONS).requestedPermissions;
+diff --git a/docs/NATIVE_RENDERER_SOFT_KIOSK.md b/docs/NATIVE_RENDERER_SOFT_KIOSK.md
+index 2392a15b..8a142fb3 100644
+--- a/docs/NATIVE_RENDERER_SOFT_KIOSK.md
++++ b/docs/NATIVE_RENDERER_SOFT_KIOSK.md
+@@ -63,8 +63,21 @@ It targets only the known own-package panel or NativeActivity and preserves the
+ selected panel route. It never inspects arbitrary foreground apps. Sleep, keyguard,
+ bounded app transitions, and declared system prompts suppress recovery.
+ Permission callers must invoke `NativeRendererSelfKioskApplication.beginSystemPrompt`
+-before dispatch and `endSystemPrompt` when the result arrives. Prompt suppression
+-expires after 60 seconds if no callback arrives.
++before dispatch and `endSystemPrompt` when the result arrives. This generic timed
++suppression expires after 60 seconds if no callback arrives.
++
++The optional selected startup-permission owner additionally reports its actual
++dispatched runtime-permission or Location-settings prompt. The Application samples
++the exact remembered native Activity (including its logical native alias), and the
++service suppresses departure counting and recovery before evaluating those episodes.
++An actual pending prompt remains protected beyond the generic deadline, including
++when dispatch preceded kiosk arming. Pause alone does not prove completion. The
++result, Location return, retirement, replacement, finishing/destruction, or loss of
++the actual controller ends this ownership. Queued delivery and cancellation awaiting
++resume own no prompt. Default-off products and absent optional classes retain their
++existing behavior. If a present selected observer cannot be invoked, recovery stays
++suppressed until it can be observed again or its current Activity is retired; failure
++is not evidence of prompt completion. All observations run on the main looper.
+ 
+ ## Departure gesture and exit
+ 
+@@ -107,6 +120,14 @@ pure departure/suppression/terminal traces, and selected/unselected manifest dry
+ resolution. Run `tools/checks/Test-NativeRendererExperimentPanel.ps1` for generated
+ panel-shell compilation. Neither test establishes headset acceptance.
+ 
++`python tools/checks/test_experiment_startup_permissions.py` exercises the actual
++selected permission coordinator and native lifecycle. The focused
++`python tools/checks/test_startup_prompt_kiosk_observation.py` executes the production
++Application observation and service evaluation with real permission/departure/kiosk
++owners and inert Android leaves: runtime/Location prompts beyond 60 seconds,
++begin-before-arm, optional/failed observations, exact Activity ownership, and normal
++triple departure after completion. These are host controls, not physical prompt proof.
++
+ Attended Quest validation must cover real Meta-button departures in both panel and
+ immersive presentation, permission prompts, sleep, overlay permission readback,
+ background-return acceptance, native focus, and writer-acknowledged exit. Synthetic
+diff --git a/tools/checks/test_experiment_startup_permissions.py b/tools/checks/test_experiment_startup_permissions.py
+index 83f1fa46..feb160eb 100644
+--- a/tools/checks/test_experiment_startup_permissions.py
++++ b/tools/checks/test_experiment_startup_permissions.py
+@@ -47,6 +47,30 @@ final class BreathCompositionPanelModule {
+ }
+ public final class StartupPermissionsHarness {
+  static int checks;static void check(boolean v,String why){checks++;if(!v)throw new AssertionError(why);}
++ static boolean owns(Activity host){
++  try{return Boolean.TRUE.equals(ExperimentStartupPermissions.class.getMethod("ownsSystemPrompt",Activity.class).invoke(null,host));}
++  catch(NoSuchMethodException missing){throw new AssertionError("actual pending prompt ownership observation missing",missing);}
++  catch(Exception unavailable){throw new AssertionError(unavailable);}
++ }
++ static void promptOwnership()throws Exception {
++  NativeProductPanelActivity owner=fresh(false);check(!owns(owner),"unresumed owner claimed a prompt");owner.onResume();
++  check(owns(owner),"runtime request did not own its actual pending prompt");owner.onPause();check(owns(owner),"Android prompt pause lost pending ownership");
++  NativeProductPanelActivity other=new NativeProductPanelActivity();check(!owns(other)&&!owns(null),"another or null Activity claimed pending ownership");
++  ExperimentStartupPermissions.result(other,9410,new String[]{"ignored"},new int[]{0});check(owns(owner),"foreign callback released actual prompt");
++  owner.finishing=true;check(!owns(owner),"finishing Activity retained protection");owner.finishing=false;
++  owner.destroyed=true;check(!owns(owner),"destroyed Activity retained protection");owner.destroyed=false;
++  BreathCompositionPanelModule controller=BreathCompositionPanelModule.current;BreathCompositionPanelModule.current=null;
++  check(!owns(owner),"Activity without its actual controller retained protection");BreathCompositionPanelModule.current=controller;
++  android.content.pm.PackageManager.selected=Boolean.FALSE;check(!owns(owner),"default-off owner retained protection");android.content.pm.PackageManager.selected=Boolean.TRUE;
++  final boolean[] denied={false};Thread thread=new Thread(()->{try{ExperimentStartupPermissions.class.getMethod("ownsSystemPrompt",Activity.class).invoke(null,owner);}catch(java.lang.reflect.InvocationTargetException expected){denied[0]=expected.getCause() instanceof IllegalStateException;}catch(Exception unexpected){throw new AssertionError(unexpected);}});thread.start();thread.join();check(denied[0],"non-main observation admitted");
++  owner.result(true);check(!owns(owner),"actual runtime result did not release protection");owner.onResume();Handler.drain();retire(owner);check(!owns(owner),"retired Activity retained protection");
++  NativeProductPanelActivity pending=fresh(false);pending.onResume();check(owns(pending),"replacement request missing ownership");
++  NativeProductPanelActivity replacement=fresh(false);replacement.onResume();check(!owns(pending)&&owns(replacement),"replaced Activity retained ownership");retire(pending);check(owns(replacement),"retiring old Activity released replacement");retire(replacement);check(!owns(replacement),"retirement retained pending ownership");
++  NativeProductPanelActivity cancelled=fresh(false);cancelled.cancelImmediately=true;cancelled.onResume();check(!owns(cancelled),"cancelled request still owned a prompt while awaiting resume");retire(cancelled);
++  NativeProductPanelActivity location=fresh(false);location.location="disabled";location.granted.addAll(Arrays.asList(android.content.pm.PackageManager.declared));location.onResume();check(!owns(location),"queued Location delivery claimed an unlaunched prompt");Handler.drain();check(owns(location),"actual Location surface did not own a prompt");location.onPause();check(owns(location),"Location pause released pending ownership");location.onActivityResult(9411,0,null);check(!owns(location),"Location result retained ownership");location.onResume();Handler.drain();retire(location);
++  NativeProductPanelActivity resume=fresh(false);resume.location="disabled";resume.granted.addAll(Arrays.asList(android.content.pm.PackageManager.declared));resume.onResume();Handler.drain();resume.onPause();resume.onResume();check(!owns(resume),"actual Location return without result retained ownership");Handler.drain();retire(resume);
++  NativeProductPanelActivity unavailable=fresh(false);unavailable.throwRequest=true;unavailable.onResume();check(!owns(unavailable),"failed permission dispatch retained protection");Handler.drain();retire(unavailable);
++ }
+  static NativeProductPanelActivity fresh(boolean gate){BreathCompositionPanelModule.gateAllows=gate;NativeProductPanelActivity a=new NativeProductPanelActivity();a.onCreate(null);return a;}
+  static void retire(NativeProductPanelActivity a){a.onDestroy();Handler.drain();}
+  static void diagnostics()throws Exception {
+@@ -108,6 +132,7 @@ public final class StartupPermissionsHarness {
+   for(int api:new int[]{29,32}){android.os.Build.VERSION.SDK_INT=api;NativeProductPanelActivity compatibility=fresh(false);compatibility.onResume();check(compatibility.requested.length==(api<31?2:5),"runtime API permission closure changed");retire(compatibility);}android.os.Build.VERSION.SDK_INT=34;
+   android.content.pm.PackageManager.declared=new String[]{"android.permission.BLUETOOTH_CONNECT","android.permission.BLUETOOTH_ADVERTISE","android.permission.INTERNET"};NativeProductPanelActivity minimal=fresh(false);minimal.location="disabled";minimal.onResume();check(minimal.requested.length==2,"undeclared scan/location or normal permissions requested");minimal.result(true);Handler.drain();check(minimal.settingsRequests==0,"phone-only product without declared Polar scan opened Location settings");retire(minimal);
+   check(NativeRendererSelfKioskApplication.begins==NativeRendererSelfKioskApplication.ends,"kiosk prompt guards unbalanced across retirement/cancellation");
++  android.content.pm.PackageManager.declared=new String[]{"android.permission.BLUETOOTH_SCAN","android.permission.BLUETOOTH_CONNECT","android.permission.ACCESS_FINE_LOCATION"};promptOwnership();
+   System.out.println("PASS "+checks+" actual selected permission coordinator/native lifecycle controls: declared closure, bounded diagnostics/privacy, Location handoff observations, one request, denial/cancel, no reentry/stale owner/panel effects");
+  }
+ }'''
+diff --git a/tools/checks/test_startup_prompt_kiosk_observation.py b/tools/checks/test_startup_prompt_kiosk_observation.py
+new file mode 100644
+index 00000000..8422485d
+--- /dev/null
++++ b/tools/checks/test_startup_prompt_kiosk_observation.py
+@@ -0,0 +1,137 @@
++"""Execute production app observation + watchdog evaluation with real startup/policy owners.
++
++Only Android leaves (clock, windows, launch dispatch) are inert. This catches a
++watchdog that counts its own still-pending permission surfaces after 60 seconds.
++"""
++import subprocess
++import tempfile
++from pathlib import Path
++from test_experiment_gateway_dedupe import method
++from test_experiment_startup_permissions import PACKAGE, STUBS, HARNESS
++
++
++def main():
++    repo = Path(__file__).resolve().parents[2]
++    java = repo / 'apps/native-renderer-android/src/main/java' / PACKAGE
++    panel = repo / 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java' / PACKAGE
++    selected = repo / 'apps/native-renderer-android/src/phone-pairing/java' / PACKAGE
++    app = (java / 'NativeRendererSelfKioskApplication.java').read_text()
++    service = (java / 'NativeRendererSelfKioskService.java').read_text()
++    stubs = dict(STUBS)
++    stubs['android/os/SystemClock.java'] = 'package android.os;public class SystemClock {public static long now=100;public static long uptimeMillis(){return now;}}'
++    stubs['android/os/Handler.java'] = stubs['android/os/Handler.java'].replace('public static void drain()', 'public void removeCallbacksAndMessages(Object o){}public static void drain()')
++    stubs['android/os/PowerManager.java'] = 'package android.os;public class PowerManager {public boolean isInteractive(){return true;}}'
++    stubs['android/app/KeyguardManager.java'] = 'package android.app;public class KeyguardManager {public boolean isKeyguardLocked(){return false;}}'
++    stubs['android/os/Bundle.java'] = stubs['android/os/Bundle.java'].replace('{}', '{public boolean getBoolean(String k,boolean fallback){Object v=get(k);return v instanceof Boolean?(Boolean)v:fallback;}}')
++    stubs['android/content/pm/PackageManager.java'] = stubs['android/content/pm/PackageManager.java'].replace('public static final int', 'public static class NameNotFoundException extends Exception {}public static final int').replace('getApplicationInfo(String p,int flags){', 'getApplicationInfo(String p,int flags)throws NameNotFoundException{').replace('a.metaData.put(', 'a.metaData.put("rusty.quest.native_renderer.original_panel_native_host",Boolean.TRUE);a.metaData.put(')
++    stubs['android/app/Activity.java'] = stubs['android/app/Activity.java'].replace('public boolean destroyed,', 'public static android.content.Context application;public boolean focused=true;public android.content.Context getApplicationContext(){return application==null?this:application;}public boolean hasWindowFocus(){return focused;}public boolean isChangingConfigurations(){return false;}public boolean destroyed,')
++    stubs['android/util/Log.java'] = stubs['android/util/Log.java'].replace('public static int count(', 'public static int w(String t,String m,Throwable e){return w(t,m);}public static int count(')
++    stubs['android/content/Intent.java'] = stubs['android/content/Intent.java'].replace('public final String action;', 'public static final int FLAG_ACTIVITY_NEW_TASK=1,FLAG_ACTIVITY_REORDER_TO_FRONT=2,FLAG_ACTIVITY_SINGLE_TOP=4;public static final String ACTION_MAIN="main",CATEGORY_LAUNCHER="launcher";public Intent setComponent(ComponentName c){return this;}public Intent addFlags(int f){return this;}public Intent addCategory(String c){return this;}public Intent putExtra(String k,String v){return this;}public Intent putExtra(String k,long v){return this;}public final String action;')
++    stubs['android/content/ComponentName.java'] = stubs['android/content/ComponentName.java'].replace('public String flatten', 'public ComponentName(){}public ComponentName(String p,String c){}public String flatten')
++    prefix = HARNESS[:HARNESS.index('public final class StartupPermissionsHarness')]
++    prefix = '\n'.join(line for line in prefix.splitlines() if not line.startswith('final class NativeRendererActivityComponents ') and not line.startswith('final class NativeRendererSelfKioskApplication '))
++    settled = method((panel / 'BreathCompositionPanelModule.java').read_text(), 'static void onSelectedStartupPermissionsSettled(')
++    observation = method((panel / 'BreathCompositionPanelModule.java').read_text(), 'private void observeStartupPermissionResume(')
++    prefix = prefix.replace('__SETTLED__', settled).replace('__HOST_OBSERVATION__', observation)
++    prefix = prefix.replace('import android.app.Activity;', 'import android.app.Activity;import android.app.KeyguardManager;import android.content.*;import java.lang.ref.WeakReference;')
++    prefix = prefix.replace('static void originalPanelHostCreated', 'static boolean routeToNativePanel(Intent i,boolean recovery){return false;}static void originalPanelHostCreated')
++    # Baseline executes the unchanged watchdog and fails on recovery, not javac.
++    owns = method(app, 'boolean ownsStartupSystemPrompt(') if 'boolean ownsStartupSystemPrompt(' in app else 'boolean ownsStartupSystemPrompt(){return false;}'
++    app_body = '''final class NativeRendererSelfKioskApplication extends android.content.Context {
++      final Map<String,java.lang.ref.WeakReference<Activity>> activities=new HashMap<>();
++      final Map<String,Boolean> resumed=new HashMap<>();final Map<String,Long> departures=new HashMap<>();long panelLeaveGeneration;
++      void track(Activity a){remember(a);resumed.put(NativeRendererActivityComponents.policyClass(a.getClass().getName()),true);}
++    ''' + '\n'.join(method(app, signature) for signature in [
++        'private boolean own(', 'private void remember(', 'boolean isResumed(', 'boolean hasWindowFocus(',
++        'boolean hasDeparture(', 'void discardDepartures(', 'public static void beginSystemPrompt(', 'public static void endSystemPrompt('
++    ]) + owns + '\n}'
++    service_body = '''final class NativeRendererSelfKioskService extends android.content.Context {
++      static final String TAG="test",POWER_SERVICE="power",KEYGUARD_SERVICE="keyguard";
++      final NativeRendererSelfKioskApplication app;final Handler handler=new Handler(Looper.getMainLooper());
++      final NativeRendererSoftKioskCoordinator coordinator=NativeRendererSoftKioskCoordinator.process();
++      final NativeRendererSelfKioskDeparturePolicy departures=new NativeRendererSelfKioskDeparturePolicy();
++      long nextAttemptMs,observedGeneration,generationStartedUnixMs,lastDepartureId;long missingSinceMs=-1;boolean returnPending;String readback="";int launches,terminals;
++      NativeRendererSelfKioskService(NativeRendererSelfKioskApplication a){app=a;}Object getApplication(){return app;}
++      Object getSystemService(String key){return POWER_SERVICE.equals(key)?new android.os.PowerManager():new android.app.KeyguardManager();}
++      void stopSelf(){}boolean rendererFocused(){return true;}boolean hasPendingTerminal(){return false;}
++      void resumePendingTerminal(Object c){}void dispatchTerminal(Object c,NativeRendererSoftKioskCoordinator.Action a){terminals++;}
++      void startActivity(android.content.Intent i){launches++;}public String getPackageName(){return app.getPackageName();}
++      void tick(){evaluate();}
++    ''' + method(service, 'private void evaluate(') + method(service, 'private Intent recoveryIntent(') + '\n}'
++    support = (repo / 'apps/native-renderer-android/panel-modules/polar/src/main/java' / PACKAGE / 'PolarBleRuntimeSupport.java').read_text()
++    support_body = 'package io.github.mesmerprism.rustyquest.native_renderer;import android.app.Activity;import android.content.pm.PackageManager;final class PolarBleRuntimeSupport {' + '\n'.join(method(support, n) for n in [
++        'static boolean managesStartupPermissions(', 'private static Class<?> startupPermissionClass(', 'static boolean requestSelectedStartupPermissions(',
++        'static boolean selectedStartupPermissionsBusy(', 'static void selectedStartupPermissionLifecycle(', 'static boolean selectedStartupPermissionResult(', 'static boolean selectedStartupActivityResult('
++    ]) + 'static String locationServicesState(android.content.Context c){return c.location;}}'
++    with tempfile.TemporaryDirectory(prefix='rq-startup-kiosk-') as temp:
++        out = Path(temp)
++        for path, body in stubs.items():
++            file = out / path
++            file.parent.mkdir(parents=True, exist_ok=True)
++            file.write_text(body)
++        target = out / PACKAGE
++        target.mkdir(parents=True, exist_ok=True)
++        (target / 'PromptKioskHarness.java').write_text(prefix + '\n' + app_body + service_body + TEST)
++        (target / 'PolarBleRuntimeSupport.java').write_text(support_body)
++        sources = [*map(str,out.rglob('*.java')), str(panel / 'NativeProductPanelActivity.java'), str(selected / 'ExperimentStartupPermissions.java')]
++        sources += [str(java / (name + '.java')) for name in ['NativeRendererActivityComponents', 'NativeRendererForegroundGuardPolicy', 'NativeRendererHomeEpisodePolicy', 'NativeRendererSoftKioskCoordinator', 'NativeRendererSelfKioskDeparturePolicy']]
++        subprocess.run(['javac','--release','8','-d',str(out),*sources],check=True)
++        result = subprocess.run(['java','-cp',str(out),PACKAGE.replace('/','.')+'.PromptKioskHarness'],capture_output=True,text=True)
++        if result.returncode:
++            print(result.stderr)
++        result.check_returncode()
++        print(result.stdout.strip())
++        # A packaged selected owner with an unavailable observation must not be
++        # interpreted as permission completion. No production source is edited.
++        unavailable = target / 'ExperimentStartupPermissions.java'
++        unavailable.write_text((selected / 'ExperimentStartupPermissions.java').read_text().replace(
++            'ownsSystemPrompt(', 'unavailableSystemPrompt('))
++        subprocess.run(['javac','--release','8','-cp',str(out),'-d',str(out),str(unavailable)],check=True)
++        subprocess.run(['java','-cp',str(out),PACKAGE.replace('/','.')+'.PromptKioskHarness','unavailable'],check=True)
++        (target / 'ExperimentStartupPermissions.class').unlink()
++        subprocess.run(['java','-cp',str(out),PACKAGE.replace('/','.')+'.PromptKioskHarness','absent'],check=True)
++
++
++TEST = r'''
++public final class PromptKioskHarness {
++ static int checks;static long epoch=10;
++ static void check(boolean value,String why){checks++;if(!value)throw new AssertionError(why);}
++ static void arm(){NativeRendererSoftKioskCoordinator c=NativeRendererSoftKioskCoordinator.process();c.useSelfWatchdog();check(c.armFromExplicitColdLaunch(epoch++,NativeRendererForegroundGuardPolicy.Presentation.IMMERSIVE,"experimenter"),"arm rejected");c.updateServiceState(NativeRendererSoftKioskCoordinator.ServiceState.CONNECTED);}
++ static void advance(NativeRendererSelfKioskService s,long delta){SystemClock.now+=delta;s.tick();}
++ static void focus(NativeProductPanelActivity host,NativeRendererSelfKioskService s,boolean focus){host.focused=focus;advance(s,100);if(!focus)advance(s,300);}
++ static NativeProductPanelActivity fresh(NativeRendererSelfKioskApplication app){BreathCompositionPanelModule.gateAllows=false;NativeProductPanelActivity a=new NativeProductPanelActivity();a.onCreate(null);app.track(a);return a;}
++ static void run(boolean beforeArm,boolean location){
++  NativeRendererSoftKioskCoordinator c=NativeRendererSoftKioskCoordinator.process();c.releaseImmersiveOwner();
++  NativeRendererSelfKioskApplication app=new NativeRendererSelfKioskApplication();Activity.application=app;
++  if(!beforeArm)arm();NativeProductPanelActivity host=fresh(app);if(location){host.location="disabled";host.granted.addAll(Arrays.asList(android.content.pm.PackageManager.declared));}
++  host.onResume();Handler.drain();if(beforeArm)arm();NativeRendererSelfKioskService service=new NativeRendererSelfKioskService(app);
++  advance(service,120000);check(!c.selfRecoverySuppressed(SystemClock.now),"fixture still protected by estimated prompt timer");
++  for(int i=0;i<4;i++){focus(host,service,true);focus(host,service,false);check(service.launches==0&&service.terminals==0&&!c.snapshot().terminal&&c.snapshot().recoveryAttempts==0,"actual pending prompt escaped into watchdog recovery after 60 seconds");}
++  check(app.ownsStartupSystemPrompt(),"remembered canonical native alias did not expose actual owner");
++  NativeProductPanelActivity other=new NativeProductPanelActivity();app.track(other);check(!app.ownsStartupSystemPrompt(),"remembered replacement inherited old prompt protection");app.track(host);
++  host.finishing=true;check(!app.ownsStartupSystemPrompt(),"finishing remembered owner protected kiosk");host.finishing=false;
++  if(location){host.onPause();host.location="enabled";host.onActivityResult(9411,0,null);host.onResume();}else host.result(true);Handler.drain();
++  check(!app.ownsStartupSystemPrompt(),"completed actual prompt still protected kiosk");
++  // The suppressed absence cannot count retrospectively, even with a long dwell.
++  advance(service,500);check(!c.snapshot().terminal,"prompt absence counted retrospectively");
++  for(int i=0;i<3;i++){focus(host,service,true);focus(host,service,false);if(i<2)check(!c.snapshot().terminal,"ordinary escape ended before third departure");}
++  check(c.snapshot().terminal&&service.terminals==1,"ordinary post-result triple departure no longer exits");host.onDestroy();Handler.drain();
++ }
++ static void optional(String mode)throws Exception {
++  NativeRendererSelfKioskApplication app=new NativeRendererSelfKioskApplication();Activity.application=app;
++  NativeProductPanelActivity host=fresh(app);boolean unavailable="unavailable".equals(mode);
++  check(app.ownsStartupSystemPrompt()==unavailable,"unavailable selected observation or optional absent class used unsafe default");
++  android.content.pm.PackageManager.selected=Boolean.FALSE;check(!app.ownsStartupSystemPrompt(),"default-off composition acquired startup suppression");
++  android.content.pm.PackageManager.selected="true";check(!app.ownsStartupSystemPrompt(),"string metadata enabled startup suppression");android.content.pm.PackageManager.selected=Boolean.TRUE;
++  host.destroyed=true;check(!app.ownsStartupSystemPrompt(),"destroyed remembered Activity retained startup suppression");host.destroyed=false;
++  final boolean[] rejected={false};Thread thread=new Thread(()->{try{app.ownsStartupSystemPrompt();}catch(IllegalStateException expected){rejected[0]=true;}});thread.start();thread.join();check(rejected[0],"off-main application observation admitted");
++  app.activities.put(NativeRendererForegroundGuardPolicy.NATIVE_ACTIVITY,new java.lang.ref.WeakReference<Activity>(new Activity()));check(!app.ownsStartupSystemPrompt(),"foreign physical Activity accepted under logical native alias");
++  app.activities.clear();check(!app.ownsStartupSystemPrompt(),"absent remembered Activity acquired suppression");
++  System.out.println("PASS "+checks+" optional startup observation controls: "+mode+", default-off, exact native, dead owner and main thread");
++ }
++ public static void main(String[] args)throws Exception {if(args.length>0){optional(args[0]);return;}run(false,false);run(true,false);run(false,true);System.out.println("PASS "+checks+" actual startup/app/watchdog controls: beyond 60s, begin before arm, Location, exact alias owner, completion and ordinary escape");}
++}'''
++
++
++if __name__ == '__main__':
++    main()
