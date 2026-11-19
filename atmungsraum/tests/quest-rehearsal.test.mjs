@@ -38,6 +38,7 @@ test('explicit save confirmation waits for the original final writer receipt bef
     assert.equal(original.op, 'save-next');
     assert.equal(reads, 1);
     assert.equal(saved, outcome === 'confirmed');
+    if (outcome === 'confirmed') assert.equal(rehearsal.state.message, 'Sitzung beendet.');
     if (outcome === 'outcome_unknown') assert.equal(rehearsal.pending.id, original.id);
   }
 });

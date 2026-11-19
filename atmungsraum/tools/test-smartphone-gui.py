@@ -708,16 +708,24 @@ def capture_error_recording_update_save(review):
 
 
 def capture_polar_signal_pause(review, tag, viewport, font):
-    for recovered in (False, True):
+    messages = {
+        "waiting": "Gurtposition, Hautkontakt und Batterie",
+        "ready": "Polar-Signal wieder bereit",
+        "invalidated": "Polar-Kalibrierung ist nicht mehr gültig",
+    }
+    for state, message in messages.items():
+        recovered = state == "ready"
         health = {"required": True, "pause_latched": True, "invalid_timeout_ms": 5000,
                   "usable_fresh": recovered, "last_pause": {"reason": "breathing-data-unusable"}}
+        setup = {"stage": "waiting", "input": "polar-tilt", "calibration": "failed",
+                 "failure": "source_replaced"} if state == "invalidated" else None
         page = review.page(initial(c, {"phase": "PAUSED", "host": "vr-session", "generation": 3,
-                                      "condition": "condition-a", "polarInput": health}), viewport=viewport)
+                                      "condition": "condition-a", "polarInput": health}, setup), viewport=viewport)
         try:
             page.evaluate("size => document.documentElement.style.fontSize = size", font)
             page.clock.run_for(2000)
             status = page.locator("#quest-status")
-            expect(status).to_contain_text("Polar-Signal wieder bereit" if recovered else "Gurtposition, Hautkontakt und Batterie")
+            expect(status).to_contain_text(message)
             button = page.locator("#quest-play")
             expect(button).to_have_text("Fortsetzen")
             assert mutations(page)["session"] == [], "Polar recovery never resumes automatically"
@@ -725,7 +733,8 @@ def capture_polar_signal_pause(review, tag, viewport, font):
                 expect(button).to_be_enabled()
             else:
                 expect(button).to_be_disabled()
-            review.shot(page, f"{tag}-polar-pause-{'ready' if recovered else 'waiting'}",
+            expect(page.locator("#quest-finish")).to_be_enabled()
+            review.shot(page, f"{tag}-polar-pause-{state}",
                         "Polar signal pause", status, "Recovery")
             if recovered:
                 button.click()

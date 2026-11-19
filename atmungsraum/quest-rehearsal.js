@@ -243,7 +243,7 @@ export class QuestRehearsal {
     }
     this.remember(null);
     this.update({ unknown: false, message: op === 'recenter' ? 'VR-Szene zentriert.'
-      : op === 'save-next' ? 'Probelauf beendet.' : '' });
+      : op === 'save-next' ? 'Sitzung beendet.' : '' });
     return true;
   }
 
