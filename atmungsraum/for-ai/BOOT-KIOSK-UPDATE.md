@@ -29,8 +29,20 @@ the correct discovery service. Specific LAN/TURN transport and a new physical
 triple-escape check are not established by this result. The warm-relaunch Polar
 issue remains separate. Developer32 was subsequently published to the private
 Developer channel as Meta build1470180652847613 with Quest2 target and
-processing Complete. Its actual PWA-triggered delivery test is pending: the
-first fresh check still returned available27 from Meta's SDK.
+processing Complete. The first actual PWA-triggered check still returned
+available27 from Meta's SDK.
+
+The later32 delivery passed after a diagnostic restart: two PWA checks while27
+was running offered27, despite the headset's Developer channel and Store showing32.
+The wearer did not press Update. Following kiosk escape, a host cold launch
+restored the baseline, whose startup SDK check detected and installed32.
+Package replacement, exact32 bytes and Meta installer/initiator are confirmed.
+Helper3 requested fallback and the stimulus returned automatically; SDK relaunch
+was also active, so the helper is not proven necessary. The Pixel automatically
+reconnected with its saved trust and active control; kiosk is effective.
+PWA-only fresh detection remains unqualified. A successor test must leave32
+running, avoid Store inspection, then isolate a restart-only refresh if needed.
+The installed baseline is now32; held28 remains unpublished.
 The normal Meta27 app and Pixel pairing were restored afterward, with fresh
 native `IDLE/rec:false/pending:false`, active phone control and kiosk ready-armed.
 
