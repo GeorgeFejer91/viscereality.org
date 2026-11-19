@@ -1,5 +1,23 @@
 # Atmungsraum Quest 2 APKs
 
+## Background music bench 42 — 2026-11-19
+
+Bench 42 supersedes the independently signed bench 41 for the lab Quest.
+Package `org.viscereality.atmungsraum.webrtcbench`, version
+`0.2.41-music-bench`, code 42, 73,277,159 bytes. SHA-256
+`422efd293402b745ea23db029f67b8e7c6a67194faccda3bdb9f9f7fd76aa72c`.
+It uses bench 37's retained v3 signer
+`da1e642f68f2516473269240c7bd325a43eab328878f323358891786cef8eb88`.
+Native source and build switches are the same as bench 41, with that signer
+and the new version. V3 signature, 16 KiB alignment, signed session closure
+and exact music, cue and OpenXR asset comparisons pass.
+
+The USB Quest accepted the same-signer update from the stopped bench 37.
+Installed bytes and the retained bench UID match. The existing Developer 27
+APK bytes and process were confirmed across the install. The bench was left
+stopped. The Quest reports no route to the PWA host and WebRTC signaling, so
+a paired playback and listening check remains open.
+
 ## Background music bench 41 — 2026-11-19
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version

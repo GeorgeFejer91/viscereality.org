@@ -13,12 +13,13 @@
   payloads, active membership, late preparation callbacks, timeout and stop.
   Review found blocking preparation on the main looper. The final path
   prepares asynchronously and rechecks admission before starting audio.
-- [x] Build and inspect signed bench 41. Verify the v3 signer, 16 KiB
+- [x] Build and inspect signed bench 42. Verify the retained v3 signer, 16 KiB
   alignment, ARM64 OpenXR loader, exact music bytes and signed session closure.
-- [ ] Finish the smartphone release gate and verify the exact Pages deployment,
-  live runtime and installed Pixel.
+  USB install retains the bench UID and matches the signed APK digest.
+- [x] Pass the 429-state smartphone release gate. Verify the exact Pages
+  deployment, live runtime and installed Pixel.
 - [ ] Confirm audible play, level change and stop on Quest 2 with the paired
-  phone. The USB headset has Developer 27 and bench 37 installed. Its
+  phone. The USB headset has Developer 27 and bench 42 installed. Its
   [USB validation](HOTEL-WIFI-HANDOFF.md#current-usb-validation) records the
   captive Quest Wi-Fi and unavailable authenticated phone connection.
   The separate Developer 32 updater test remains open.
@@ -29,8 +30,18 @@ tree `06e8bf8b` passes 104 Remote-join and 74 trusted-phone assertions. The
 browser HMAC and cached/idle startup suites pass. All 363 Node tests pass
 with the native assembly and Java bridges enabled. The independent
 844×390/200% dialog check confirms loading, failure, cancellation and focus
-return. The [signed bench candidate](../quest/apks/README.md#background-music-bench-41--2026-11-19)
-is ready for headset qualification.
+return. The [installed signed bench](../quest/apks/README.md#background-music-bench-42--2026-11-19)
+awaits the authenticated phone connection and wearer check.
+
+PWA release `20261119-background-music` merged in [PR 157](https://github.com/GeorgeFejer91/viscereality.org/pull/157)
+at `4f730a133e20e12c0df092810ab0ec86ed00d00a`. Exact
+[Pages run 44555857503](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44555857503)
+succeeded. All five affected live runtime files match Git. Public portrait,
+landscape and desktop checks confirmed the Settings entry, dialog and focus
+return. The idle Pixel 10 reopened its installed standalone app, loaded
+the same release and both new runtime modules, retained its saved pairing,
+and exercised the dialog through the unconnected-state message and return
+to Connect. USB headset HTTPS and WebRTC signaling still report no route.
 
 ### Active: publish Meta32 and test the PWA update — 2026-11-19
 

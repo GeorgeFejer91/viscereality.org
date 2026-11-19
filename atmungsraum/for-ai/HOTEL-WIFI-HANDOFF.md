@@ -43,6 +43,13 @@ The Quest's post-recovery egress and authenticated pairing remain open.
 
 ## Current USB validation
 
+Subsequent background-music check: the USB Quest accepted the same-signer
+[bench 42](../quest/apks/README.md#background-music-bench-42--2026-11-19)
+update with exact installed bytes and the existing bench UID. Developer 27's
+APK and process remained available. The Quest still reports no route to the
+public PWA and signaling hosts. Playback qualification requires a working
+authenticated phone connection.
+
 On November 19, the Quest on this PC matched Meta-installed Developer 27
 and signed WebRTC bench 37 by package, version and installed APK hash.
 Developer 32 is active on the Meta channel. Use the
