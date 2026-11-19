@@ -1,5 +1,84 @@
 # Atmungsraum Quest 2 APKs
 
+## Startup permission guard: Developer 32 and bench 39 — 2026-11-19
+
+Both local packages bind native commit
+`fe22d7d402d2edfa912412777720685c571b4f5b`, tree
+`a99d4eb89b05b170e89a10bfb45f11044807ecbb`. Apply the existing WebRTC overlay,
+then the updater reconciliation and
+[`startup-permission-kiosk.patch`](../startup-permission-kiosk.patch).
+The exact current startup owner protects a real pending permission or Location
+prompt beyond the generic kiosk timeout; normal escape resumes afterward.
+The warm-relaunch retired Polar runtime remains a separate open issue.
+
+| Property | Developer 32 | This-PC bench 39 |
+| --- | --- | --- |
+| Package | `org.viscereality.atmungsraum.developer` | `org.viscereality.atmungsraum.webrtcbench` |
+| Version | `0.2.31-dev`, code 32 | `0.2.38-rtc-test`, code 39 |
+| Bytes | 65,974,254 | 65,597,078 |
+| SHA256 | `e93da23aa044d1f43b69c31e17c45f4fe456b54ccb71b7abe521c54f603463db` | `701b685c27f6c5a23b5b70023172dc328aa2336ef10d4a20428c5edd17d60c4f` |
+| Meta updates | SDK207 / helper3 | Disabled |
+
+Both use the retained Developer v3 signer
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+Actual signed 900000ms session closure, signatures, 16 KiB alignment and clean
+source capsules pass. All 74 audio entries, ten WebRTC assets, exact release
+protocol and applicable LSL/OpenXR/SDK loaders match the qualified predecessor.
+The lifecycle/watchdog regressions and independent review pass. Physical prompt
+acceptance remains pending; neither package has been installed or published to
+Meta. Installed/published Developer27 and held28 remain the update-test baseline.
+
+## Reconciled Developer 31 local candidate — 2026-11-19
+
+Package `org.viscereality.atmungsraum.developer`, version `0.2.30-dev`, code31,
+65,974,254bytes. SHA256
+`3f318be948cd3cee12570f56ed898d939b38b30fc5c14dfd452d0d98dd9589c6`.
+The retained Developer v3 certificate remains
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+Native commit `a7289a89d0ab092a0d5a9a89a6ef67f7cb36ff57`, tree
+`310ee8870fce0de0108cc05891abdd309d976b09`, reconstructs from fixed27-r2,
+the unchanged WebRTC overlay, then
+[`updater-reconciliation.patch`](../updater-reconciliation.patch).
+
+This combines Developer30 with the ambiguous duplicate-download repair.
+Even with helper3, targetless SDK progress cannot select a queued payload as
+the offered version. Require bounded positive cancellation, fresh version
+validation and an owned completed download before the original install path.
+No helper binary changes. The repair is RED on exact Developer30 and GREEN
+with162 duplicate/63 service cases. All16 updater suites, actual production
+Java compilation,11-source closure, gateway/pairing controls, independent
+review and all361 PWA/assembly tests with zero skips pass.
+
+Canonical assembly, v3 signature,16KiB alignment and actual signed900000ms
+session closure pass. All74 baseline audio entries, LSL, OpenXR and SDK207
+loaders match signed27. All10 WebRTC files are packaged, including the exact
+release protocol. The isolated Windows build needed the retained LSL library
+and a shorter source path for the shader compiler; failed attempts are retained
+privately and are not APKs. This candidate is local, uninstalled and not on Meta.
+The installed and published Developer baseline remains27;28 remains held.
+
+## This-PC reconciliation bench 38
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version
+`0.2.37-rtc-test`, code38, SHA256
+`5cb50e248c6e39156cb369facb4a816f1cff3eb6b3f34a605bfa92d061c3feb5`.
+This local bench uses the retained Developer certificate above, distinct from
+the bench37 certificate recorded below. It selects the reconciled native
+source with WebRTC and phone pairing, with Meta updates disabled. Signed
+session closure passes and the installed Quest2 hash matches. Meta27 was
+freshly observed `IDLE`, `rec:false`, `pending:false` before it was temporarily
+closed for the side-by-side bench launch. Its package/data and helper3 remain.
+The installed Pixel6a PWA reports `20261119-idle-refresh` in standalone mode
+and automatically confirmed control of27 before the switch. Bench38 started
+and reached Android's first-run permission flow. The wearer confirmed matching
+code826276 on the headset, and the phone side confirmed the same digits. After
+a cold process restart, saved membership rejoined automatically and recenter
+received native confirmation over authenticated LAN HTTP. WebRTC relay is not
+qualified by that result. The first pending permission flow exceeded the old
+60-second kiosk guard and selected its escape path; a warm Activity relaunch
+also retained a retired Polar runtime. Bench39 carries the first repair;
+the second remains open. This is not an updater delivery result.
+
 ## Canonical Developer 30 candidate
 
 | Build property | Verified value |

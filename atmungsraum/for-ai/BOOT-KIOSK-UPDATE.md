@@ -1,5 +1,23 @@
 # Autoboot, kiosk and Meta update qualification — 2026-11-16
 
+## Actual startup prompt ownership — 2026-11-19
+
+During this-PC bench38 first launch, pending runtime permission dialogs exceeded
+the generic60-second suppression and kiosk counted three own-surface departures,
+then admitted its intentional exit. The app did not crash. Warm Activity return
+also exposed a retired Polar owner; a real process cold start recovered the
+saved membership and native control. Keep that separate warm-lifecycle issue open.
+
+The [startup permission overlay](../quest/README.md#actual-startup-permission-kiosk-protection)
+adds an exact current-Activity observation for actual runtime/Location prompts.
+The own-app watcher checks it before counting departures. Time cannot end that
+protection: actual platform completion, owner retirement or loss of the exact
+current owner ends it. Generic prompt timing/default-off behavior and ordinary
+escape after completion are preserved. Host regressions replay120seconds and
+the after-completion triple escape. The next physical check must leave a real
+prompt open past60seconds, verify no exit, then allow it and verify native
+focus/control. No helper binary or Meta update policy changes are required.
+
 ## Actual boot/update acceptance — 2026-11-17
 
 Meta21 baseline and Meta22 successor have exact installed-byte, signer and Meta
