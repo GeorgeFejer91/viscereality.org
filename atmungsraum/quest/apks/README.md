@@ -41,8 +41,11 @@ the timer after its next-cycle boundary. The attended main run then entered
 ERROR at02:35.647 with its writer still open. Cues/stimulus continued; terminal
 audio error cleanup reset the input to Automatic and cleared calibration.
 The initiating failure was not retained before cleanup. This candidate is not
-hardware-qualified. Preserve and save the partial writer through the normal
-phone recovery action before restarting. Full900-second completion and data
+hardware-qualified. The published ERROR-writer phone recovery saved the partial
+run and native status returned to IDLE with no writer or pending request. Its
+11,835,517byte phone CSV matches the native final SHA256
+`662f58daf483569956580434600c7910c080d3570efb3e7b8fc4914c1996c96a`;
+saved:true/completed:false, writer drops0. Full900-second completion and data
 custody remain pending. Meta remains33; no Developer34 upload is claimed here.
 
 ## Background music signed profile matrix — 2026-11-19

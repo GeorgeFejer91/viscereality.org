@@ -1,5 +1,24 @@
 # Shared breathing scheduler and setup calibration
 
+## Five-second Polar signal pause — 2026-11-19
+
+The user requires a native main-session pause after five consecutive seconds
+without usable Polar breathing input, including missing samples or quality
+rejection. Short gaps retain the last diagnosed breath state and its normal
+radius integration. Raw Bluetooth traffic does not establish usable input.
+Pause the actual audio/session clock through the existing native control path;
+retain valid calibration. Do not turn a quality gap into a terminal audio error.
+Keep real source, model and audio-clock retirement barriers separate.
+
+The phone must explain the pause and ask the experimenter to check the strap's
+position, skin contact and battery. Continue requires current usable data and
+an explicit experimenter action; returning samples never resume automatically.
+Native timing and readiness remain authoritative. The optional private
+`pd.native` fields `usable_fresh`, `invalid_timeout_ms:5000`, `unusable_age_ms`
+and the existing latched pause reason carry this information. Older APKs keep
+their existing native admission contract. PROJECT records implementation and
+hardware qualification; this policy is not present in installed Developer34.
+
 ## Current Polar health and pre-session battery review — 2026-11-17
 
 The toolbar must continue checking the current selected Polar after initial

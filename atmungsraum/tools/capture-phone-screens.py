@@ -86,6 +86,7 @@ function snapshot() {
     ...(settings.liveRecording ? {live_recording: 1} : {}),
     controller_access: settings.access,
     polar_health: polarHealth,
+    ...(settings.polarInput ? {pd: {native: settings.polarInput}} : {}),
     power:Object.hasOwn(settings,'power') ? settings.power
       : {v:1,quest:{percent:82,charging:false},controllers:[]},
     ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),

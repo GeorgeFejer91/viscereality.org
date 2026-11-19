@@ -28,8 +28,24 @@ and Quest → phone → Drive data flow. Keep the existing lifecycle owner here.
   composition token checker is stale and is not represented as passing.
 - [x] Build and locally install Developer34 with exact signed-byte readback.
   See the [APK log](../quest/apks/README.md#developer34-start-recovery-candidate--2026-11-19).
-- [ ] Publish the qualified source/evidence and verify exact Pages deployment.
-- [ ] After local hardware qualification, publish Developer34 through Meta and
+- [x] Publish the Start/source and ERROR-writer save recovery increment in
+  PR165, merge `aa6d63fbdc481be53b2e92f489d41dd81ea358bf`, Pages44591752710.
+  Eight runtime/evidence/policy files match exact committed live bytes; the
+  publisher independently checked all11 affected files. The actual Pixel loads
+  `20261119-error-save`, enables Beenden and completes the normal save.
+- [x] Save Developer34's failed main, confirm native IDLE/rec:false/pending:false,
+  and download its partial CSV through the actual phone UI.11,835,517bytes,
+  SHA256 `662f58daf483569956580434600c7910c080d3570efb3e7b8fc4914c1996c96a`,
+  matching the native final descriptor. Native final saved:true/completed:false,
+  writer drops0. Events record audio-error before pause and later sensor
+  interruption markers; the original pre-cleanup audio guard remains unknown.
+- [ ] Implement the user's five-second Polar usability pause and usable-data-only
+  manual Continue policy, then qualify the next local Developer candidate.
+- [x] Verify the conditional phone warning and Continue gate:368 automated tests
+  without skips,454 rendered states, context check and independent review pass.
+  Native receipt/dispatch gates remain authoritative; actual new-APK acceptance
+  and publication of this phone increment are pending.
+- [ ] After local hardware qualification, publish that qualified candidate through Meta and
   align the latest hint; Meta currently remains33.
 - [ ] Repeat attended preparation, full 900-second completion, verified phone
   export, questionnaire and private Drive custody. Configure this Pixel6a's
@@ -62,8 +78,25 @@ control and no pending request; Start remains disabled.367 automated tests pass
 without skips, including the errored writer, stale signals, absent writer,
 pending request and foreign-controller cases.438 rendered states and a focused
 finish-before-update ERROR-writer check pass. Independent review confirms the
-save guards; physical recovery and publication are pending. No900-second completion or new Drive custody is
+save guards; actual save and publication now pass as recorded above. No900-second completion or new Drive custody is
 claimed for34.
+
+User policy added during diagnosis: five consecutive seconds without usable
+Polar breathing data pauses the main through the existing native control path.
+Keep calibration and the last diagnosis through short quality/data gaps. The
+phone must ask the experimenter to check strap position/contact and battery.
+Continue remains disabled until usable data returns; recovery never resumes
+automatically. Keep raw acquisition traffic distinct from usable breathing
+evidence and keep real source/audio/clock retirement barriers. This follow-up
+is in progress and is not part of installed34 or published Meta33.
+
+Raw ECG coverage blocker found in the saved34 partial:9521 CSV ECG rows for
+about155 seconds, with73-sample source packets represented only by their last
+33–36 samples. The recording admission owner applies its250ms audio-head
+window to every raw ECG sample, rejecting older samples before writer counters.
+Zero writer drops does not establish complete acquisition. A receipt-bound raw
+packet admission correction and actual writer/export regressions are required
+before claiming full ECG coverage; preserve source/clock and session boundaries.
 
 ### Active: Quest background music across releases — 2026-11-19
 
