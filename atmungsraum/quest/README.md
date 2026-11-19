@@ -84,6 +84,16 @@ compilation and independent review pass. Signed Developer 32 and bench 39
 packages pass their actual 900-second session closure, v3 signature and 16 KiB
 alignment checks; first-run hardware acceptance remains pending.
 
+Before running the full updater host suite on that source, also apply
+[`startup-kiosk-host-fixture.patch`](startup-kiosk-host-fixture.patch). This
+test-only follow-up adds the new observer method to the older install-handoff
+fixture. It is 1,287 bytes, SHA256
+`e81ec8b79788cec8767a8dc13d0eb10383db0b48ab20120ad7d2ec0867541321`,
+and reconstructs native commit `30cde1d1aff280a9a6d6f79576df774e506616bc`,
+tree `678e7fe27274353344feaab9992196967d0e2eb6`. All 16 updater suites pass
+with that fixture correction. Production source and native docs are byte-identical
+to the signed `fe22d7d4` packages; their source identity above remains unchanged.
+
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
 tree is `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485`. Commit it in an isolated

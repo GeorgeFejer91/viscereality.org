@@ -1,0 +1,13 @@
+diff --git a/tools/checks/test_meta_install_kiosk_handoff.py b/tools/checks/test_meta_install_kiosk_handoff.py
+index 98ec4bbfcc6e7671bbbc7d232f9cc518a217cbc8..6097acb115d8c0dddd0f189618831de1a7dfdf4f 100644
+--- a/tools/checks/test_meta_install_kiosk_handoff.py
++++ b/tools/checks/test_meta_install_kiosk_handoff.py
+@@ -16,6 +16,8 @@ class Log {static void i(String t,String m){}static void w(String t,String m,Thr
+ class Handler {int scheduled,cancelled;void postDelayed(Runnable r,long d){scheduled++;}void removeCallbacksAndMessages(Object token){cancelled++;}}
+ class NativeRendererActivityComponents {static String nativeClass(Object c){return "android.app.NativeActivity";}}
+ class NativeRendererSelfKioskApplication {boolean focus=true;boolean departed;int discards;boolean hasWindowFocus(String c){return focus;}boolean isResumed(String c){return true;}
++ // This install-handoff fixture has no attended startup prompt; its dedicated owner fixture covers that path.
++ boolean ownsStartupSystemPrompt(){return false;}
+  boolean hasDeparture(String c,long g){return departed;}void discardDepartures(){departed=false;discards++;}}
+ class ControlPanelActivity {static boolean routeToNativePanel(Intent i,boolean recover){return false;}}
+ class Parent {void onTaskRemoved(Intent i){}}

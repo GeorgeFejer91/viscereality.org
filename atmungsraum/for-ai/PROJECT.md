@@ -73,8 +73,9 @@ Bounded next repair, inside this same validation goal:
 - [x] Run startup-permission, kiosk and actual production compilation
   checks; independent review.94 lifecycle,42 actual observer/watchdog and14
   optional-class controls pass, including120seconds and subsequent ordinary
-  escape. Kiosk policy/static and production javac pass. All16 updater suites
-  remain the previously qualified source baseline; recheck during packaging.
+  escape. Kiosk policy/static and production javac pass. A fresh updater-suite
+  check found an older generated kiosk stub missing the new observer method;
+  the test-only correction restores all16 passing updater suites.
 - [x] Build signed Developer32 and bench39 packages from the reviewed source;
   actual900-second session closure, v3 signatures,16KiB alignment, source
   capsules,74 unchanged audio entries,10 WebRTC assets and retained loaders pass.
@@ -90,6 +91,17 @@ is 30,378 bytes/SHA256
 Local Developer32/bench39 packaging is complete. Exact package records are in
 the [APK log](../quest/apks/README.md); neither is Meta-published. No helper,
 required-version or PWA-runtime change is implied. Preserve held28 and installed27.
+
+The separately applicable [host fixture correction](../quest/startup-kiosk-host-fixture.patch)
+is 1,287 bytes/SHA256
+`e81ec8b79788cec8767a8dc13d0eb10383db0b48ab20120ad7d2ec0867541321`.
+It reconstructs native `30cde1d1aff280a9a6d6f79576df774e506616bc`, tree
+`678e7fe27274353344feaab9992196967d0e2eb6`; production source/docs remain
+byte-identical to the signed `fe22d7d4` builds. All16 Meta suites pass; the
+install-handoff12, startup observation42+14, existing kiosk and terminal pending-arm27
+controls pass. Root independently reran the actual12-case handoff harness and
+confirmed no production delta. The prior patch still reconstructs the exact
+immutable signed-build tree.
 
 ### Active: full lab validation and UI repairs — 2026-11-18
 
