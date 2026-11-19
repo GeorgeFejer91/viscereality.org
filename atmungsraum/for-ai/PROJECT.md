@@ -5,6 +5,12 @@
 The user requests diagnosis and repair before repeating the complete main run
 and Quest → phone → Drive data flow. Keep the existing lifecycle owner here.
 
+The [current collaborator test handoff](plans/2026-11-19-attended35-followup.md)
+records the completed Developer 35 r2 continuity run, the separate recording
+and next-session defects, and the native, phone and calibration work now
+underway. Use it to choose the correct build and compare results from another
+headset and phone.
+
 - [x] Reproduce the attended Developer33 failure: personal Polar calibration
   succeeds, participant accepts tracking, Arm succeeds, but two Start requests
   reject with the main timer at zero. Cues and stimulus remain present.
@@ -56,9 +62,12 @@ and Quest → phone → Drive data flow. Keep the existing lifecycle owner here.
   All6 affected live files match committed bytes, including the151,048byte
   patch SHA256 `d492a926bc148c5f529448886247cb41564f60374a4ca3e4083f529998006a66`.
   Meta remains33/latest and27/floor;35 is installed locally only.
-- [ ] Run wearer calibration, five-second pause/recovery, and the full main/data
-  flow on35. The user explicitly requests waiting for their next go-ahead;
-  leave calibration and the session stopped meanwhile.
+- [x] Complete one attended 900-second main and matching phone download on
+  Developer 35 r2. The wearer agreed to proceed for the continuity test and
+  reported that personal Polar tracking was unsatisfactory.
+- [ ] Verify raw recording integrity, a second participant session after
+  completion, and physical five-second pause/recovery. Track the distinct
+  lifecycle failures and pending source work in the collaborator handoff.
 - [ ] After local hardware qualification, publish that qualified candidate through Meta and
   align the latest hint; Meta currently remains33.
 - [ ] Repeat attended preparation, full 900-second completion, verified phone

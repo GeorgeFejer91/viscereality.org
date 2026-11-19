@@ -6,6 +6,10 @@ has access to the private Developer distribution through their Meta account.
 Detect the actual headset model and phone/browser first. Quest2 is the physical
 acceptance target tested here; confirm Meta eligibility for other models.
 
+For the current build matrix, known failures and an independent test sequence,
+use the [19 November testing handoff](plans/2026-11-19-attended35-followup.md).
+The setup below retains its original code 22 validation evidence.
+
 ## Task to give the agent
 
 Set up Atmungsraum Developer on this Quest so every real restart launches the
