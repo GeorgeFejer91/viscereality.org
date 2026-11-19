@@ -1,5 +1,21 @@
 # Atmungsraum Quest 2 APKs
 
+## Meta Developer 32 publication — 2026-11-19
+
+The user explicitly selected code32 for this private distribution/update test,
+superseding the held27-to28 order. Exact signed32 below is now published as
+Meta build `1470180652847613` in Developer channel `1529361979246951` for
+app `1459506690581676`, targeting Quest2. The current-build table reports
+`0.2.31-dev`/32 and processing `Complete`; the existing teen/adult audience
+is retained. No helper or APK rebuild changed.
+
+Delivery remains pending: the first actual Pixel PWA `check-and-update` command
+completed a fresh native27 SDK check, but Meta still offered27. The package
+observer confirms installed27/process continuity. No host installation or
+launch has substituted for the intended PWA/Meta/helper transition. The public
+latest hint is32; required floor27 remains while this candidate is qualified.
+Polar, full recording and relay acceptance gaps remain explicit.
+
 ## Startup permission guard: Developer 32 and bench 39 — 2026-11-19
 
 Both local packages bind native commit
@@ -25,7 +41,8 @@ Actual signed 900000ms session closure, signatures, 16 KiB alignment and clean
 source capsules pass. All 74 audio entries, ten WebRTC assets, exact release
 protocol and applicable LSL/OpenXR/SDK loaders match the qualified predecessor.
 The lifecycle/watchdog regressions and independent review pass. Developer32
-remains local and uninstalled. Bench39
+was initially local and uninstalled; see the subsequent Meta publication above.
+Bench39
 was installed in place on this-PC Quest2 with exact signed-byte readback after
 fresh native38 `IDLE/rec:false/pending:false` confirmation. Its existing runtime
 permissions and saved trust were initially retained. For the attended first-run
@@ -41,8 +58,8 @@ membership. The PWA confirmed connection, bridge and active control and saved
 39's correct fingerprint. A native status response alone had not established
 that earlier. Specific LAN/relay transport qualification remains separate.
 
-Neither package has been published to Meta. Installed/published Developer27
-and held28 remain the update-test baseline. Bench39 is stopped and normal
+Bench39 remains local. The installed Developer baseline remains27;32 is now
+published and28 remains held. Bench39 is stopped and normal
 Meta27 has been relaunched. Explicit matching-code confirmation restored the
 Pixel's Meta27 pairing. Fresh native27 readback confirms `IDLE`, no recording or
 pending command, active phone control and kiosk ready-armed. Helper3 is retained.

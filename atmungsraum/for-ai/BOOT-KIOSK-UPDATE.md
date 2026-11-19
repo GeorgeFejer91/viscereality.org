@@ -27,7 +27,10 @@ active control with the new build fingerprint. An initial empty scan may have
 been a range issue, as reported by the wearer; PC scanning independently saw
 the correct discovery service. Specific LAN/TURN transport and a new physical
 triple-escape check are not established by this result. The warm-relaunch Polar
-issue remains separate. Developer32 is built locally, not Meta-published.
+issue remains separate. Developer32 was subsequently published to the private
+Developer channel as Meta build1470180652847613 with Quest2 target and
+processing Complete. Its actual PWA-triggered delivery test is pending: the
+first fresh check still returned available27 from Meta's SDK.
 The normal Meta27 app and Pixel pairing were restored afterward, with fresh
 native `IDLE/rec:false/pending:false`, active phone control and kiosk ready-armed.
 
