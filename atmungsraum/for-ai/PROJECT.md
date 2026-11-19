@@ -49,9 +49,14 @@ endpoint: the fresh-phone path stops before opening WebRTC.
   five-minute timer overlaps saved-headset discovery. Queue the due check
   for the next idle Connect window before another search. A Chromium
   regression verifies one update and exact saved membership retention.
+- [x] Publish `20261119-idle-refresh`. Merge `759beb7` passed the
+  [exact Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44427512855),
+  all six live file comparisons, and the remote context gate. The target
+  Chromium startup suite, eight pairing UI cases, 361 web and assembly
+  checks, and 421 smartphone GUI states passed.
 - [ ] Verify that the installed Pixel has refreshed to
-  `20261119-idle-refresh`. The standalone readback after the pairing
-  release still showed `20261118-saved-quest-service` and its saved pairing.
+  `20261119-idle-refresh`. The standalone readback after deployment
+  still showed `20261118-saved-quest-service` and its saved pairing.
   Check the loaded entry and connection modules before counting the phone test.
 - [x] Build and inspect signed bench 37 and the selected canonical Developer
   candidate 30. Match the bench 37 installed SHA-256 and retained UID. Preserve
@@ -63,6 +68,9 @@ endpoint: the fresh-phone path stops before opening WebRTC.
   the operator available for the real headset confirmation. Match a native
   status and Recenter receipt, then test automatic reconnect in both startup
   orders and measure the ICE route. Cross-device and worn-H10 evidence remains open.
+  The lab readback marked the Quest's active Wi-Fi captive and the Pixel's
+  validated. Clear any Quest sign-in and verify application egress before
+  attributing a connection failure to TURN.
 
 Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
 navigate the Quest autonomously where the platform provides a supported
