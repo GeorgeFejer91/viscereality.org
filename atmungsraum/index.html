@@ -13,10 +13,10 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261119-background-music">
+  <link rel="stylesheet" href="./style.css?v=20261119-music-manual-update-help">
   <link rel="stylesheet" href="./questionnaire.css?v=1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261119-background-music"></script>
+  <script type="module" src="./app.js?v=20261119-music-manual-update-help"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -505,6 +505,7 @@
               <button id="meta-update-acknowledge" hidden type="button"><span data-measure>Aktuellen Quest-Stand übernehmen</span></button>
             </div>
           </div>
+          <button id="update-manual-update-help" data-operator-go="update-help" type="button"><span data-measure>Manuelles Update · Hilfe</span></button>
           <details id="apk-identity">
             <summary><span data-measure>Details</span></summary>
             <dialog class="operator-dialog" id="apk-details-dialog" aria-labelledby="apk-details-title">
@@ -558,6 +559,32 @@
         <button id="operator-update-next" data-operator-go="participant" type="button"><span data-measure>Weiter zur Vorbereitung</span></button>
       </footer>
     </section>
+    <section id="manual-update-screen" aria-labelledby="manual-update-title" class="screen operator-screen" hidden>
+      <header class="screen-header">
+        <h1 id="manual-update-title" data-measure tabindex="-1">Quest-Update</h1>
+      </header>
+      <div class="screen-body operator-body">
+        <select id="manual-update-step" aria-label="Schritt der Update-Anleitung">
+          <option value="0">1 · Sichern</option>
+          <option value="1">2 · Kiosk</option>
+          <option value="2">3 · Store</option>
+          <option value="3">4 · Kanal</option>
+          <option value="4">5 · Warten</option>
+          <option value="5">6 · Prüfen</option>
+        </select>
+        <div class="task-group" aria-live="polite" aria-atomic="true">
+          <p data-manual-update-step="0" data-measure>Beende eine laufende Sitzung und sichere die Aufnahme vor dem Update.</p>
+          <p data-manual-update-step="1" data-measure hidden>Öffne das Meta-Menü 3-mal in 5 Sekunden. Lass dazwischen jedes Mal den Stimulus zurückkehren.</p>
+          <p data-manual-update-step="2" data-measure hidden>Auf der Quest: Öffne Atmungsraum im Store (Developer) und wähle „Update“.</p>
+          <p data-manual-update-step="3" data-measure hidden>Wird kein Update angeboten, prüfe den Developer-Release-Kanal für Atmungsraum.</p>
+          <p data-manual-update-step="4" data-measure hidden>Warte, bis das Update fertig ist. Öffne die App, falls sie nicht zurückkehrt.</p>
+          <p data-manual-update-step="5" data-measure hidden>PWA wieder verbinden. Unter „Quest-App prüfen“ den erwarteten APK-Stand abgleichen.</p>
+        </div>
+      </div>
+      <footer class="actions operator-actions">
+        <button data-operator-return type="button"><span data-measure>Zurück</span></button>
+      </footer>
+    </section>
     <section id="settings-screen" aria-labelledby="settings-screen-title" class="screen operator-screen" hidden>
       <header class="screen-header">
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
@@ -565,7 +592,10 @@
         <h1 id="settings-screen-title" data-measure tabindex="-1">Einstellungen</h1>
       </header>
       <div class="screen-body operator-body">
-        <button id="operator-update-open" data-operator-go="update" type="button"><span data-measure>Quest-App prüfen</span></button>
+        <div class="settings-update-links">
+          <button id="operator-update-open" data-operator-go="update" type="button"><span data-measure>Quest-App prüfen</span></button>
+          <button id="settings-manual-update-help" data-operator-go="update-help" type="button"><span data-measure>Manuelles Update · Hilfe</span></button>
+        </div>
         <details id="settings-connection">
           <summary><span data-measure>Quest-Steuerung</span></summary>
           <dialog class="operator-dialog" aria-labelledby="settings-connection-title">

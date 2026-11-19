@@ -95,6 +95,14 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 .update-diagnostics { display: grid; gap: 12px; min-width: 0; padding-block: 8px; }
 #update-screen #meta-update { border: 0; padding: 0; }
 #update-instruction { overflow-wrap: break-word; }
+#manual-update-screen .operator-body { align-content: start; grid-auto-rows: min-content; }
+#manual-update-screen .task-group { padding: 12px; }
+.settings-update-links { display: grid; gap: var(--gap); min-width: 0; }
+#manual-update-step {
+  width: 100%; min-width: 0; min-height: 48px; padding: 8px;
+  font: inherit; line-height: 1.3; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px;
+}
 :is(#apk-package, #apk-full-identity) { overflow-wrap: anywhere; }
 .update-diagnostics p:empty { display: none; }
 #apk-details-dialog .update-diagnostics { gap: var(--gap); padding-block: 0; }
@@ -361,6 +369,7 @@ html[data-layout="reflow"] #quest-participant .patient-body { grid-template-rows
   .operator-screen .screen-header { padding-block-end: 4px; }
 }
 @media (orientation: landscape) and (max-height: 480px) {
+  #settings-screen .settings-update-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #apk-details-dialog > .screen-body { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; }
   #quest .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
   #quest :is(#operator-common, #quest-pairing) { grid-column: 1 / -1; }
@@ -630,6 +639,10 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
 .session-actions button { padding-inline: 4px; }
 #participant-screen .patient-field input, #participant-screen .patient-field select, #patient-id { padding-block: 6px; }
 #settings-screen .operator-body:has(#quest-playback:not([hidden])) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+#settings-screen .operator-body:has(#quest-playback:not([hidden])) .settings-update-links {
+  grid-column: 1 / -1;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 #settings-screen .operator-body:has(#quest-playback:not([hidden])) #operator-common {

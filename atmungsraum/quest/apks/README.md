@@ -49,6 +49,11 @@ OpenXR/Meta loaders match32; the three changed asset JSON files carry generated
 paths, identity and binding hashes. The audio descriptor matches after run-path
 normalization. No breathing or updater behavior was changed for this probe.
 
+Reproduction uses the pre-music assembly recipe at public commit
+`b48a21de144464692c335340310316fef622583c`, with explicit33/0.2.32-dev
+version overrides. The later music recipe requires its additional native
+overlay and is not the recipe for this intentionally unchanged-source probe.
+
 The existing installed32 actor, PID20269, remained alive while33 was uploaded
 and processed. No headset Store visit, restart, PWA update request, host install
 or launch was performed during this preparation. The phone is in personal use
