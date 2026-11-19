@@ -13,10 +13,10 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261119-idle-refresh">
+  <link rel="stylesheet" href="./style.css?v=20261119-background-music">
   <link rel="stylesheet" href="./questionnaire.css?v=1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261119-idle-refresh"></script>
+  <script type="module" src="./app.js?v=20261119-background-music"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -589,6 +589,20 @@
             <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
           </dialog>
         </details>
+        <button id="music-open" type="button" aria-haspopup="dialog" aria-controls="music-dialog"><span data-measure>Hintergrundmusik</span></button>
+        <dialog id="music-dialog" class="operator-dialog" aria-labelledby="music-title">
+          <header><h2 id="music-title" data-measure>Musik</h2></header>
+          <div class="screen-body">
+            <button id="music-play" type="button" disabled><span data-measure>Abspielen</span></button>
+            <div id="music-volume-control">
+              <label for="music-volume"><span data-measure>Lautstärke</span></label>
+              <output for="music-volume" data-measure aria-hidden="true">35 %</output>
+              <input id="music-volume" type="range" min="0" max="100" value="35" disabled>
+            </div>
+            <p id="music-message" role="status" data-measure hidden></p>
+          </div>
+          <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
+        </dialog>
         <details id="quest-settings">
           <summary><span data-measure>Kiosk</span></summary>
           <dialog class="operator-dialog" id="kiosk-dialog" aria-labelledby="kiosk-dialog-title">

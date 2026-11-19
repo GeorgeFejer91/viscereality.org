@@ -1,7 +1,7 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=10';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=20';
+  controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=21';
 import { pairPhone } from './quest-pairing.js?v=9';
 import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=44';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=30';
@@ -205,6 +205,90 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const settingsEcg = byId('settings-ecg');
   const settingsConnection = byId('settings-connection');
   const settingsKiosk = byId('quest-settings');
+  const musicDialog = byId('music-dialog');
+  const musicOpen = byId('music-open');
+  const musicPlay = byId('music-play');
+  const musicVolume = byId('music-volume');
+  const musicOutput = musicVolume.previousElementSibling;
+  let musicGateway, musicState, musicAttempt;
+  let musicReady = false;
+  let musicDraft = false;
+  let musicError = null;
+  musicOpen.addEventListener('click', () => musicDialog.showModal());
+  musicDialog.addEventListener('close', () => {
+    musicDraft = false;
+    paint();
+    if (needsDialogFocus(musicDialog) && musicOpen.getClientRects().length) musicOpen.focus({ preventScroll: true });
+  });
+  function showMusicVolume(value) {
+    text(musicOutput, `${value} %`);
+    musicVolume.setAttribute('aria-valuetext', `${value} %`);
+  }
+  function paintMusic(gateway, status, active) {
+    if (musicGateway !== gateway) {
+      musicGateway = gateway;
+      musicState = musicAttempt = null;
+      musicDraft = false;
+      musicError = null;
+    }
+    const observed = backgroundMusicStatus(status?.background_music);
+    const supported = Boolean(gateway?.backgroundMusic && observed);
+    if (observed && (!musicState || observed.revision >= musicState.revision)) musicState = observed;
+    if (musicError && observed && observed.revision > musicError.revision
+      && (musicError.volume === observed.volume || musicError.playing === (observed.state === 'playing')
+        && ['off', 'playing'].includes(observed.state))) musicError = null;
+    musicReady = supported && active;
+    musicPlay.disabled = musicVolume.disabled = !musicReady;
+    for (const control of [musicPlay, musicVolume]) {
+      if (musicAttempt) control.setAttribute('aria-disabled', 'true');
+      else control.removeAttribute('aria-disabled');
+    }
+    const canStop = supported && ['starting', 'playing'].includes(musicState.state);
+    text(musicPlay.firstElementChild, canStop ? 'Stoppen' : 'Abspielen');
+    if (!musicReady) musicDraft = false;
+    if (!musicDraft && supported) musicVolume.value = musicState.volume;
+    byId('music-volume-control').hidden = !supported;
+    musicPlay.hidden = !supported;
+    showMusicVolume(musicVolume.value);
+    const message = !status ? 'Verbinde zuerst die Quest.'
+      : !supported ? 'Diese Quest-App unterstützt Hintergrundmusik noch nicht.'
+        : !active ? 'Übernimm die Quest-Steuerung, um die Musik zu ändern.'
+          : musicState.state === 'starting' ? 'Die Quest lädt die Musik …'
+            : musicState.state === 'failed' ? 'Die Quest konnte die Musik nicht abspielen.' : musicError ? 'Die Quest hat die Einstellung nicht bestätigt.' : '';
+    const musicMessage = byId('music-message');
+    text(musicMessage, message);
+    musicMessage.hidden = !message;
+  }
+  async function changeMusic(change) {
+    if (!musicReady || musicAttempt || document.hidden) { paint(); return; }
+    const gateway = musicGateway;
+    const attempt = { ...change, revision: musicState.revision };
+    musicAttempt = attempt;
+    musicError = null;
+    paint();
+    try {
+      const applied = await gateway.backgroundMusic({ v: 1, ...change }, AbortSignal.timeout(4000));
+      if (musicAttempt === attempt && applied.revision >= musicState.revision) musicState = applied;
+    } catch {
+      if (musicAttempt === attempt) musicError = attempt;
+    } finally {
+      if (musicAttempt === attempt) musicAttempt = null;
+      paint();
+    }
+  }
+  musicPlay.addEventListener('click', () => {
+    if (musicState) void changeMusic({ playing: !['starting', 'playing'].includes(musicState.state) });
+  });
+  musicVolume.addEventListener('input', () => {
+    if (!musicReady || musicAttempt) { paint(); return; }
+    musicDraft = true;
+    showMusicVolume(musicVolume.value);
+  });
+  musicVolume.addEventListener('change', () => {
+    musicDraft = false;
+    void changeMusic({ volume: musicVolume.valueAsNumber });
+  });
+  musicVolume.addEventListener('pointercancel', () => { musicDraft = false; paint(); });
   const connectionView = byId('settings-connection-view');
   const sessionReceiptView = connectionView.querySelector('[value="run-receipt"]');
   const setupReceiptView = connectionView.querySelector('[value="setup-receipt"]');
@@ -425,7 +509,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       else if (step !== 'questionnaire') move('operator-common', body);
       if (step === 'questionnaire' && toolbarDialog.open) toolbarDialog.close();
       if (step !== 'settings') settingsConnection.open = false;
-      if (step !== 'settings') settingsKiosk.open = false;
+      if (step !== 'settings') {
+        settingsKiosk.open = false;
+        if (musicDialog.open) musicDialog.close();
+      }
       const preparationRecovery = byId('preview-recovery');
       if (step === 'update') byId('apk-detail-receipt').append(preparationRecovery);
       else if (preparationRecovery.parentElement !== byId('operator-common')) byId('quest-recovery').after(preparationRecovery);
@@ -756,6 +843,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       updateProgress.removeAttribute('value');
       updateProgress.removeAttribute('max');
     }
+    paintMusic(rehearsal.gateway, status, control.active);
     settingsKiosk.hidden = !status;
     if (!status && settingsKiosk.open) settingsKiosk.open = false;
     const kioskView = kiosk.update(rehearsal.gateway, { status, busy: waiting, pending, unknown });

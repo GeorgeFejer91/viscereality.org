@@ -1,5 +1,20 @@
 # Build Atmungsraum for Quest 2
 
+## Optional background music
+
+Apply [background-music.patch](background-music.patch) after the Developer 32
+source overlays. Paired phone builds package the existing supplied
+`../assets/audio/background/ji3ji3.mp3` under `assets/atmungsraum-music/`.
+Assembly verifies the signed APK copy by hash. The separately authored
+`-MainStudyAudio` composition retains its own background mix.
+
+On the phone, open **Einstellungen → Hintergrundmusik**. The Quest starts
+each native run with music off and volume at 35%. Play loops the track in the
+APK. Stop releases the player. The volume slider changes the music gain
+independently of the breathing guidance. The connected phone with active
+control can change playback and volume. Music can keep playing through a
+phone reconnect while the native owner remains active.
+
 See the [Quest APK log](apks/README.md) for the current signed build, its
 source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
