@@ -45,10 +45,14 @@ endpoint: the fresh-phone path stops before opening WebRTC.
   [exact Pages run](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44424045321).
   All 24 changed live files matched Git bytes, and the remote context gate
   passed.
+- [x] Reproduce a missed idle PWA release check in the real app when its
+  five-minute timer overlaps saved-headset discovery. Queue the due check
+  for the next idle Connect window before another search. A Chromium
+  regression verifies one update and exact saved membership retention.
 - [ ] Verify that the installed Pixel has refreshed to
-  `20261119-bluetooth-buttons`. The visible standalone readback after Pages
-  still showed the previous release and its saved pairing. Check the loaded
-  entry and connection modules before counting any phone test.
+  `20261119-idle-refresh`. The standalone readback after the pairing
+  release still showed `20261118-saved-quest-service` and its saved pairing.
+  Check the loaded entry and connection modules before counting the phone test.
 - [x] Build and inspect signed bench 37 and the selected canonical Developer
   candidate 30. Match the bench 37 installed SHA-256 and retained UID. Preserve
   the installed Meta 27 bytes and process and the staged code 28 update.

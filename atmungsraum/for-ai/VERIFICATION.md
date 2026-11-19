@@ -100,6 +100,20 @@ installation. The native frame admission and room-lifetime suite passed.
 ICE/TURN, real Android Bluetooth, actual headset approval and native Recenter
 receipts remain physical checks for the signed bench and canonical release.
 
+### PWA release check during saved-headset discovery — 2026-11-19
+
+After the button-pairing release, the visible installed Pixel PWA continued
+to show the previous entry version and an active saved-headset search.
+Chromium reproduced a missed update in the production app. The five-minute
+timer fired during a saved Bluetooth search. After discovery returned
+`searching`, the next search started with no pending update check.
+The repair queues a check until the next idle Connect window, before the
+next automatic attempt. The regression observes exactly one new release
+probe, the new entry, and identical saved pairing storage. The startup suite
+also verifies cached launch, failed and late probes, reconnect, and the
+Settings and questionnaire safeguards. Installed Pixel verification remains
+part of the device checklist.
+
 ### Physical Pixel navigation stress — 2026-11-18
 
 The standalone Pixel PWA loaded `20261118-saved-quest-service` with the

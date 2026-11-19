@@ -70,6 +70,7 @@ const device = 'd'.repeat(32), key = 'b'.repeat(64), controller = 'a'.repeat(32)
 const oldIp = '192.168.10.3', newIp = '192.168.10.9';
 const gateway = ip => 'http://' + ip + ':8766/v1/gateway';
 const mode = new URL(location.href).searchParams.get('fixture');
+const savedSearch = mode === 'saved-search-release';
 const unreachable = mode === 'lan-unreachable';
 const legacy = mode.startsWith('legacy-commissioning');
 const owner = unreachable || legacy ? {v: 2, device, serial: '', epoch: '1', native_epoch: '2', identity_kind: 'app-installation'}
@@ -78,7 +79,8 @@ const mark = value => sessionStorage.events = JSON.stringify([...JSON.parse(sess
 const storage = 'atmungsraum-quest-pair';
 const savedOwner = legacy ? {device: '0'.repeat(32), serial: 'OLD-QUEST', epoch: '1', native_epoch: '2'} : owner;
 localStorage.setItem(storage, localStorage.getItem(storage) || JSON.stringify({
-  ...savedOwner, enrollment: {controller, key}, bluetoothId: 'saved', build, endpoint: gateway(oldIp)
+  ...savedOwner, enrollment: {controller, key}, bluetoothId: 'saved', build,
+  ...(savedSearch ? {} : {endpoint: gateway(oldIp)})
 }));
 if (mode === 'legacy-commissioning-pending') {
   sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({
@@ -107,7 +109,7 @@ radio.getDevices = async () => [{
   }
 }}];
 radio.requestDevice = async () => { mark('chooser'); throw Error('Unexpected chooser'); };
-if (mode === 'companion') delete radio.getDevices;
+if (mode === 'companion' || savedSearch) delete radio.getDevices;
 Object.defineProperty(navigator, 'bluetooth', {value: radio});
 const fetchPage = window.fetch.bind(window);
 let witness = 0;
@@ -125,6 +127,10 @@ window.fetch = async (url, init) => {
         : {v: 1, state: 'searching'});
     }
     mark('companion');
+    if (savedSearch) {
+      await new Promise(resolve => window.finishSavedSearch = resolve);
+      return Response.json({v: 1, state: 'searching'});
+    }
     if (mode === 'companion') return Response.json({v: 1, state: 'ready', metadata});
     throw new TypeError('No companion');
   }
@@ -363,6 +369,7 @@ def run():
         verify_reconnect(browser, url, release)
         verify_legacy_commissioning(browser, url, release)
         verify_idle_release_timer(browser, url, release)
+        verify_release_during_saved_search(browser, url, release)
 
 
 def verify_idle_release_timer(browser, url, release):
@@ -390,6 +397,32 @@ def verify_idle_release_timer(browser, url, release):
         assert page.url == idle + '#connect' and len(release['probes']) == probe_count + 1
         assert page.evaluate("localStorage.getItem('pwa-test-sentinel')") == 'retained'
         print('PASS open and idle Connect updates once without hiding Settings or dropping storage')
+
+
+def verify_release_during_saved_search(browser, url, release):
+    from playwright.sync_api import expect
+
+    release.update(app_url=OLD, probe_result=None)
+    with browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True) as context:
+        context.add_init_script(QUEST_STARTUP)
+        page = context.new_page()
+        page.clock.install()
+        target = url.replace('?live-sync=off#daten', '?fixture=saved-search-release')
+        page.goto(target)
+        page.wait_for_function("typeof window.finishSavedSearch === 'function'")
+        expect(page.locator('#quest-find')).to_have_attribute('aria-disabled', 'true')
+        saved = page.evaluate("localStorage.getItem('atmungsraum-quest-pair')")
+        old_script = page.locator('script[src="./app.js?v=pwa-test-old"]')
+        probe_count = len(release['probes'])
+        release['app_url'] = NEW
+        page.clock.fast_forward(5 * 60 * 1000)
+        assert old_script.count() == 1 and len(release['probes']) == probe_count
+        page.evaluate("window.finishSavedSearch()")
+        page.clock.run_for(2200)
+        page.wait_for_selector('script[src="./app.js?v=pwa-test-new"]', state='attached', timeout=5000)
+        assert len(release['probes']) == probe_count + 1
+        assert page.evaluate("localStorage.getItem('atmungsraum-quest-pair')") == saved
+        print('PASS release check queued during a saved Bluetooth search runs before the next attempt')
 
 
 if __name__ == '__main__':

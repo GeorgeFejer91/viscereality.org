@@ -172,11 +172,17 @@ async function measureLabels() {
 
 let questMounted = false;
 let refreshingIdlePage = false;
+let idleRefreshRequested = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
   import('./quest-ui.js?v=20261119-bluetooth-buttons').then(({ mountQuestRehearsal }) =>
-    mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
+    mountQuestRehearsal(participantIdentity, questPair, () => {
+      // A saved search can be busy at the refresh timer's exact deadline.
+      // Give the requested check the next idle window before searching again.
+      if (idleRefreshRequested) void refreshIdlePage();
+      return !refreshingIdlePage;
+    })).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }
@@ -220,17 +226,25 @@ function idleConnectionPage() {
     && ![...byId('patient-form').querySelectorAll('input, select')].some(field => field.value);
 }
 
+async function refreshIdlePage() {
+  if (refreshingIdlePage || !idleConnectionPage()) return;
+  idleRefreshRequested = false;
+  refreshingIdlePage = true;
+  if (!await replaceWithPublishedRelease(idleConnectionPage)) refreshingIdlePage = false;
+}
+
+function requestIdleRefresh() {
+  if (refreshingIdlePage) return;
+  idleRefreshRequested = true;
+  void refreshIdlePage();
+}
+
 if (!await replaceWithPublishedRelease()) {
-  const refreshIdlePage = async () => {
-    if (refreshingIdlePage || !idleConnectionPage()) return;
-    refreshingIdlePage = true;
-    if (!await replaceWithPublishedRelease(idleConnectionPage)) refreshingIdlePage = false;
-  };
-  document.addEventListener('visibilitychange', refreshIdlePage);
+  document.addEventListener('visibilitychange', requestIdleRefresh);
   window.addEventListener('pageshow', event => {
-    if (event.persisted) void refreshIdlePage();
+    if (event.persisted) requestIdleRefresh();
   });
-  window.setInterval(refreshIdlePage, 5 * 60_000);
+  window.setInterval(requestIdleRefresh, 5 * 60_000);
   window.addEventListener('hashchange', mountOperator);
   const recovery = location.hash === '#daten';
   const browserExports = byId('daten');
