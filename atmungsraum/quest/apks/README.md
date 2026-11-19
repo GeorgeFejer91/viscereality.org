@@ -1,5 +1,50 @@
 # Atmungsraum Quest 2 APKs
 
+## Developer34 Start recovery candidate — 2026-11-19
+
+Version `0.2.33-dev`/34 is built locally from clean native commit
+`e71ea147fccff9b6712de14a85d634563ad3b7cf`, tree
+`5a868ed5cf4a6ce074bdbf8400d3b8e9fd76ce8e`. Reconstruct Developer32,
+apply the published background-music overlay, then
+[main-start-recovery.patch](../main-start-recovery.patch). The latter's exact
+tree reconstruction passes. Use `assemble-apk.ps1 -CanonicalRelease`, the
+retained Developer signer/private visual assets, SDK207 and helper3.
+The build uses the assembly recipe at website commit `40e8442`; the later
+all-profile music recipe is not needed to reproduce this canonical build.
+The APK is73,625,661bytes, SHA256
+`485f17aedd05bbba1ad8f0adaad8b09878aeeb41ed0844a9f72bb1730c138acd`.
+Retained v3 signer
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`,
+16KiB alignment, exact OpenXR/Meta loaders, music bytes and actual signed
+900000ms session closure all pass. File Manager's selected Quest2 install
+confirms exactly those bytes and version34; this is a local install, not Meta delivery.
+
+Compared with33, this includes the already-published background-music source
+and repairs shared-loop Start recovery: delayed packets do not expire at the
+audio-history deadline; admission still requires fresh input; missed/late
+callbacks rearm a future full cycle at most twice. A definitive rejected Start
+cancels only its original reservation, preserving still-valid calibration.
+Native owner/session/carrier fences, unknown outcomes and duplicate receipts
+remain protected. Terminal save/reset behavior is unchanged. The selected
+audio owner also compiles against Android's actual boot class path.
+
+Software evidence:912 native host tests pass, with6 isolated fixtures kept
+separate; the real Java/Rust audio peer passes9 groups;83 gateway-boundary,
+30 native-rejection,65 durable-mapping and134 coordinator/codec controls pass.
+The composed gateway/authentication/enrollment suite and boundary scan pass.
+All365 PWA/assembly/Java-interoperability tests pass with zero skips.
+The older aggregate composition static check has stale pre-existing source
+tokens; it is not reported as passing. The normal explicit MAIN/LAUNCHER cold
+route activates automatic Polar connection and both streams. Personal calibration
+completed and the wearer accepted tracking. The first main request advances
+the timer after its next-cycle boundary. The attended main run then entered
+ERROR at02:35.647 with its writer still open. Cues/stimulus continued; terminal
+audio error cleanup reset the input to Automatic and cleared calibration.
+The initiating failure was not retained before cleanup. This candidate is not
+hardware-qualified. Preserve and save the partial writer through the normal
+phone recovery action before restarting. Full900-second completion and data
+custody remain pending. Meta remains33; no Developer34 upload is claimed here.
+
 ## Background music signed profile matrix — 2026-11-19
 
 All candidates use native tree `06e8bf8bb7b23c407bc78474e4177f47aae3c1e9`.

@@ -1,0 +1,1023 @@
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+index e18d53db..ad1fd448 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+@@ -227,6 +227,11 @@ const MAX_TRAINING_SAMPLES: usize = 800;
+ // envelope. These are distinct from 200 ms actual-sample freshness/gaps and
+ // 150 ms sensor/host clock drift. History never extrapolates audio frames.
+ const BUFFERED_HISTORY_NS: u64 = CLOCK_FRESH_NS;
++// Raw PMD is packetized (36 ACC samples at 200 Hz). The audio-history bound
++// is not a connection-liveness deadline. Match acquisition's one-second loss
++// window while a main is queued/running; actual admission still requires a
++// fresh classified sample and never extrapolates one from this grace.
++const MAIN_DELIVERY_LIVENESS_NS: u64 = 1_000_000_000;
+ const MAX_AUDIO_HISTORY: usize = 32;
+ const MAX_PENDING_TRAINING: usize = 64;
+ const GRAVITY_TAU_S: f64 = 0.10;
+@@ -478,6 +483,14 @@ impl BreathingSetup {
+             }
+         }
+         self.flush_pending_training();
++        let delivery_liveness_ns = if matches!(
++            self.experiment,
++            ExperimentState::Waiting | ExperimentState::Running
++        ) {
++            MAIN_DELIVERY_LIVENESS_NS
++        } else {
++            BUFFERED_HISTORY_NS
++        };
+         if (self.model.is_some()
+             || self.input.pretrained()
+             || matches!(
+@@ -486,7 +499,7 @@ impl BreathingSetup {
+             ))
+             && self
+                 .delivery_witness_ns
+-                .is_some_and(|last| monotonic_ns.saturating_sub(last) > BUFFERED_HISTORY_NS)
++                .is_some_and(|last| monotonic_ns.saturating_sub(last) > delivery_liveness_ns)
+         {
+             self.live = None;
+             self.quality.warning = "timing";
+@@ -551,7 +564,7 @@ impl BreathingSetup {
+         let buffered_delivery = self.input.is_polar()
+             && self
+                 .delivery_witness_ns
+-                .is_some_and(|last| monotonic_ns.saturating_sub(last) <= BUFFERED_HISTORY_NS);
++                .is_some_and(|last| monotonic_ns.saturating_sub(last) <= delivery_liveness_ns);
+         if self.experiment == ExperimentState::Waiting {
+             if !self.input_ready(monotonic_ns) {
+                 if !signal_resuming && !buffered_delivery {
+@@ -677,6 +690,15 @@ impl BreathingSetup {
+         }
+     }
+
++    pub(crate) fn cancel_experiment(&mut self) {
++        // A rejected official Start retires its frame reservation, not the
++        // participant's calibration or selected input. Source/clock retirement
++        // remains authoritative and is never repaired by cancelling a start.
++        self.experiment = ExperimentState::Preparation;
++        self.experiment_start_frame = None;
++        self.experiment_completed_frames = 0;
++    }
++
+     pub(crate) fn clock_diagnostics(&self, now: u64) -> (Option<u64>, Option<u64>, &'static str) {
+         let Some(clock) = self.clock else {
+             return (None, None, "clock-unavailable");
+@@ -1079,6 +1101,21 @@ impl BreathingSetup {
+         Ok(())
+     }
+
++    pub(crate) fn defer_experiment(&mut self, now_ns: u64) -> Result<(), SetupFailure> {
++        if !matches!(self.experiment, ExperimentState::Waiting | ExperimentState::Running) {
++            return Err(SetupFailure::InputNotReady);
++        }
++        if !self.clock_ready(now_ns) {
++            return Err(SetupFailure::ClockStale);
++        }
++        let start = self.next_boundary()?;
++        start.checked_add(self.experiment_target_frames()).ok_or(SetupFailure::FrameOverflow)?;
++        self.experiment_start_frame = Some(start);
++        self.experiment_completed_frames = 0;
++        self.experiment = ExperimentState::Waiting;
++        Ok(())
++    }
++
+     /// Model inspection/projection only. Use `driver_sample(now_ns)` for output
+     /// and `snapshot(now_ns).ready` for readiness; both enforce live freshness.
+     pub(crate) fn model(&self) -> Option<&TiltModel> {
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+index 97c7f51b..f1f35702 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+@@ -1081,7 +1081,7 @@ impl Runtime {
+     }
+     fn check_command(&mut self, v: &Value, now: u64) -> Result<Option<Value>, &'static str> {
+         self.expire_recovery(now);
+-        if v["op"] == "end-main" {
++        if matches!(v["op"].as_str(), Some("end-main" | "cancel-main" | "defer-main")) {
+             closed(v, &["v", "id", "g", "r", "op", "main_start_frame"])?;
+         } else {
+             closed(v, &["v", "id", "g", "r", "op"])?;
+@@ -1100,6 +1100,8 @@ impl Runtime {
+                         | "controller"
+                         | "begin-main"
+                         | "end-main"
++                        | "cancel-main"
++                        | "defer-main"
+                 )
+             )
+         {
+@@ -1124,7 +1126,7 @@ impl Runtime {
+             return Err("clock-unavailable");
+         }
+         let s = self.core.snapshot(now);
+-        if v["op"] == "end-main" {
++        if matches!(v["op"].as_str(), Some("end-main" | "cancel-main" | "defer-main")) {
+             if v["main_start_frame"].as_u64().is_none()
+                 || v["main_start_frame"].as_u64() != self.last_admitted_frame
+             {
+@@ -1139,6 +1141,11 @@ impl Runtime {
+             ) {
+                 return Err("main-not-active");
+             }
++            if v["op"] == "defer-main"
++                && !matches!(s.experiment, ExperimentState::Waiting | ExperimentState::Running)
++            {
++                return Err("main-not-pending-start");
++            }
+             return Ok(None);
+         }
+         if self.recovery.is_some() {
+@@ -1268,6 +1275,12 @@ impl Runtime {
+                 self.last_admitted_frame = None;
+                 Ok(())
+             }
++            "cancel-main" => {
++                self.core.cancel_experiment();
++                self.last_admitted_frame = None;
++                Ok(())
++            }
++            "defer-main" => self.core.defer_experiment(now).map_err(|f| f.as_str()),
+             _ => Err("command-invalid"),
+         };
+         let accepted = result.is_ok();
+@@ -1737,7 +1750,7 @@ pub(crate) fn command_json(text: &str, now: u64) -> Value {
+         }
+     }
+     // Terminal cleanup is permitted while the next cycle is waiting for its park acknowledgment.
+-    let preparation_reservation = if value["op"] == "end-main" {
++    let preparation_reservation = if matches!(value["op"].as_str(), Some("end-main" | "cancel-main")) {
+         None
+     } else {
+         match crate::meta_update_admission::reserve_session() {
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+index cee53442..496197e7 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+@@ -1727,6 +1727,85 @@ fn terminal_main_reset_is_frame_bound_and_keeps_the_current_audio_observation()
+     assert_eq!(next["main_start_frame"], Value::Null);
+     assert_eq!(next["playing"], true);
+ }
++
++#[test]
++fn rejected_main_cancellation_preserves_the_calibrated_input_and_allows_fresh_retry() {
++    let (mut r, frame, now) = calibrated_inhale_runtime();
++    let prepared = r.status(now);
++    let model = r.core.model().map(|m| (m.generation, m.source_owner, m.axis, m.low, m.high));
++    assert_eq!(command(&mut r, 20, "begin-main", now)["accepted"], true);
++    let queued = r.status(now);
++    let mut cancel = json!({"v":1,"id":"0000000000000015","g":queued["g"],
++        "r":queued["r"],"op":"cancel-main","main_start_frame":queued["main_start_frame"]});
++    assert_eq!(r.command(&cancel, now)["accepted"], true);
++    let restored = r.status(now);
++    assert_eq!(restored["input"], prepared["input"]);
++    assert_eq!(restored["calibration"], "ready");
++    assert_eq!(restored["attempt"], prepared["attempt"]);
++    assert_eq!(restored["position_frames"], frame);
++    assert_eq!(restored["playing"], true);
++    assert_eq!(restored["ready"], true);
++    assert_eq!(restored["main_start_frame"], Value::Null);
++    assert_eq!(r.core.model().map(|m| (m.generation, m.source_owner, m.axis, m.low, m.high)), model);
++    assert_eq!(command(&mut r, 22, "begin-main", now)["accepted"], true);
++    // A different cancellation cannot retire the new reservation.
++    cancel["id"] = json!("0000000000000017");
++    cancel["r"] = r.status(now)["r"].clone();
++    cancel["main_start_frame"] = json!(123);
++    assert_eq!(r.command(&cancel, now)["reason"], "main-frame-mismatch");
++    assert_eq!(r.status(now)["stage"], "main-pending");
++}
++
++#[test]
++fn queued_polar_start_waits_through_one_delayed_batch_without_admitting_stale_input() {
++    let (mut r, frame, now) = calibrated_inhale_runtime();
++    assert_eq!(command(&mut r, 20, "begin-main", now)["accepted"], true);
++    // A 36-sample/200 Hz H10 packet spans 180 ms. One delayed packet can
++    // exceed the 250 ms audio history while still inside acquisition's 1 s
++    // liveness window. It supplies neither fresh samples nor Start readiness.
++    for tick in 1..=20 {
++        let at = now + tick * 20_000_000;
++        r.observe_clock(7, frame + tick * 882, at, true);
++    }
++    let waiting = r.status(now + 400_000_000);
++    assert_eq!(waiting["stage"], "main-pending");
++    assert_eq!(waiting["ready"], false);
++    assert_eq!(waiting["main_started"], false);
++    assert!(r.core.model().is_some());
++    for tick in 21..=850 {
++        let at = now + tick * 20_000_000;
++        r.observe_clock(7, frame + tick * 882, at, true);
++        r.observe_host_aligned_acc(100_000_000_000 + at, at, vector(0.2));
++    }
++    let started = r.status(now + 17_000_000_000);
++    assert_eq!(started["stage"], "main");
++    assert_eq!(started["main_started"], true);
++    assert_eq!(started["ready"], true);
++}
++
++#[test]
++fn a_missed_official_start_rearms_a_future_cycle_without_consuming_main_duration() {
++    let (mut r, frame, now) = calibrated_inhale_runtime();
++    assert_eq!(command(&mut r, 20, "begin-main", now)["accepted"], true);
++    for tick in 1..=800 {
++        let at = now + tick * 20_000_000;
++        r.observe_clock(7, frame + tick * 882, at, true);
++        r.observe_host_aligned_acc(100_000_000_000 + at, at, vector(0.2));
++    }
++    let at = now + 16_000_000_000;
++    let old = r.status(at);
++    assert_eq!(old["stage"], "main");
++    let deferred = json!({"v":1,"id":"0000000000000015","g":old["g"],"r":old["r"],
++        "op":"defer-main","main_start_frame":old["main_start_frame"]});
++    assert_eq!(r.command(&deferred, at)["accepted"], true);
++    let next = r.status(at);
++    assert_eq!(next["stage"], "main-pending");
++    assert_eq!(next["experiment_elapsed_ms"], 0);
++    assert!(next["main_start_frame"].as_u64().unwrap() > old["position_frames"].as_u64().unwrap());
++    assert_eq!(next["calibration"], "ready");
++    assert_eq!(r.command(&deferred, at)["accepted"], true);
++    assert_eq!(r.status(at)["main_start_frame"], next["main_start_frame"], "same operation is never replayed");
++}
+ #[test]
+ fn tracking_receipt_requires_observed_controller_and_retains_actual_fixed_orientation() {
+     let mut r = runtime();
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+index 64e0c444..13955c46 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+@@ -342,8 +342,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         int requestedBias = -1;
+         boolean armCheckpointObserved;
+         long armLaunchEpoch = -1L;
++        long mainAudioGeneration = -1L, mainAudioStartFrame = -1L;
++        boolean mainRejectionCleanupAttempted;
+         boolean awaitsDurableNativeOutcome() {
+-            return "arm".equals(operation) || "set-bias".equals(operation) || "save-next".equals(operation)
++            return "arm".equals(operation) || "start".equals(operation) || "set-bias".equals(operation) || "save-next".equals(operation)
+                 || "save-exit".equals(operation);
+         }
+         RemotePending(String browserId, String nativeId, String operation) {
+@@ -379,6 +381,47 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         }
+     }
+
++    private static void captureRemoteMainReservation(RemotePending pending, JSONObject readback) {
++        if (!"start".equals(pending.operation) || !BreathingSetupAudio.selected(remoteContext)) return;
++        ExperimentSessionBleServer server = remoteServer();
++        ExperimentSessionControlCapability.Fence fence = pending.sessionFence;
++        // Capture authority belongs to this still-current session, never to a
++        // stale request that happens to encounter another session's main frame.
++        if (server == null || fence == null || readback == null
++                || server.currentGeneration() != pending.serverGeneration || fence.server != pending.serverGeneration
++                || server.currentNativeEpoch() != pending.nativeOwnerEpoch || fence.epoch != pending.nativeOwnerEpoch
++                || !server.acceptsNativeOwner(fence.owner, fence.ownerEpoch)
++                || readback.optLong("generation", -1L) != fence.generation
++                || readback.optLong("runtime_epoch", -1L) != fence.epoch
++                || !fence.session.equals(readback.optString("session_key"))
++                || !fence.condition.equals(readback.optString("condition_id"))
++                || !fence.profile.equals(readback.optString("non_audio_profile_sha256"))
++                || !fence.binding.equals(readback.optString("activation_binding_sha256"))
++                || !"armed".equals(readback.optString("control_state")))
++            throw new SecurityException("main-start-session-fence-changed");
++        JSONObject audio = BreathingSetupAudio.status();
++        if (!"main".equals(audio.optString("stage"))) return;
++        long generation = audio.optLong("g", -1L), frame = audio.optLong("main_start_frame", -1L);
++        if (generation <= 0L || frame < 0L) return;
++        pending.mainAudioGeneration = generation;
++        pending.mainAudioStartFrame = frame;
++    }
++
++    private static String rejectRemoteSessionDetail(RemotePending pending, String reason) {
++        // Only a closed native reason token is projected into the carrier receipt.
++        if (reason == null || !reason.matches("[A-Za-z][A-Za-z0-9_-]{0,79}")) reason = "native-operation-rejected";
++        String detail = "Native rejected: " + reason + ".";
++        if (pending.mainAudioStartFrame < 0L || pending.mainRejectionCleanupAttempted) return detail;
++        pending.mainRejectionCleanupAttempted = true;
++        try {
++            JSONObject cleanup = BreathingSetupAudio.cancelRejectedMain(pending.mainAudioGeneration, pending.mainAudioStartFrame);
++            String state = cleanup.optString("state", "outcome_unknown"), cleanupReason = cleanup.optString("reason", "cleanup-unavailable");
++            if (!"confirmed".equals(state) && !"rejected".equals(state)) state = "outcome_unknown";
++            if (!cleanupReason.matches("[A-Za-z][A-Za-z0-9_-]{0,79}")) cleanupReason = "cleanup-unavailable";
++            return detail + " Main cleanup: " + state + " (" + cleanupReason + ").";
++        } catch (Exception uncertain) { return detail + " Main cleanup: outcome_unknown."; }
++    }
++
+     /** One observation of the existing kiosk/shell action, independent of pending Arm. */
+     private static final class RemoteTerminalPending {
+         final ExperimentSessionBleServer server;
+@@ -606,6 +649,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                 ExperimentSessionBleServer server = remoteServer();
+                 if (server == null) return;
+                 if (!server.acceptsStatusRead(pending.serverGeneration, pending.nativeOwnerEpoch)) return;
++                // Fenced session operations settle through the full operator readback,
++                // including original-Start audio cleanup. This sparse shell projection
++                // must not consume their correlation first (or treat duplicate as failure).
++                if (pending.sessionFence != null) return;
+                 if("arm".equals(pending.operation)&&readback.armAcceptance!=null
+                         &&readback.armAcceptance.matches(pending.nativeId,pending.armGeneration,pending.armCondition,readback))pending.armCheckpointObserved=true;
+                 if ("arm".equals(pending.operation) && readback.receipt.accepted
+@@ -779,13 +826,15 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                         && fence.profile.equals(readback.optString("non_audio_profile_sha256"))
+                         && fence.binding.equals(readback.optString("activation_binding_sha256"));
+                     String expected="start".equals(pending.operation)?"running":"pause".equals(pending.operation)?"paused":"running";
+-                    boolean deniedCurrent=pending.nativeId.equals(readback.optString("last_operation_id"))
++                    boolean currentOwner=server!=null&&server.currentGeneration()==pending.serverGeneration
++                        &&server.currentNativeEpoch()==pending.nativeOwnerEpoch
++                        &&readback.optLong("runtime_epoch",-1)==pending.nativeOwnerEpoch;
++                    boolean deniedCurrent=currentOwner&&pending.nativeId.equals(readback.optString("last_operation_id"))
+                         && ("rejected".equals(readback.optString("last_operation_status"))
+-                            || "failed".equals(readback.optString("last_operation_status"))
+-                            || "duplicate".equals(readback.optString("last_operation_status")));
++                            || "failed".equals(readback.optString("last_operation_status")));
+                     if(deniedCurrent) {
+                         if(server!=null)server.updateReceiptForGeneration(pending.serverGeneration,pending.browserId,
+-                            "rejected","Native session operation rejected, failed or duplicate.");remotePending=null;
++                            "rejected",rejectRemoteSessionDetail(pending,readback.optString("last_reason")));remotePending=null;
+                     }else if(exact && pending.nativeId.equals(readback.optString("operator_operation_id"))
+                             && "ble-session-v2".equals(readback.optString("operator_origin"))
+                             && "applied".equals(readback.optString("operator_operation_status"))
+@@ -797,12 +846,6 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                         if(server!=null)server.updateReceiptForGeneration(pending.serverGeneration,pending.browserId,
+                             "confirmed","set-bias".equals(pending.operation)?"Breathing bias applied and saved: "+pending.requestedBias+"%.":"Native session operation applied.");
+                         remotePending=null;
+-                    }else if(pending.nativeId.equals(readback.optString("last_operation_id"))
+-                            && ("rejected".equals(readback.optString("last_operation_status"))
+-                                || "failed".equals(readback.optString("last_operation_status")))) {
+-                        if(server!=null)server.updateReceiptForGeneration(pending.serverGeneration,pending.browserId,
+-                            "rejected","Native session operation rejected or failed.");
+-                        remotePending=null;
+                     }
+                 }
+                 return readback;
+@@ -1043,19 +1086,32 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                 }
+                 if(request.sessionFence!=null) {
+                     String nativeId="ble-session-"+request.id;
++                    RemotePending pending=new RemotePending(request.id,nativeId,request.operation,request.sessionFence);
++                    boolean crossedNativeBoundary=false;
+                     try {
+                         if(request.sessionFence.server!=server.currentGeneration())throw new SecurityException("carrier-replaced");
+-                        remotePending=new RemotePending(request.id,nativeId,request.operation,request.sessionFence);
+-                        remotePending.requestedBias=request.bias;
++                        if("start".equals(request.operation))captureRemoteMainReservation(pending,sessionControlReadback());
++                        remotePending=pending;
++                        pending.requestedBias=request.bias;
+                         server.updateReceipt(request.id,"pending","Waiting for the native session operation.");
+                         // This is the same serialized native session owner used by controller input.
+                         // The worker rechecks the full current session/generation/epoch tuple.
+                         JSONObject command=request.sessionFence.nativeCommand(nativeId,SystemClock.elapsedRealtimeNanos());
+                         if("set-bias".equals(request.operation))command.put("bias_percent",request.bias);
++                        crossedNativeBoundary=true;
+                         JSONObject admission=new JSONObject(ControlPanelActivity.applyExperimentSessionCommand(command.toString()));
+-                        if(!"queued".equals(admission.optString("command_status")))throw new SecurityException("native-not-queued");
++                        if("rejected".equals(admission.optString("command_status"))) {
++                            server.updateReceipt(request.id,"rejected",rejectRemoteSessionDetail(pending,admission.optString("reason_code")));
++                            if(remotePending==pending)remotePending=null;
++                        }else if(!"queued".equals(admission.optString("command_status")))
++                            server.updateReceipt(request.id,"outcome_unknown","Native session admission outcome unknown; awaiting original readback.");
+                     }catch(Exception denied) {
+-                        server.updateReceipt(request.id,"rejected","Session owner admission failed.");remotePending=null;
++                        if(crossedNativeBoundary) {
++                            server.updateReceipt(request.id,"outcome_unknown","Native session outcome unknown; awaiting original readback.");
++                        }else {
++                            server.updateReceipt(request.id,"rejected",rejectRemoteSessionDetail(pending,"session-owner-admission-failed"));
++                            if(remotePending==pending)remotePending=null;
++                        }
+                     }
+                     return;
+                 }
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index 593dce7a..c7591803 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -46,6 +46,7 @@ public final class ExperimentSessionCommandGateway {
+     private JSONObject pendingRecenter;
+     private LocalEnrollmentGuard pendingRecenterGuard;
+     private String deferredMainId = "";
++    private long deferredMainAudioGeneration;
+     private CalibrationInstruction calibrationInstruction;
+     private ProbeInstruction probeInstruction;
+     private final ExperimentSessionWifiConnection wifiSetup;
+@@ -1505,18 +1506,23 @@ public final class ExperimentSessionCommandGateway {
+             throw new SecurityException("session-update-check-required");
+         final String updateCycle=updateGrant!=null&&updateGrant.optInt("v")==2?updateGrant.optString("cycle",""):"";
+         JSONObject setup = BreathingSetupAudio.status();
++        final long admittedAudioGeneration = setup.getLong("g");
++        final String admittedInput = setup.optString("input");
++        final long admittedAttempt = setup.optLong("attempt");
++        final long[] admittedFrame = new long[] { -1L };
+         JSONObject begin = new JSONObject().put("v", 1).put("id", ExperimentSessionBleProtocol.newHex(8))
+             .put("g", setup.getLong("g")).put("r", setup.getLong("r")).put("op", "begin-main");
+         if(admittedEffect!=null)admittedEffect.check();
+         if (!BreathingSetupAudio.command(begin).optBoolean("accepted", false))
+             throw new SecurityException("main-breathing-input-unavailable");
+         deferredMainId = id;
++        deferredMainAudioGeneration = admittedAudioGeneration;
+         carrier.updateReceipt(id, "pending", "Waiting for the next complete breathing cycle.");
+         Runnable retired = new Runnable() { public void run() { main.post(new Runnable() { public void run() {
+             rejectDeferredMain(id);
+         }}); }};
+         try {
+-        boolean queued = BreathingSetupAudio.deferExperimentStart(new Runnable() { public void run() {
++        class MainBoundary implements Runnable { int rearms; public void run() {
+             main.post(new Runnable() { public void run() {
+                 if (!id.equals(deferredMainId)) return;
+                 try {
+@@ -1530,15 +1536,43 @@ public final class ExperimentSessionCommandGateway {
+                             || carrier.currentGeneration() != admittedCarrier
+                             || !carrier.acceptsNativeOwner(admittedOwner, admittedEpoch)
+                             || !remoteAvailable() || !"ARMED".equals(current.opt("p"))
++                            || !"main".equals(breathing.optString("stage"))
+                             || !breathing.optBoolean("main_started") || !breathing.optBoolean("playing")
+-                            || !breathing.optBoolean("ready"))
++                            || !breathing.optBoolean("clock_valid")
++                            || breathing.optLong("g") != admittedAudioGeneration
++                            || !admittedInput.equals(breathing.optString("input"))
++                            || admittedAttempt != breathing.optLong("attempt"))
+                         throw new SecurityException("main-boundary-owner-changed");
++                    long frame = breathing.optLong("main_start_frame", -1L);
++                    if (frame < 0 || admittedFrame[0] >= 0 && admittedFrame[0] != frame)
++                        throw new SecurityException("main-boundary-frame-changed");
++                    admittedFrame[0] = frame;
++                    if (!breathing.optBoolean("ready") || breathing.optLong("experiment_elapsed_ms") > 250L) {
++                        if (rearms++ >= 2) throw new SecurityException("main-boundary-delay-limit");
++                        // The audio owner admitted a fresh boundary before this
++                        // main-looper callback. A late PMD batch can make its
++                        // second read temporarily unready. Keep this one intent
++                        // pending for a future full cycle. Re-arm the existing
++                        // frame-bound intent, without starting late or consuming
++                        // any of the participant's 900-second interval.
++                        JSONObject deferred = BreathingSetupAudio.deferMainBoundary(admittedAudioGeneration, frame);
++                        if (!"confirmed".equals(deferred.optString("state"))) {
++                            rejectDeferredMain(id);
++                            return;
++                        }
++                        admittedFrame[0] = -1L;
++                        if (!BreathingSetupAudio.deferExperimentStart(MainBoundary.this, retired))
++                            rejectDeferredMain(id);
++                        return;
++                    }
+                     if(admittedEffect!=null)admittedEffect.check();
+                     delegate.dispatch(request);
+                     deferredMainId = "";
++                    deferredMainAudioGeneration = 0;
+                 } catch (Exception rejected) { rejectDeferredMain(id); }
+             }});
+-        }}, retired);
++        }}
++        boolean queued = BreathingSetupAudio.deferExperimentStart(new MainBoundary(), retired);
+         if (!queued) rejectDeferredMain(id);
+         } catch (BreathingSetupAudio.OutcomeUncertainException uncertain) {
+             retireDeferredMain(id, true);
+@@ -1549,16 +1583,21 @@ public final class ExperimentSessionCommandGateway {
+     }
+     private void retireDeferredMain(String id, boolean uncertain) {
+         if (!id.equals(deferredMainId)) return;
++        long admittedGeneration = deferredMainAudioGeneration;
+         deferredMainId = "";
++        deferredMainAudioGeneration = 0;
+         BreathingSetupAudio.cancelDeferredExperimentStart();
++        String reason = "boundary-retired";
+         try {
+             JSONObject current = BreathingSetupAudio.status();
+-            if (!current.isNull("main_start_frame")) BreathingSetupAudio.command(new JSONObject().put("v", 1)
+-                .put("id", ExperimentSessionBleProtocol.newHex(8)).put("g", current.getLong("g"))
+-                .put("r", current.getLong("r")).put("op", "end-main")
+-                .put("main_start_frame", current.getLong("main_start_frame")));
+-        } catch (Exception unavailable) { /* A retired native owner cannot be reset by this gateway. */ }
+-        carrier.updateReceipt(id, uncertain ? "outcome_unknown" : "rejected", "The native breathing boundary could not be confirmed.");
++            String failure = current.optString("failure");
++            if (failure.matches("signal_gap|input_not_ready|clock_stale|clock_stalled|clock_retired|controller_stale|invalid_source")) reason = failure;
++            if (current.getLong("g") == admittedGeneration && !current.isNull("main_start_frame")) {
++                JSONObject cleanup = BreathingSetupAudio.cancelRejectedMain(admittedGeneration, current.getLong("main_start_frame"));
++                if (!"confirmed".equals(cleanup.optString("state"))) uncertain = true;
++            }
++        } catch (Exception unavailable) { uncertain = true; }
++        carrier.updateReceipt(id, uncertain ? "outcome_unknown" : "rejected", "main-start:" + reason);
+     }
+     private JSONObject snapshot()throws Exception {
+         try {
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+index 49851ffe..77211b40 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+@@ -233,6 +233,29 @@ final class BreathingSetupAudio implements AutoCloseable {
+             catch (java.util.concurrent.RejectedExecutionException retired) { owner.cancel(); }
+         }
+     }
++    static JSONObject cancelRejectedMain(final long expectedGeneration, final long admittedFrame) {
++        return changeMainReservation(expectedGeneration, admittedFrame, false);
++    }
++    static JSONObject deferMainBoundary(final long expectedGeneration, final long admittedFrame) {
++        return changeMainReservation(expectedGeneration, admittedFrame, true);
++    }
++    private static JSONObject changeMainReservation(final long expectedGeneration, final long admittedFrame, final boolean defer) {
++        final BreathingSetupAudio owner = appLifetime;
++        if (owner == null || expectedGeneration <= 0 || admittedFrame < 0)
++            return cancellationReceipt("rejected", "main-owner-unavailable");
++        try {
++            return owner.call(new Callable<JSONObject>() { public JSONObject call() throws Exception {
++                return owner.changeMainIfCurrent(expectedGeneration, admittedFrame, defer);
++            }});
++        } catch (Exception uncertain) {
++            return cancellationReceipt("outcome_unknown", "main-cancel-unconfirmed");
++        }
++    }
++    private static JSONObject cancellationReceipt(String state, String reason) {
++        JSONObject result = new JSONObject();
++        try { result.put("state", state).put("reason", reason); } catch (Exception ignored) { }
++        return result;
++    }
+     static boolean continuousMain(String scenarioId) { return selected && "haupt-15".equals(scenarioId); }
+     static String mainRecordingPlan(String scenarioId) {
+         BreathingSetupAudio owner = appLifetime;
+@@ -258,13 +281,13 @@ final class BreathingSetupAudio implements AutoCloseable {
+     static void muteForInstruction(final boolean muted) throws Exception {
+         BreathingSetupAudio owner = appLifetime;
+         if (owner == null) throw new IllegalStateException("breathing-loop-unavailable");
+-        owner.call(() -> {
++        owner.call(new Callable<Void>() { public Void call() throws Exception {
+             synchronized (owner) {
+                 if (owner.closed || !owner.initialized) throw new IllegalStateException("breathing-loop-unavailable");
+                 owner.player.setMuted(muted);
+             }
+             return null;
+-        });
++        }});
+     }
+
+     static void pauseLoop() { control(false); }
+@@ -463,6 +486,40 @@ final class BreathingSetupAudio implements AutoCloseable {
+             return Math.min(900000L, Math.max(0L, frame - mainStartFrame) * 1000L / contract.sampleRate);
+         } catch (Exception unavailable) { return -1; }
+     }
++    private JSONObject changeMainIfCurrent(long expectedGeneration, long admittedFrame, boolean defer) throws Exception {
++        for (int attempt = 0; attempt < 2; attempt++) {
++            synchronized (this) {
++                if (closed || !initialized) return cancellationReceipt("rejected", "main-owner-retired");
++            }
++            JSONObject state = new JSONObject(nativeBridge.status(clock.nowNs()));
++            if (state.getLong("g") != expectedGeneration)
++                return cancellationReceipt("rejected", "stale-generation");
++            if (state.isNull("main_start_frame")) {
++                if (defer) return cancellationReceipt("rejected", "main-not-active");
++                cancel();
++                return cancellationReceipt("confirmed", "main-already-inactive");
++            }
++            if (state.getLong("main_start_frame") != admittedFrame)
++                return cancellationReceipt("rejected", "main-frame-mismatch");
++            JSONObject command = new JSONObject().put("v", 1)
++                .put("id", java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16))
++                .put("g", expectedGeneration).put("r", state.getLong("r")).put("op", defer ? "defer-main" : "cancel-main")
++                .put("main_start_frame", admittedFrame);
++            JSONObject result = new JSONObject(nativeBridge.command(command.toString(), clock.nowNs()));
++            if (result.optBoolean("accepted", false)) {
++                if (!defer) cancel();
++                return cancellationReceipt("confirmed", defer ? "main-boundary-deferred" : "main-reservation-cancelled");
++            }
++            String reason = result.optString("reason", "main-cancel-unconfirmed");
++            // Only a conclusive non-effect may be retried, with identical owner
++            // and frame fences. Never replay a command whose outcome is unknown.
++            if (!"stale-revision".equals(reason))
++                return cancellationReceipt("main-frame-mismatch".equals(reason) || "stale-generation".equals(reason)
++                    ? "rejected" : "outcome_unknown", reason);
++        }
++        return cancellationReceipt("outcome_unknown", "main-cancel-stale-revision");
++    }
++
+     private boolean endMainIfCurrent(long admittedFrame) throws Exception {
+         synchronized (this) { if (closed || mainStartFrame != admittedFrame) return false; }
+         for (int attempt = 0; attempt < 2; attempt++) {
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
+index 12c633ec..83fce818 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
+@@ -27,7 +27,9 @@ public final class BreathingSetupAudioNativeTest {
+         hungPollRemainsObservableAndQueuedRetryCannotRunLater(json, executable);
+         stoppedAndExceptionedPlayersRemainExplicitlyRecoverable(json, executable);
+         terminalRetirementCannotPlayReturningPreparation(json, executable);
+-        System.out.println("BreathingSetupAudioNativeTest PASS (real Rust admission/ledger, 7 groups)");
++        queuedMainSurvivesOneLatePmdPacket(json, executable);
++        rejectedMainCancellationRetriesOnlyConclusiveRevisionRaces(json, executable);
++        System.out.println("BreathingSetupAudioNativeTest PASS (real Rust admission/ledger, 9 groups)");
+     }
+
+     private static void explicitPreparationEndWaitsForRealPlayerAndNativePark(String json,String executable)throws Exception {
+@@ -220,6 +222,57 @@ public final class BreathingSetupAudioNativeTest {
+         }
+     }
+
++    private static void queuedMainSurvivesOneLatePmdPacket(String json, String executable) throws Exception {
++        try (Fixture f = new Fixture(json, executable)) {
++            f.start();
++            for (int frame = 1764; frame <= 2116800; frame += 1764) {
++                f.advance(frame, 40000000L);
++                double t = (frame % 705600) / 44100.0;
++                f.acc(t < 4 ? t / 4 : t < 8 ? 1 : t < 12 ? (12 - t) / 4 : 0);
++            }
++            check(f.state().getBoolean("ready"), "real participant fit is ready before Start");
++            check(BreathingSetupAudio.command(f.request("begin-main")).getBoolean("accepted"), "real native main reservation");
++            java.util.concurrent.atomic.AtomicInteger starts = new java.util.concurrent.atomic.AtomicInteger();
++            java.util.concurrent.atomic.AtomicInteger retired = new java.util.concurrent.atomic.AtomicInteger();
++            check(BreathingSetupAudio.deferExperimentStart(starts::incrementAndGet, retired::incrementAndGet), "real Java owner queues main");
++            for (int tick = 1; tick <= 1000; tick++) {
++                f.advance(2116800 + tick * 882, 20000000L);
++                // First notification is 400 ms late; later packets contain the
++                // real H10 shape: 36 samples at 200 Hz every 180 ms.
++                if (tick >= 20 && (tick - 20) % 9 == 0) {
++                    for (int sample = 0; sample < 36; sample++) f.accAt(0.2, (35L - sample) * 5000000L);
++                }
++                if (tick == 20) check(retired.get() == 0 && starts.get() == 0, "late packet cannot retire or invent a Start");
++            }
++            check(starts.get() == 1 && retired.get() == 0, "real Rust and Java admit the original Start once after real input returns");
++            check(f.state().getString("calibration").equals("ready"), "batch jitter retains participant fit");
++        }
++    }
++
++    private static void rejectedMainCancellationRetriesOnlyConclusiveRevisionRaces(String json, String executable) throws Exception {
++        try (Fixture f = new Fixture(json, executable)) {
++            BreathingSetupAudio.command(f.request("polar-fixed"));
++            for (int tick = 1; tick <= 40; tick++) { f.advance(tick * 1764, 40000000L); f.acc(0.5); }
++            check(BreathingSetupAudio.command(f.request("begin-main")).getBoolean("accepted"), "ready selected input reserves main");
++            JSONObject state = f.state(); long generation = state.getLong("g"), frame = state.getLong("main_start_frame");
++            f.bridge.staleCancellations = 1;
++            JSONObject cancelled = BreathingSetupAudio.cancelRejectedMain(generation, frame);
++            check(cancelled.getString("state").equals("confirmed") && f.bridge.cancellationAttempts == 2,
++                "one conclusive stale revision may retry with the same generation and frame");
++            check(f.state().isNull("main_start_frame") && f.state().getString("input").equals("polar-tilt-fixed"),
++                "real cancellation retains the selected input");
++            check(BreathingSetupAudio.command(f.request("begin-main")).getBoolean("accepted"), "fresh Start may reserve again");
++            state = f.state(); frame = state.getLong("main_start_frame");
++            int before = f.bridge.cancellationAttempts;
++            check(BreathingSetupAudio.cancelRejectedMain(generation + 1, frame).getString("state").equals("rejected")
++                && f.bridge.cancellationAttempts == before, "wrong owner cannot attempt cancellation");
++            f.bridge.uncertainCancellation = true;
++            JSONObject unknown = BreathingSetupAudio.cancelRejectedMain(generation, frame);
++            check(unknown.getString("state").equals("outcome_unknown") && f.bridge.cancellationAttempts == before + 1,
++                "a lost actual cancellation result is never replayed");
++        }
++    }
++
+     static final class Fixture implements AutoCloseable {
+         final FakeClock clock = new FakeClock(); final FakePlayer player = new FakePlayer();
+         final NativePeer bridge; final BreathingSetupAudio owner;
+@@ -237,9 +290,12 @@ public final class BreathingSetupAudioNativeTest {
+         JSONObject receipt(JSONObject request) { return new JSONObject(bridge.command(new JSONObject().put("v", 1).put("id", request.getString("id")).put("op", "receipt").toString(), clock.now)); }
+         void advance(int frame, long ns) { player.head = frame; clock.now += ns; owner.observe(); }
+         void acc(double volume) {
++            accAt(volume, 0L);
++        }
++        void accAt(double volume, long lag) {
+             double angle = -0.08 + 0.16 * volume;
+-            bridge.exchange(new JSONObject().put("kind", "acc").put("sensor", 100000000000L + clock.now)
+-                .put("host", clock.now).put("source", bridge.nano).put("now", clock.now)
++            bridge.exchange(new JSONObject().put("kind", "acc").put("sensor", 100000000000L + clock.now - lag)
++                .put("host", clock.now - lag).put("source", bridge.nano - lag).put("now", clock.now)
+                 .put("mg", new JSONArray().put(Math.sin(angle) * 1000).put(0).put(Math.cos(angle) * 1000)));
+         }
+         ScheduledThreadPoolExecutor worker() throws Exception { java.lang.reflect.Field worker = BreathingSetupAudio.class.getDeclaredField("worker"); worker.setAccessible(true); return (ScheduledThreadPoolExecutor)worker.get(owner); }
+@@ -278,6 +334,8 @@ public final class BreathingSetupAudioNativeTest {
+         final Process process; final BufferedReader output; final PrintWriter input;
+         volatile long nano;
+         volatile RuntimeException dispatchFailure;
++        int staleCancellations, cancellationAttempts;
++        boolean uncertainCancellation;
+         NativePeer(String executable) throws Exception {
+             ProcessBuilder builder = new ProcessBuilder(executable, "--ignored", "--exact", "experiment_breathing_setup_runtime::tests::java_audio_recovery_native_peer", "--nocapture", "--test-threads=1");
+             builder.environment().put("RQ_AUDIO_RECOVERY_PEER", "1"); builder.redirectError(ProcessBuilder.Redirect.INHERIT);
+@@ -293,7 +351,17 @@ public final class BreathingSetupAudioNativeTest {
+         public void observeSourceClockPair(long javaNano, long elapsed) { nano = javaNano; exchange(new JSONObject().put("kind", "pair").put("nano", javaNano).put("elapsed", elapsed)); }
+         public void observe(long g, long frame, long now, boolean playing) { if (dispatchFailure != null) throw dispatchFailure; exchange(new JSONObject().put("kind", "observe").put("g", g).put("frame", frame).put("now", now).put("playing", playing)); }
+         public String status(long now) { return exchange(new JSONObject().put("kind", "status").put("now", now)).toString(); }
+-        public String command(String json, long now) { return exchange(new JSONObject().put("kind", "command").put("command", new JSONObject(json)).put("now", now)).toString(); }
++        public String command(String json, long now) {
++            JSONObject command = new JSONObject(json);
++            boolean cancel = command.optString("op").equals("cancel-main");
++            if (cancel) {
++                cancellationAttempts++;
++                if (staleCancellations-- > 0) return new JSONObject().put("accepted", false).put("reason", "stale-revision").toString();
++            }
++            String result = exchange(new JSONObject().put("kind", "command").put("command", command).put("now", now)).toString();
++            if (cancel && uncertainCancellation) throw new IllegalStateException("modeled lost post-admission result");
++            return result;
++        }
+         public String recoveryEffect(String id, long old, long target, String action, long now) { return exchange(new JSONObject().put("kind", "effect").put("id", id).put("old", old).put("target", target).put("action", action).put("now", now)).toString(); }
+         public void close() throws Exception { input.println(new JSONObject().put("kind", "quit")); if (!process.waitFor(2, TimeUnit.SECONDS)) process.destroyForcibly(); check(process.exitValue() == 0, "native peer exited cleanly"); }
+     }
+diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
+index 66efc372..3258d793 100644
+--- a/docs/EXPERIMENT_SESSION_CONTROL.md
++++ b/docs/EXPERIMENT_SESSION_CONTROL.md
+@@ -4,6 +4,33 @@ Controller, panel, debug CLI and Web Bluetooth controls address the same seriali
+ native session and official active clock. They do not fabricate a phase sample,
+ immersive presentation, frame, wearer result or acoustic observation.
+
++## Shared-loop Start admission and recovery
++
++The selected shared breathing loop reserves the next complete cycle before
++OfficialStart. Packet-delivery liveness uses the acquisition owner's one-second
++window; the 250 ms audio-history bound remains separate. The actual admission
++still requires fresh input. A late or temporarily unready main-thread boundary
++callback may rearm its same intent for a future full cycle at most twice. It
++cannot start a completed interval or consume the pending interval's 900 seconds.
++
++Internal `defer-main` and `cancel-main` commands require the current audio
++generation, semantic revision and exact reserved frame. Cancellation preserves
++a still-valid model, selected input and audio observation. Terminal `end-main`
++keeps its existing reset semantics. Source or clock retirement cannot be undone
++by cancellation. These internal commands add no public setup or debug authority.
++
++A definitive native Start rejection cancels only the reservation captured under
++the matching carrier, native owner and complete ARMED session tuple. Duplicate
++or uncertain outcomes cannot trigger cleanup. A conclusive stale revision may
++retry cleanup once with the same generation/frame; a lost outcome is not replayed.
++Full native readback owns fenced-operation settlement, including delayed results.
++
++Focused coverage includes `test_experiment_gateway_breathing_boundary.py`,
++`test_native_start_rejection_cleanup.py`, `test_remote_durable_pending.py` and
++the real Java audio-owner/Rust runtime peer in `Test-BreathingSetupAudioHost.ps1`.
++Host checks do not establish physical Start, uninterrupted recording or data
++custody; those require the selected signed APK and an attended complete run.
++
+ | Operation | Controller / panel | CLI | Web |
+ | --- | --- | --- | --- |
+ | Arm selected condition and initial bias | Experimenter condition controls | arm with requested_condition/requested_bias | Existing v1 arm carries condition/bias |
+diff --git a/tools/checks/Test-ExperimentSessionCommandGateway.ps1 b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
+index 894c091d..40ba472d 100644
+--- a/tools/checks/Test-ExperimentSessionCommandGateway.ps1
++++ b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
+@@ -32,6 +32,8 @@ if($LASTEXITCODE-ne0){throw 'Gateway closed live-bias parser tests failed'}
+ if($LASTEXITCODE-ne0){throw 'Gateway original receipt/dedupe tests failed'}
+ & python (Join-Path $PSScriptRoot 'test_experiment_gateway_breathing_boundary.py') --repo $repo --json-jar $JsonJar
+ if($LASTEXITCODE-ne0){throw 'Selected gateway breathing boundary lifecycle tests failed'}
++& python (Join-Path $PSScriptRoot 'test_native_start_rejection_cleanup.py') --repo $repo --json-jar $JsonJar
++if($LASTEXITCODE-ne0){throw 'Definitive native Start rejection cleanup tests failed'}
+ & python (Join-Path $PSScriptRoot 'test_experiment_gateway_ble_journal.py') --repo $repo --json-jar $JsonJar
+ if($LASTEXITCODE-ne0){throw 'Gateway mixed BLE/network original receipt tests failed'}
+ & python (Join-Path $PSScriptRoot 'test_experiment_ble_phone_admission.py') --repo $repo --json-jar $JsonJar
+diff --git a/tools/checks/experiment_breathing_setup_stub.py b/tools/checks/experiment_breathing_setup_stub.py
+index 0789fc2f..e2626d33 100644
+--- a/tools/checks/experiment_breathing_setup_stub.py
++++ b/tools/checks/experiment_breathing_setup_stub.py
+@@ -12,5 +12,7 @@ final class BreathingSetupAudio {
+  static org.json.JSONObject status(){throw new AssertionError("Unselected setup cannot read audio");}
+  static String mainRecordingPlan(String scenario){throw new AssertionError("Unselected setup cannot replace recording plan");}
+  static boolean deferExperimentStart(Runnable ready,Runnable retired){throw new AssertionError("Unselected setup cannot defer");}
++ static org.json.JSONObject cancelRejectedMain(long generation,long frame){throw new AssertionError("Unselected setup cannot cancel main");}
++ static org.json.JSONObject deferMainBoundary(long generation,long frame){throw new AssertionError("Unselected setup cannot rearm main");}
+ }
+ '''
+diff --git a/tools/checks/test_experiment_gateway_breathing_boundary.py b/tools/checks/test_experiment_gateway_breathing_boundary.py
+index a04fab1d..1bb466e0 100644
+--- a/tools/checks/test_experiment_gateway_breathing_boundary.py
++++ b/tools/checks/test_experiment_gateway_breathing_boundary.py
+@@ -17,15 +17,25 @@ final class ExperimentSessionRecordingExport {static void retire(){}}
+ final class BreathingSetupAudio {
+  static final class OutcomeUncertainException extends RuntimeException {}
+  static Runnable ready,retired;static boolean queued=true,uncertain,mainStarted,playing=true,reentrantCancel,inputReady=true;
+- static int begins,ends,cancels,calibrations;static boolean reserved,muted;static JSONObject calibrationReceipt;
++ static int begins,ends,cancels,calibrations,mainCancellations,rearms;static boolean reserved,muted,complete;static JSONObject calibrationReceipt;
++ static long mainFrame=705600L,elapsed;
+  static void muteForInstruction(boolean value){muted=value;}
+  static void pauseLoop(){playing=false;}
+  static boolean selected(Object context){return true;}
+  static JSONObject status()throws Exception{return new JSONObject().put("g",7).put("r",1)
+-  .put("attempt",calibrations).put("main_started",mainStarted).put("ready",inputReady).put("playing",playing).put("main_start_frame",reserved?705600L:JSONObject.NULL);}
++  .put("attempt",calibrations).put("input","polar-tilt").put("stage",complete?"complete":mainStarted?"main":"main-pending")
++  .put("experiment_elapsed_ms",elapsed).put("main_started",mainStarted).put("ready",inputReady).put("clock_valid",true).put("playing",playing).put("main_start_frame",reserved?mainFrame:JSONObject.NULL);}
++ static JSONObject deferMainBoundary(long generation,long frame)throws Exception {
++  rearms++;mainFrame+=705600L;mainStarted=false;elapsed=0;
++  return new JSONObject().put("state","confirmed");
++ }
++ static JSONObject cancelRejectedMain(long generation,long frame)throws Exception {
++  mainCancellations++;reserved=false;return new JSONObject().put("state","confirmed");
++ }
+  static JSONObject command(JSONObject body)throws Exception {
+   if(body.getString("op").equals("begin-main")){begins++;reserved=true;return new JSONObject().put("accepted",true);}
+   if(body.getString("op").equals("end-main")){ends++;reserved=false;return new JSONObject().put("accepted",true);}
++  if(body.getString("op").equals("cancel-main")){mainCancellations++;reserved=false;return new JSONObject().put("accepted",true);}
+   if(body.getString("op").equals("calibrate")){
+    calibrations++;calibrationReceipt=new JSONObject().put("state","confirmed").put("accepted",true).put("reason","accepted");
+    return calibrationReceipt;
+@@ -35,7 +45,7 @@ final class BreathingSetupAudio {
+  }
+  static boolean deferExperimentStart(Runnable begin,Runnable reject){ready=begin;retired=reject;if(uncertain)throw new OutcomeUncertainException();return queued;}
+  static void cancelDeferredExperimentStart(){cancels++;if(reentrantCancel&&retired!=null)retired.run();}
+- static void reset(){ready=retired=null;queued=true;uncertain=mainStarted=reserved=reentrantCancel=false;playing=inputReady=true;begins=ends=cancels=calibrations=0;calibrationReceipt=null;muted=false;}
++ static void reset(){ready=retired=null;queued=true;uncertain=mainStarted=reserved=reentrantCancel=complete=false;playing=inputReady=true;begins=ends=cancels=calibrations=mainCancellations=rearms=0;calibrationReceipt=null;muted=false;mainFrame=705600L;elapsed=0;}
+ }
+ final class NativeRendererMetaUpdate {
+  static String cycle="1",updateState="accepted";static boolean allowed=true;static int reservations;static boolean failOutro;
+@@ -54,6 +64,7 @@ final class GatewayBreathingBoundaryTest {
+  void retireMemberProtocols(){}
+  void revalidateEffect()throws Exception {if(effectGuard!=null)effectGuard.check();}
+  Object context=new Object();long identity=1,epoch=7;String deferredMainId="";boolean remote=true;
++ long deferredMainAudioGeneration;
+  CalibrationInstruction calibrationInstruction;
+  ProbeInstruction probeInstruction;
+  boolean calibrationSelected,probePackaged=true,polarReady=true;Runnable narrationCompleted,narrationFailed;int narrationStarts,narrationReleases;
+@@ -262,6 +273,28 @@ final class GatewayBreathingBoundaryTest {
+   }
+  }
+  public static void main(String[] args)throws Exception {
++  GatewayBreathingBoundaryTest delayed=fresh();delayed.start();BreathingSetupAudio.inputReady=false;
++  delayed.boundary();
++  check(delayed.state().equals("pending")&&delayed.dispatches==0&&BreathingSetupAudio.begins==1
++      &&BreathingSetupAudio.ends==0,"a delayed fresh sample keeps the original Start pending without deleting calibration");
++  BreathingSetupAudio.inputReady=true;delayed.boundary();delayed.boundary();
++  check(delayed.state().equals("confirmed")&&delayed.dispatches==1&&BreathingSetupAudio.begins==1,
++      "fresh evidence completes the original boundary once without replaying begin-main");
++  check(BreathingSetupAudio.rearms==1,"a missed fresh boundary moves to a future complete cycle");
++  delayed=fresh();delayed.start();BreathingSetupAudio.complete=true;BreathingSetupAudio.elapsed=900000;
++  delayed.boundary();check(delayed.dispatches==0&&delayed.state().equals("rejected"),"completed main cannot acquire a late OfficialStart");
++  delayed=fresh();delayed.start();BreathingSetupAudio.elapsed=300;delayed.boundary();
++  check(delayed.dispatches==0&&delayed.state().equals("pending")&&BreathingSetupAudio.rearms==1,
++      "a late callback must rearm rather than consume the main duration before Start");
++  delayed.boundary();check(delayed.dispatches==1,"the later fresh cycle starts normally");
++  delayed=fresh();delayed.start();
++  for(int miss=0;miss<3;miss++){BreathingSetupAudio.elapsed=300;delayed.boundary();}
++  check(delayed.state().equals("rejected")&&delayed.dispatches==0&&BreathingSetupAudio.rearms==2
++      &&BreathingSetupAudio.mainCancellations==1&&BreathingSetupAudio.ends==0,
++      "repeated missed cycles terminate with retained calibration instead of trapping the operator");
++  delayed=fresh();BreathingSetupAudio.queued=false;delayed.start();
++  check(BreathingSetupAudio.mainCancellations==1&&BreathingSetupAudio.ends==0,
++      "a rejected queue cancels only its main reservation, never the calibrated setup");
+   checkCalibrationInstruction();
+   checkUpdateDuringNarration();
+   checkExplorationStart();
+@@ -272,23 +305,23 @@ final class GatewayBreathingBoundaryTest {
+   try{h.ownerExchange("command",new JSONObject().put("id","2222222222222222").put("op","pause"));throw new AssertionError("new mutation crossed pending boundary");}catch(SecurityException expected){}
+   h.boundary();check(h.dispatches==1&&h.state().equals("confirmed")&&h.deferredMainId.isEmpty(),"boundary dispatch must preserve original receipt");
+   h.boundary();check(h.dispatches==1,"late duplicate callback cannot redispatch");
+-  h=fresh();BreathingSetupAudio.queued=false;h.start();check(h.state().equals("rejected")&&h.dispatches==0&&BreathingSetupAudio.ends==1&&h.deferredMainId.isEmpty(),"refused queue must cancel native reservation");
+-  h=fresh();BreathingSetupAudio.uncertain=true;h.start();check(h.state().equals("outcome_unknown")&&BreathingSetupAudio.ends==1&&h.deferredMainId.isEmpty(),"uncertain queue must preserve uncertainty and cancel own token");
++  h=fresh();BreathingSetupAudio.queued=false;h.start();check(h.state().equals("rejected")&&h.dispatches==0&&BreathingSetupAudio.mainCancellations==1&&h.deferredMainId.isEmpty(),"refused queue must cancel native reservation");
++  h=fresh();BreathingSetupAudio.uncertain=true;h.start();check(h.state().equals("outcome_unknown")&&BreathingSetupAudio.mainCancellations==1&&h.deferredMainId.isEmpty(),"uncertain queue must preserve uncertainty and cancel own token");
+   h.boundary();check(h.dispatches==0,"late callback after uncertain admission cannot dispatch");
+-  for(int race=0;race<8;race++) {
++  for(int race=0;race<7;race++) {
+    h=fresh();h.start();
+    if(race==0)h.identity++;if(race==1)h.epoch++;if(race==2)h.carrier.generation++;if(race==3)h.carrier.live=false;
+    if(race==4)h.remote=false;if(race==5)h.phase="IDLE";if(race==6)BreathingSetupAudio.playing=false;
+    if(race==7)BreathingSetupAudio.inputReady=false;
+-   h.boundary();check(h.dispatches==0&&h.state().equals("rejected")&&h.deferredMainId.isEmpty()&&BreathingSetupAudio.ends==1,"changed owner/mode/phase/audio must retire reservation: "+race);
++   h.boundary();check(h.dispatches==0&&h.state().equals("rejected")&&h.deferredMainId.isEmpty()&&BreathingSetupAudio.mainCancellations==1,"changed owner/mode/phase/audio must retire reservation: "+race);
+   }
+-  h=fresh();h.start();h.failDispatch=true;h.boundary();check(h.dispatchAttempts==1&&h.dispatches==0&&h.state().equals("rejected")&&BreathingSetupAudio.ends==1,"failed native dispatch must retain token until rejection cleanup");
++  h=fresh();h.start();h.failDispatch=true;h.boundary();check(h.dispatchAttempts==1&&h.dispatches==0&&h.state().equals("rejected")&&BreathingSetupAudio.mainCancellations==1,"failed native dispatch must retain token until rejection cleanup");
+   h=fresh();h.start();BreathingSetupAudio.reentrantCancel=true;h.retireControllers();h.main.drain();
+-  check(h.state().equals("rejected")&&h.deferredMainId.isEmpty()&&h.rejectedUpdates==1&&BreathingSetupAudio.ends==1,"controller retirement must clear own token before reentrant audio cancellation");
++  check(h.state().equals("rejected")&&h.deferredMainId.isEmpty()&&h.rejectedUpdates==1&&BreathingSetupAudio.mainCancellations==1,"controller retirement must clear own token before reentrant audio cancellation");
+   h.boundary();check(h.dispatches==0,"callback after controller retirement must stay inert");
+   h=fresh();final GatewayBreathingBoundaryTest owner=h;h.effectGuard=()->{if(!owner.controlAlive)throw new SecurityException("old controller retired");};h.start();
+-  h.controlAlive=false;h.boundary();check(h.dispatches==0&&h.state().equals("rejected")&&BreathingSetupAudio.ends==1,"deferred boundary rechecks captured controller lease");
+-  h=fresh();h.start();h.rejectDeferredMain(ID);h.boundary();check(h.dispatches==0&&BreathingSetupAudio.ends==1,"explicit handover cancels deferred start and late callback");
++  h.controlAlive=false;h.boundary();check(h.dispatches==0&&h.state().equals("rejected")&&BreathingSetupAudio.mainCancellations==1,"deferred boundary rechecks captured controller lease");
++  h=fresh();h.start();h.rejectDeferredMain(ID);h.boundary();check(h.dispatches==0&&BreathingSetupAudio.mainCancellations==1,"explicit handover cancels deferred start and late callback");
+   h=fresh();h.start();NativeRendererMetaUpdate.cycle="2";h.boundary();
+   check(h.dispatches==0&&h.state().equals("rejected"),"delayed main cannot borrow a later cycle grant");
+   h=fresh();h.start();NativeRendererMetaUpdate.allowed=false;h.boundary();
+diff --git a/tools/checks/test_experiment_local_enrollment.py b/tools/checks/test_experiment_local_enrollment.py
+index 9e3222b2..cee41647 100644
+--- a/tools/checks/test_experiment_local_enrollment.py
++++ b/tools/checks/test_experiment_local_enrollment.py
+@@ -13,6 +13,8 @@ def main():
+ import java.util.*;import org.json.JSONObject;
+ final class LocalEnrollmentHarness {
+  boolean phonePairingEnabled;int trustedPhoneCount;ExperimentTrustedPhones trustedPhones;
++ static final class OptionalBackgroundMusic {void stop(){throw new AssertionError("Unselected background music cannot stop");}}
++ OptionalBackgroundMusic backgroundMusic;
+  void requirePhoneRegistry(){throw new AssertionError("unselected phone pairing");}
+  void reconcileMemberProtocols(){}void retireMemberProtocols(){}void retireControlEffects(){}
+  String deviceId(){return preferences.getString("device","");}
+diff --git a/tools/checks/test_native_start_rejection_cleanup.py b/tools/checks/test_native_start_rejection_cleanup.py
+new file mode 100644
+index 00000000..a9c18c98
+--- /dev/null
++++ b/tools/checks/test_native_start_rejection_cleanup.py
+@@ -0,0 +1,114 @@
++"""Execute selected production session-dispatch/readback bodies; no Android/JNI effects."""
++from pathlib import Path
++import argparse
++import os
++import subprocess
++import tempfile
++from test_experiment_gateway_dedupe import method
++
++
++parser = argparse.ArgumentParser()
++parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[2])
++parser.add_argument('--json-jar', type=Path, required=True)
++args = parser.parse_args()
++root = args.repo
++source = (root / 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java').read_text(encoding='utf-8')
++dispatch = method(source, 'if(request.sessionFence!=null)')
++readback = method(source, 'private JSONObject sessionControlReadback(JSONObject response)')
++helpers = ''
++for signature in ('private static void captureRemoteMainReservation(', 'private static String rejectRemoteSessionDetail('):
++    if signature in source:
++        helpers += method(source, signature) + '\n'
++java = r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import org.json.*;
++class SystemClock {static long now;static long elapsedRealtime(){return now;}static long elapsedRealtimeNanos(){return now*1000000;}}
++class ExperimentSessionTerminalCorrelation {long carrierGeneration,nativeOwnerEpoch;}
++class ExperimentSessionControlCapability {static class Fence {
++ long server=7,generation=3,epoch=5,owner=9,ownerEpoch=5;String session="session",condition="condition",profile="profile",binding="binding";
++ boolean failCommand;JSONObject nativeCommand(String id,long now){if(failCommand)throw new SecurityException("bad command");return new JSONObject().put("id",id);}
++}}
++class BreathingSetupAudio {
++ static int cancels;static boolean selected=true;static long g=11,frame=123;
++ static String stage="main",cleanup="confirmed";static boolean calibration=true;
++ static boolean selected(Object context){return selected;}
++ static JSONObject status(){return new JSONObject().put("stage",stage).put("g",g).put("main_start_frame",frame);}
++ static JSONObject cancelRejectedMain(long expectedG,long expectedFrame){
++  cancels++;if(expectedG!=g||expectedFrame!=frame)return new JSONObject().put("state","rejected").put("reason","main-frame-mismatch");
++  if(cleanup.equals("confirmed"))stage="calibrated";
++  return new JSONObject().put("state",cleanup).put("reason",cleanup.equals("confirmed")?"accepted":"native-command-outcome-unknown");
++ }
++}
++class ExperimentSessionBleServer {
++ static class CommandRequest {String id="browser",operation="start";int bias;ExperimentSessionControlCapability.Fence sessionFence=new ExperimentSessionControlCapability.Fence();}
++ long generation=7,epoch=5;String state="",detail="";int updates;
++ long currentGeneration(){return generation;}long currentNativeEpoch(){return epoch;}
++ boolean acceptsNativeOwner(long identity,long ownerEpoch){return identity==9&&ownerEpoch==epoch;}
++ void updateReceipt(String id,String state,String detail){this.state=state;this.detail=detail;updates++;}
++ boolean updateReceiptForGeneration(long g,String id,String state,String detail){if(g!=generation)return false;updateReceipt(id,state,detail);return true;}
++}
++class ControlPanelActivity {
++ static int calls;static boolean throwAfterDispatch;static String admission="queued";
++ static String applyExperimentSessionCommand(String raw){calls++;if(throwAfterDispatch)throw new IllegalStateException("transport lost");return new JSONObject().put("command_status",admission).put("reason_code","NativeAdmissionRejected").toString();}
++ static String nativeReadBreathCompositionStatus(){return new JSONObject().put("snapshot",new JSONObject().put("feature_lock_active",true).put("activation_binding_matches",true).put("activation_binding_sha256","binding")).toString();}
++}
++class BreathCompositionPanelModule {
++ static Object remoteContext=new Object();static RemotePending remotePending;static ExperimentSessionBleServer server;
++ static ExperimentSessionBleServer remoteServer(){return server;}
++ static JSONObject sessionControlReadback(){return response("","none").getJSONObject("readback").put("activation_binding_sha256","binding").put("control_state","armed");}
++ __PENDING__
++ __HELPERS__
++ __EXPIRE__
++ static void dispatch(ExperimentSessionBleServer.CommandRequest request){ExperimentSessionBleServer server=remoteServer();__DISPATCH__}
++ __READBACK__
++ static int checks;
++ static void check(boolean b,String why){checks++;if(!b)throw new AssertionError(why);}
++ static ExperimentSessionBleServer.CommandRequest fresh(){
++  server=new ExperimentSessionBleServer();remotePending=null;ControlPanelActivity.calls=0;ControlPanelActivity.throwAfterDispatch=false;ControlPanelActivity.admission="queued";
++  BreathingSetupAudio.cancels=0;BreathingSetupAudio.selected=true;BreathingSetupAudio.g=11;BreathingSetupAudio.frame=123;BreathingSetupAudio.stage="main";BreathingSetupAudio.cleanup="confirmed";BreathingSetupAudio.calibration=true;
++  return new ExperimentSessionBleServer.CommandRequest();
++ }
++ static JSONObject response(String id,String state){return new JSONObject().put("command_status","accepted").put("readback",new JSONObject()
++  .put("generation",3).put("runtime_epoch",5).put("session_key","session").put("condition_id","condition").put("non_audio_profile_sha256","profile")
++  .put("last_operation_id",id).put("last_operation_status",state).put("last_reason","PolarSamplesNotFresh"));}
++ public static void main(String[]args)throws Exception {
++  BreathCompositionPanelModule module=new BreathCompositionPanelModule();
++  for(int stale=0;stale<9;stale++){
++   ExperimentSessionBleServer.CommandRequest old=fresh();ControlPanelActivity.admission="rejected";
++   if(stale==0)old.sessionFence.server--;if(stale==1)old.sessionFence.generation--;if(stale==2)old.sessionFence.epoch--;if(stale==3)old.sessionFence.session="old-session";if(stale==4)old.sessionFence.condition="old-condition";if(stale==5)old.sessionFence.profile="old-profile";if(stale==6)old.sessionFence.binding="old-binding";if(stale==7)old.sessionFence.owner--;if(stale==8)old.sessionFence.ownerEpoch--;
++   dispatch(old);check(BreathingSetupAudio.cancels==0&&BreathingSetupAudio.stage.equals("main")&&ControlPanelActivity.calls==0&&server.state.equals("rejected"),"stale carrier/full native session tuple cannot capture or cancel current unrelated main: "+stale);
++  }
++  ExperimentSessionBleServer.CommandRequest request=fresh();ControlPanelActivity.admission="rejected";dispatch(request);
++  check(BreathingSetupAudio.cancels==1&&BreathingSetupAudio.stage.equals("calibrated")&&BreathingSetupAudio.calibration,"definite admission rejection cancels original main and preserves calibration");
++  check(server.state.equals("rejected")&&server.detail.contains("NativeAdmissionRejected")&&remotePending==null,"definite admission reason retained");
++  request=fresh();request.sessionFence.failCommand=true;dispatch(request);check(BreathingSetupAudio.cancels==1&&BreathingSetupAudio.calibration&&ControlPanelActivity.calls==0&&server.state.equals("rejected"),"local pre-JNI failure cancels original reservation before rejection");
++  request=fresh();dispatch(request);module.sessionControlReadback(response("ble-session-browser","rejected"));
++  check(BreathingSetupAudio.cancels==1&&BreathingSetupAudio.calibration&&remotePending==null,"later original rejection cancels once");
++  check(server.detail.contains("PolarSamplesNotFresh"),"native rejection reason retained");module.sessionControlReadback(response("ble-session-browser","rejected"));check(BreathingSetupAudio.cancels==1,"readback replay cannot recancel");
++  request=fresh();dispatch(request);RemotePending original=remotePending;expireRemotePendingObservation(31001);check(remotePending==original,"later native Start outcome retains original correlation after timeout");
++  module.sessionControlReadback(response("foreign","rejected"));check(BreathingSetupAudio.cancels==0&&remotePending==original,"foreign rejection cannot cancel");
++  module.sessionControlReadback(response("ble-session-browser","duplicate"));check(BreathingSetupAudio.cancels==0&&remotePending==original,"duplicate alone cannot disprove original success");
++  request=fresh();ControlPanelActivity.throwAfterDispatch=true;dispatch(request);check(server.state.equals("outcome_unknown")&&BreathingSetupAudio.cancels==0&&remotePending!=null,"JNI exception is uncertain and does not cancel");
++  request=fresh();ControlPanelActivity.admission="pending";dispatch(request);check(server.state.equals("outcome_unknown")&&BreathingSetupAudio.cancels==0&&remotePending!=null,"unrecognized admission preserves uncertain reservation");
++  for(String status:new String[]{"applied","duplicate"}){
++   request=fresh();dispatch(request);JSONObject successful=response("ble-session-browser",status);successful.getJSONObject("readback").put("operator_operation_id","ble-session-browser").put("operator_origin","ble-session-v2").put("operator_operation_status","applied").put("control_state","running");module.sessionControlReadback(successful);check(server.state.equals("confirmed")&&BreathingSetupAudio.cancels==0,"native success including duplicate readback keeps main reservation");
++  }
++  for(int mode=0;mode<4;mode++){
++   request=fresh();if(mode==0)BreathingSetupAudio.selected=false;if(mode==1)BreathingSetupAudio.stage="calibrated";if(mode==2)request.operation="resume";if(mode==3)BreathingSetupAudio.frame=-1;
++   dispatch(request);module.sessionControlReadback(response("ble-session-browser","rejected"));check(BreathingSetupAudio.cancels==0,"non shared-main Start path cannot cancel unrelated audio");
++  }
++  request=fresh();dispatch(request);BreathingSetupAudio.frame=124;module.sessionControlReadback(response("ble-session-browser","rejected"));check(BreathingSetupAudio.stage.equals("main")&&server.detail.contains("main-frame-mismatch"),"replacement reservation is guarded and cleanup refusal visible");
++  request=fresh();dispatch(request);BreathingSetupAudio.cleanup="outcome_unknown";module.sessionControlReadback(response("ble-session-browser","rejected"));check(server.state.equals("rejected")&&server.detail.contains("outcome_unknown")&&BreathingSetupAudio.cancels==1,"native rejection and uncertain cleanup stay distinct");
++  for(int change=0;change<2;change++){
++   request=fresh();dispatch(request);if(change==0)server.generation++;else server.epoch++;module.sessionControlReadback(response("ble-session-browser","rejected"));check(BreathingSetupAudio.cancels==0,"retired carrier/native owner cannot cancel");
++  }
++  System.out.println("PASS "+checks+" production native Start rejection/correlation/uncertainty/audio-reservation cleanup checks; inert effects");
++ }
++}
++'''
++java = java.replace('__PENDING__', method(source, 'private static final class RemotePending')).replace('__HELPERS__', helpers).replace('__EXPIRE__', method(source, 'private static void expireRemotePendingObservation(')).replace('__DISPATCH__', dispatch).replace('__READBACK__', readback)
++jar = args.json_jar
++with tempfile.TemporaryDirectory(prefix='rq-native-start-rejection-') as tmp:
++    output = Path(tmp)/'BreathCompositionPanelModule.java'
++    output.write_text(java, encoding='utf-8')
++    subprocess.run(['javac', '--release', '8', '-cp', str(jar), '-d', tmp, str(output)], check=True)
++    subprocess.run(['java', '-cp', tmp+os.pathsep+str(jar), 'io.github.mesmerprism.rustyquest.native_renderer.BreathCompositionPanelModule'], check=True)
+diff --git a/tools/checks/test_remote_durable_pending.py b/tools/checks/test_remote_durable_pending.py
+index 30b2ee45..fea275f7 100644
+--- a/tools/checks/test_remote_durable_pending.py
++++ b/tools/checks/test_remote_durable_pending.py
+@@ -154,6 +154,7 @@ final class BreathCompositionPanelModule {
+   pending("arm");expireRemotePendingObservation(45000);ExperimentSessionAndroidShell.SessionReadback actual=new ExperimentSessionAndroidShell.SessionReadback();sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.id.equals("original-shell")&&server.state.equals("confirmed"),"late durable original Arm confirms after later audio ID");int count=server.updates;sink.onExperimentSessionReadback(actual);check(server.updates==count,"duplicate callback cannot replay original outcome");
+   for(int change=0;change<4;change++){pending("arm");actual=new ExperimentSessionAndroidShell.SessionReadback();actual.armAcceptance=new ExperimentSessionAndroidShell.ArmAcceptance("native-arm",change==0?2:1,change==1?4:3,change==2?"condition-b":"condition-a",change!=3);sink.onExperimentSessionReadback(actual);check(remotePending!=null&&server.updates==0,"changed Arm generation/epoch/condition/durable tuple denied");}
+   pending("arm");actual=new ExperimentSessionAndroidShell.SessionReadback();actual.receipt.accepted=false;actual.receipt.operationId="native-arm";sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.state.equals("rejected"),"actual correlated native rejection still terminal");
++  pending("start");remotePending=new RemotePending("browser-start","native-start","start",new ExperimentSessionControlCapability.Fence("ref","session","condition-a","profile","binding","start",1,3,7,1,3));RemotePending fencedStart=remotePending;actual=new ExperimentSessionAndroidShell.SessionReadback();actual.receipt.accepted=false;actual.receipt.operationId="native-start";sink.onExperimentSessionReadback(actual);check(remotePending==fencedStart&&server.updates==0,"sparse shell callback cannot retire fenced Start before full native rejection and bound audio cleanup");
+   pending("save-next");expireRemotePendingObservation(45000);actual=new ExperimentSessionAndroidShell.SessionReadback();actual.armAcceptance=null;actual.receipt.operationId="native-arm";actual.receipt.durable=true;actual.recordingResult="saved";EXPERIMENT_SESSION_PANEL.state.phase=ExperimentSessionPanelState.Phase.IDLE;sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.state.equals("confirmed"),"late saved receipt confirms original SaveNext");
+   pending("save-next");actual=new ExperimentSessionAndroidShell.SessionReadback();actual.armAcceptance=null;actual.receipt.operationId="native-arm";actual.receipt.accepted=false;sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.state.equals("rejected"),"actual SaveNext failure remains rejection");
+   // Save/exit uses its separate terminal correlation harness, not a simulated

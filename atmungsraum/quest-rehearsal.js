@@ -106,7 +106,7 @@ export function rehearsalActions(status, condition = conditions[0]) {
     && typeof grant.s === 'string' && /^[a-f0-9]{32}$/.test(grant.s) && Array.isArray(grant.o) && grant.o.includes(next);
   const canPlay = allowed && (next === 'pause' || nativeSessionAllowed(status))
     && (next === 'pause' || status.pi.r === false || status.pi.f === true);
-  return { play: canPlay ? next : undefined, finish: next || status.p === 'RECORDING' ? 'save-next' : undefined };
+  return { play: canPlay ? next : undefined, finish: next || ['RECORDING', 'ERROR'].includes(status.p) ? 'save-next' : undefined };
 }
 
 export class QuestRehearsal {

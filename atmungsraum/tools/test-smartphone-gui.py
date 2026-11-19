@@ -660,6 +660,45 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
         page.context.close()
 
 
+def capture_error_recording_recovery(review, tag, viewport, font):
+    page = review.page(initial(c, {"phase": "ERROR", "host": "vr-session", "generation": 3,
+                                  "condition": "condition-a", "clock": 155647,
+                                  "errorRecording": True}), suffix="#session", viewport=viewport)
+    try:
+        page.evaluate("size => document.documentElement.style.fontSize = size", font)
+        page.clock.run_for(2000)
+        expect(page.locator("#running-screen")).to_be_visible()
+        expect(page.locator("#quest-play")).to_be_disabled()
+        expect(page.locator("#quest-finish")).to_be_enabled()
+        review.shot(page, f"{tag}-error-active-writer", "Save failed session",
+                    page.locator("#quest-finish"), "Recovery")
+        page.locator("#quest-finish").click()
+        page.clock.run_for(1000)
+        assert mutations(page)["session"] == ["save-next"], "error recovery may only save the existing writer"
+    finally:
+        page.context.close()
+
+
+def capture_error_recording_update_save(review):
+    meta = {"v": 2, "state": "current", "reason": "installed-version-is-current",
+            "installed_code": apk_fixture()["version_code"], "available_code": None,
+            "downloaded_bytes": 0, "total_bytes": None,
+            "session_allowed": True, "required_code": None, "cycle": "1", "revision": "1",
+            "attempt": None, "can_check": False, "busy_reason": "session-active"}
+    page = review.page(initial(c, {"phase": "ERROR", "host": "vr-session", "generation": 3,
+                                  "errorRecording": True, "metaUpdate": meta}), suffix="#settings")
+    try:
+        page.clock.run_for(2000)
+        go(page, "update")
+        button = page.locator("#meta-update-finish")
+        expect(button).to_be_enabled()
+        button.click()
+        page.clock.run_for(1000)
+        assert mutations(page)["session"] == ["save-next"], "Update recovery must finish the existing writer first"
+    finally:
+        page.context.close()
+
+
 def capture_diagnostics(review, tag, viewport, font):
     failed_join = initial(c) + "window.reviewJoin='fail';"
     failures = (
@@ -823,6 +862,7 @@ def verify():
             capture_layout(review, ((tag, viewport, font),))
             capture_dialogs(review, tag, viewport, font)
             capture_diagnostics(review, tag, viewport, font)
+            capture_error_recording_recovery(review, tag, viewport, font)
             capture_recordings(review, tag, viewport, font)
             capture_questionnaire(review, tag, viewport, font)
             print(f"Checked {tag}: {len(review.samples) - count_before} screens and dialogs", flush=True)
@@ -838,6 +878,7 @@ def verify():
             capture_disconnected_recordings(review, font)
             capture_disconnected_recordings(review, font, cached=True)
         capture_music_keyboard_burst(review)
+        capture_error_recording_update_save(review)
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)

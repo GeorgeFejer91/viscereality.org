@@ -50,6 +50,28 @@ test('an armed writer without sample recording exposes only its native session-b
   }
 });
 
+test('an errored active writer exposes save without enabling Start or requiring fresh Polar', async () => {
+  const failed = { ...snapshot('ERROR', 3), q: undefined, participant_arm: 1,
+    pi: { r: true, f: false, h: false } };
+  assert.equal(rehearsalActions(failed).finish, 'save-next');
+  assert.equal(rehearsalActions(failed).play, undefined);
+  for (const patch of [{ rec: false }, { pending: true },
+    { controller_access: { v: 1, role: 'waiting', active_phone: 'Other', revision: 1 } }]) {
+    assert.equal(rehearsalActions({ ...failed, ...patch }).finish, undefined);
+  }
+  let current = failed;
+  const sent = [];
+  const gateway = { owner, initial: current, close() {}, status: async () => current,
+    command: async command => {
+      sent.push(command); current = snapshot('IDLE', 3);
+      return { v: 1, id: command.id, state: 'confirmed' };
+    } };
+  const rehearsal = new QuestRehearsal(); rehearsal.attach(gateway);
+  assert.equal(await rehearsal.run('finish', undefined, 'condition-a', '', '', { confirmSave: true }), true);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].op, 'save-next');
+});
+
 test('current-session preflight rejects changed control, session revisions and delayed status', async () => {
   for (const phase of ['RUNNING', 'PAUSED']) {
     for (const action of ['play', 'finish']) {
