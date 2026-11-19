@@ -57,16 +57,26 @@ endpoint: the fresh-phone path stops before opening WebRTC.
   all six live file comparisons, and the remote context gate. The target
   Chromium startup suite, eight pairing UI cases, 361 web and assembly
   checks, and 421 smartphone GUI states passed.
-- [ ] Verify that the installed Pixel has refreshed to
-  `20261119-idle-refresh`. The standalone readback after deployment
+- [x] Verify that the installed Pixel has refreshed to
+  `20261119-idle-refresh`. The first standalone readback after deployment
   still showed `20261118-saved-quest-service` and its saved pairing.
   On 2026-11-19 the RustDesk viewer dismissed the idle PWA task in Android
   Recents. A RustDesk MCP tap on its launcher icon opened Chrome's
   `ERR_ADDRESS_UNREACHABLE` page, and its Reload button returned the same
   error. The phone's IPv4 connection to the live host on port 443 failed
   with `No route to host`; the workstation received HTTP 200 with the
-  current release. No app data was cleared. Restore phone egress and verify
-  the loaded entry and connection modules before counting the phone test.
+  current release. Rejoining the same hotel Wi-Fi exposed the Pixel sign-in
+  prompt. The operator approved completing it through RustDesk. The Pixel then
+  reached the site and signaling host on TCP 443, and the existing standalone
+  app loaded the current entry and connection UI module.
+- [x] Verify automatic refresh and reinstall on the Pixel over the restored
+  hotel Wi-Fi. Bringing the existing Chrome tab forward through RustDesk
+  advanced that tab from `20261118-idle-release` to `20261119-idle-refresh`
+  without a Reload tap. RustDesk removed the old Android WebAPK and installed
+  Atmungsraum again through Chrome. A launcher tap opened the new WebAPK in
+  standalone mode. DevTools read back entry `20261119-idle-refresh`,
+  `quest-ui.js?v=20261119-bluetooth-buttons`, and unchanged saved pairing.
+  [Recovery and evidence](HOTEL-WIFI-HANDOFF.md#pixel-recovery-and-reinstall).
 - [x] Build and inspect signed bench 37 and the selected canonical Developer
   candidate 30. Match the bench 37 installed SHA-256 and retained UID. Preserve
   the installed Meta 27 bytes and process and the staged code 28 update.
@@ -77,11 +87,11 @@ endpoint: the fresh-phone path stops before opening WebRTC.
   the operator available for the real headset confirmation. Match a native
   status and Recenter receipt, then test automatic reconnect in both startup
   orders and measure the ICE route. Cross-device and worn-H10 evidence remains open.
-  The lab readback marked the Quest's active Wi-Fi captive and the Pixel's
-  validated. Both devices returned `No route to host` for IPv4 TCP to the
-  VDO.Ninja signaling host on port 443. Clear any Quest sign-in and verify
-  application egress on both devices before attempting or attributing a
-  relay failure.
+  The initial lab readback marked the Quest's active Wi-Fi captive, with
+  signaling TCP 443 failing on both devices. The Pixel recovered after its
+  own hotel sign-in. Recheck the Quest's portal state and both devices'
+  application egress before attempting pairing or attributing a relay
+  failure. The Pixel's saved pairing remains available for the reconnect case.
 
 Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
 navigate the Quest autonomously where the platform provides a supported
