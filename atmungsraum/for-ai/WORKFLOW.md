@@ -363,6 +363,8 @@ runtime assets match the release. Drive the affected phone cases autonomously
 with [RustDesk MCP](RUSTDESK-PHONE-TESTING.md#run-and-evaluate-cases) and
 continue through the [stress and recovery checks](VERIFICATION.md#autonomous-device-validation).
 An open, visible and idle Connect screen also checks every five minutes.
+If that check falls during saved-headset discovery, it waits for the next
+idle Connect window before another automatic attempt.
 The existing release check keeps an active connection, pairing or recovery
 flow, dialog, or participant draft in its current document.
 Record the deployed commit and phone readback in [PROJECT.md](PROJECT.md).
