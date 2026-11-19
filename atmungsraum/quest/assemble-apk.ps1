@@ -176,20 +176,16 @@ Copy-Item -LiteralPath (Join-Path $QuestRepo 'fixtures/native-app-features') -De
 $assetInput = [IO.Path]::GetRelativePath($QuestRepo, $audio).Replace('\','/')
 $assetInputs = @($assetInput)
 $musicSource = Join-Path $PSScriptRoot '../assets/audio/background/ji3ji3.mp3'
-$packageMusic = ($Developer -or $PhonePairing) -and !$MainStudyAudio
-if ($packageMusic) {
-    $gatewaySources = 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
-    $musicGateway = Join-Path $QuestRepo "$gatewaySources/ExperimentSessionCommandGateway.java"
-    if (!(Select-String -LiteralPath $musicGateway -SimpleMatch 'atmungsraum-music/ji3ji3.mp3' -Quiet)) {
-        throw 'Apply the Atmungsraum background-music native patch before assembly.'
-    }
-    $musicAssets = Join-Path $runRoot 'atmungsraum-music'
-    $null = New-Item -ItemType Directory -Path $musicAssets
-    Copy-Item -LiteralPath $musicSource -Destination $musicAssets
-    $assetInputs += [IO.Path]::GetRelativePath($QuestRepo, $musicAssets).Replace('\','/')
+$gatewaySources = 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
+$musicGateway = Join-Path $QuestRepo "$gatewaySources/ExperimentSessionCommandGateway.java"
+if (!(Select-String -LiteralPath $musicGateway -SimpleMatch 'atmungsraum-music/ji3ji3.mp3' -Quiet)) {
+    throw 'Apply the Atmungsraum background-music native patch before assembly.'
 }
+$musicAssets = Join-Path $runRoot 'atmungsraum-music'
+$null = New-Item -ItemType Directory -Path $musicAssets
+Copy-Item -LiteralPath $musicSource -Destination $musicAssets
+$assetInputs += [IO.Path]::GetRelativePath($QuestRepo, $musicAssets).Replace('\','/')
 if ($WebRtc) {
-    if (!$Developer -and !$PhonePairing) { throw 'WebRtc requires the enrolled phone gateway.' }
     $rtcAssets = Join-Path $runRoot 'atmungsraum-webrtc'
     $null = New-Item -ItemType Directory -Path $rtcAssets
     $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -274,9 +270,9 @@ if ($Developer) {
 }
 $app.experiment_breathing_setup_enabled = $true
 $app.experiment_headset_setup_enabled = $false
-$phonePairingEnabled = $Developer -or $PhonePairing
-$app.experiment_phone_pairing_enabled = $phonePairingEnabled
-$app.experiment_panel_initially_closed = $phonePairingEnabled
+$initialPanelClosed = $Developer -or $PhonePairing -or $WebRtc
+$app.experiment_phone_pairing_enabled = $true
+$app.experiment_panel_initially_closed = $initialPanelClosed
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
 $handInputFeatures = @(
@@ -438,23 +434,21 @@ try {
     if ($metadata['rusty.quest.experiment.breathing_setup.enabled'] -cne 'true') {
         throw 'The native manifest must explicitly select the shared breathing setup.'
     }
-    if ($phonePairingEnabled) {
-        $closed = @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_PANEL_INITIALLY_CLOSED')
-        if ($metadata['rusty.quest.experiment.phone_pairing.enabled'] -cne 'true' -or
-            $lock.android_manifest.experiment_phone_pairing_enabled -cne $true -or
-            $lock.android_manifest.experiment_panel_initially_closed -cne $true -or
-            $closed.Count -ne 1 -or $closed[0].value -cne 'true' -or
-            $lock.android_manifest.experiment_headset_setup_enabled -cne $false -or
-            @($lock.phone_pairing_sources).Count -ne 5 -or
-            @($lock.headset_setup_sources).Count -ne 0 -or
-            @($lock.debug_experiment_operator_sources).Count -ne 0 -or
-            $manifest.OuterXml -match 'debug-experiment-control|\.headset-setup') {
-            throw 'Phone pairing must select closed startup and button-only admission without machine provisioning or a debug operator.'
-        }
-        foreach ($source in $lock.phone_pairing_sources) {
-            if ($source.sha256 -cne (Get-FileHash -LiteralPath (Join-Path $QuestRepo $source.path)).Hash.ToLowerInvariant()) {
-                throw 'The selected phone pairing source digest differs from the native implementation.'
-            }
+    $closed = @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_PANEL_INITIALLY_CLOSED')
+    if ($metadata['rusty.quest.experiment.phone_pairing.enabled'] -cne 'true' -or
+        $lock.android_manifest.experiment_phone_pairing_enabled -cne $true -or
+        $lock.android_manifest.experiment_panel_initially_closed -cne $initialPanelClosed -or
+        $closed.Count -ne [int]$initialPanelClosed -or ($initialPanelClosed -and $closed[0].value -cne 'true') -or
+        $lock.android_manifest.experiment_headset_setup_enabled -cne $false -or
+        @($lock.phone_pairing_sources).Count -ne 5 -or
+        @($lock.headset_setup_sources).Count -ne 0 -or
+        @($lock.debug_experiment_operator_sources).Count -ne 0 -or
+        $manifest.OuterXml -match 'debug-experiment-control|\.headset-setup') {
+        throw 'Phone pairing must select button-only admission and the selected startup panel state.'
+    }
+    foreach ($source in $lock.phone_pairing_sources) {
+        if ($source.sha256 -cne (Get-FileHash -LiteralPath (Join-Path $QuestRepo $source.path)).Hash.ToLowerInvariant()) {
+            throw 'The selected phone pairing source digest differs from the native implementation.'
         }
     }
     if ($metadata['com.oculus.supportedDevices'] -cne 'quest2' -or
@@ -524,18 +518,16 @@ if ($CanonicalRelease) {
 }
 $archive = [IO.Compression.ZipFile]::OpenRead($apk.FullName)
 try {
-    if ($packageMusic) {
-        $track = $archive.GetEntry('assets/atmungsraum-music/ji3ji3.mp3')
-        if (!$track -or $track.Length -ne $track.CompressedLength) {
-            throw 'The signed APK must contain the uncompressed background track.'
-        }
-        $stream = $track.Open()
-        try {
-            if ((Get-FileHash -InputStream $stream).Hash -cne (Get-FileHash -LiteralPath $musicSource).Hash) {
-                throw 'The signed APK background track must match the supplied track.'
-            }
-        } finally { $stream.Dispose() }
+    $track = $archive.GetEntry('assets/atmungsraum-music/ji3ji3.mp3')
+    if (!$track -or $track.Length -ne $track.CompressedLength) {
+        throw 'The signed APK must contain the uncompressed background track.'
     }
+    $stream = $track.Open()
+    try {
+        if ((Get-FileHash -InputStream $stream).Hash -cne (Get-FileHash -LiteralPath $musicSource).Hash) {
+            throw 'The signed APK background track must match the supplied track.'
+        }
+    } finally { $stream.Dispose() }
     $loaderEntry = $archive.GetEntry('lib/arm64-v8a/libopenxr_loader.so')
     if (!$loaderEntry) { throw 'APK is missing the ARM64 OpenXR loader.' }
     $loaderStream = $loaderEntry.Open()

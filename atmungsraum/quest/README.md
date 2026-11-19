@@ -3,10 +3,13 @@
 ## Optional background music
 
 Apply [background-music.patch](background-music.patch) after the Developer 32
-source overlays. Paired phone builds package the existing supplied
-`../assets/audio/background/ji3ji3.mp3` under `assets/atmungsraum-music/`.
-Assembly verifies the signed APK copy by hash. The separately authored
-`-MainStudyAudio` composition retains its own background mix.
+source overlays. Every Atmungsraum APK assembles with phone enrollment and
+packages the supplied `../assets/audio/background/ji3ji3.mp3` under
+`assets/atmungsraum-music/`. The assembly verifies the asset by hash in the
+signed APK. Developer and WebRTC bench builds start with the panel closed.
+Rehearsal keeps its open panel by default and can still select closed
+startup with `-PhonePairing`. The optional `-MainStudyAudio` build keeps the
+authored session mix and offers the same independent operator-controlled loop.
 
 On the phone, open **Einstellungen → Hintergrundmusik**. The Quest starts
 each native run with music off and volume at 35%. Play loops the track in the
@@ -399,9 +402,9 @@ first use only in that rehearsal/development route. A new external key does
 not become update-compatible by using the same package name. The two packages
 can coexist and have separate controller enrollment and app data.
 
-Add `-PhonePairing` to a rehearsal assembly for the current smartphone PWA.
-This enables the same matching-code protocol and closed-at-launch panel as
-the Developer build, using the rehearsal package and signer. Follow
+A rehearsal assembly includes the matching-code phone protocol by default.
+Add `-PhonePairing` to start the rehearsal panel closed, as in Developer.
+The rehearsal package and signer remain separate. Follow
 [phone pairing](../for-ai/PHONE-PAIRING.md) for the attended setup.
 
 ## Build with a separate Experimenter configuration
