@@ -97,6 +97,11 @@ export function polarSessionPause(status) {
   if (status?.p !== 'PAUSED' || input?.required !== true || input.invalid_timeout_ms !== 5000) return null;
   const waiting = input.usable_fresh !== true;
   if (input.pause_latched !== true) return { waiting, message: '' };
+  const setup = status.setup;
+  if (waiting && setup?.input === 'polar-tilt' && setup.calibration === 'failed'
+    && setup.failure === 'source_replaced') {
+    return { waiting, message: 'Polar-Kalibrierung ist nicht mehr gültig. Beende und speichere die Sitzung. Kalibriere vor dem nächsten Start erneut.' };
+  }
   const cause = input.last_pause?.reason === 'breathing-data-unusable'
     ? 'Pausiert: 5 s ohne nutzbare Polar-Daten.' : 'Pausiert: Polar-Signal unterbrochen.';
   return { waiting, message: waiting

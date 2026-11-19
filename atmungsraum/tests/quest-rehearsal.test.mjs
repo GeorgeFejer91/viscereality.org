@@ -87,6 +87,21 @@ test('a native five-second Polar pause needs usable data before manual Continue'
   assert.equal(rehearsalActions({ ...base, pd: undefined }).play, 'resume', 'legacy native gates remain authoritative');
 });
 
+test('an invalidated personal fit tells the operator to save even when raw Polar signals are fresh', () => {
+  const paused = { ...snapshot('PAUSED', 4), participant_arm: 1, pi: { r: true, f: true },
+    setup: { input: 'polar-tilt', calibration: 'failed', failure: 'source_replaced' },
+    pd: { native: { required: true, pause_latched: true, invalid_timeout_ms: 5000, usable_fresh: false,
+      last_pause: { reason: 'breathing-data-unusable' } } } };
+  const notice = rehearsalContract.polarSessionPause(paused);
+  assert.equal(notice.waiting, true);
+  assert.match(notice.message, /Kalibrierung/);
+  assert.match(notice.message, /speichere/i);
+  assert.equal(rehearsalActions(paused).play, undefined);
+  assert.equal(rehearsalActions(paused).finish, 'save-next');
+  const waitingForRebind = { ...paused, setup: { ...paused.setup, calibration: 'ready' } };
+  assert.match(rehearsalContract.polarSessionPause(waitingForRebind).message, /Gurtposition/);
+});
+
 test('current-session preflight rejects changed control, session revisions and delayed status', async () => {
   for (const phase of ['RUNNING', 'PAUSED']) {
     for (const action of ['play', 'finish']) {
