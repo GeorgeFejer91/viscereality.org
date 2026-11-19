@@ -173,12 +173,10 @@ def capture_layout(review, cases=SIZES):
         assert page.evaluate('reviewQuest.commands') == ['arm','start','pause','resume','save-next']
         expect(page.locator('#recordings-screen')).to_be_visible()
         next_before=mutations(page)
-        go(page,'session')
-        # Arm changed the native session generation, so the existing acceptance
-        # token correctly requires another tracking check before selection.
-        expect(page.locator('#breathing-preview')).to_be_visible()
+        page.locator('#operator-next-session').click()
+        expect(page.locator('#participant-screen')).to_be_visible()
         assert mutations(page)==next_before
-        assert page.locator('#patient-id').text_content()=='Tes_30_N'
+        expect(page.locator('#patient-id')).to_have_text('—')
         review.regressions.append({'kind':'layout-native-flow','size':size,'sessionCommands':['arm','start','pause','resume','save-next'],'localMutations':0})
         page.context.close()
 

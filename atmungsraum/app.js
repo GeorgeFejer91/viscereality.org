@@ -176,7 +176,7 @@ let idleRefreshRequested = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261119-polar-pause').then(({ mountQuestRehearsal }) =>
+  import('./quest-ui.js?v=20261119-next-participant').then(({ mountQuestRehearsal }) =>
     mountQuestRehearsal(participantIdentity, questPair, () => {
       // A saved search can be busy at the refresh timer's exact deadline.
       // Give the requested check the next idle window before searching again.

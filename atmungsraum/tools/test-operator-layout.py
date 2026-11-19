@@ -293,6 +293,43 @@ def completed_session_history(review):
     expect(page.locator('#recordings-screen-title')).to_be_focused()
     assert mutations(page)['session'] == ['arm', 'start', 'pause', 'resume', 'save-next']
     assert page.locator('#patient-surname').input_value() == 'Tes'
+    before_next = mutations(page)
+    next_session = page.locator('#operator-next-session')
+    c.wait_state(page, pending=True)
+    expect(page.locator('#recovery-screen')).to_be_visible()
+    expect(next_session).to_be_disabled()
+    next_session.dispatch_event('click')
+    expect(page.locator('#patient-surname')).to_have_value('Tes')
+    assert mutations(page) == before_next
+    c.wait_state(page, pending=False)
+    c.wait_setup(page, stage='idle', input='automatic', playing=False, ready=False, parked=True)
+    next_session.click()
+    expect(page.locator('#participant-screen')).to_be_visible()
+    expect(page.locator('#patient-surname')).to_have_value('')
+    expect(page.locator('#patient-age')).to_have_value('')
+    expect(page.locator('#patient-gender')).to_have_value('')
+    expect(page.locator('#patient-id')).to_have_text('—')
+    assert mutations(page) == before_next
+    c.enter_participant(page)
+    expect(page.locator('#input-screen')).to_be_visible()
+    page.locator('#preview-controller').click()
+    expect(page.locator('#breathing-preview')).to_be_visible()
+    page.locator('#preview-continue').click()
+    c.review_battery(page)
+    assert mutations(page)['session'] == before_next['session']
+    page.context.close()
+
+
+def stopped_preview_history(review):
+    page = review.page(initial(c), suffix='#calibration')
+    expect(page.locator('#participant-screen')).to_be_visible()
+    c.enter_participant(page)
+    for step in ('calibration', 'tracking', 'battery', 'session'):
+        page.evaluate('step => { location.hash = step; }', step)
+        page.clock.run_for(200)
+        expect(page.locator('#input-screen')).to_be_visible()
+        assert page.evaluate('location.hash') == '#input'
+    assert mutations(page)['setup'] == []
     page.context.close()
 
 
@@ -417,6 +454,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         guided_probe_instruction(review)
         optional_participant_navigation(review)
         completed_session_history(review)
+        stopped_preview_history(review)
         page = review.page(init)
         page.clock.run_for(4000)
         expect(page.locator('#quest')).to_be_visible()

@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=11';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=12';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=21';
 import { pairPhone } from './quest-pairing.js?v=9';
@@ -110,6 +110,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const participantFields = byId('patient-fields');
   const participantSubmit = byId('patient-next');
   const participantOutput = byId('patient-id');
+  const nextSession = byId('operator-next-session');
+  const reviewMovement = byId('input-screen').querySelector('[data-operator-go="tracking"]');
   let participantId = '';
   let previewAccepted = '';
   let batteryAccepted = '';
@@ -514,6 +516,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       history.replaceState({ operatorStep: step, operatorReturnTo: localView.returnTo }, '', '#update');
     }
     if (localView.step === 'calibration' && step === 'tracking') localView = { ...localView, step };
+    if (step === 'input' && ['calibration', 'tracking', 'battery', 'session'].includes(localView.step)) {
+      localView = { ...localView, step };
+      history.replaceState({ operatorStep: step, operatorReturnTo: localView.returnTo }, '', '#input');
+    }
     const page = byId(operatorSteps[step]);
     const body = page.querySelector('.operator-body');
     const move = (id, host) => { const element = byId(id); if (element.parentElement !== host) host.prepend(element); };
@@ -600,7 +606,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     // An overriding native operation cannot be escaped through utility links.
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
       control.disabled = step === 'questionnaire'
-        || ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
+        || ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings'
+        || control === reviewMovement && context.previewAvailable === false;
     }
     byId('operator-update-next').disabled = nativeActive || context.updateRequired || context.waitingForControl || !context.status;
     byId('operator-update-open').disabled = !context.status;
@@ -616,7 +623,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('operator-connect-next').querySelector('[data-measure]'), context.updateRequired
       ? nativeUpdate.value?.reason === 'required-update-not-yet-on-channel' ? 'Update-Prüfung öffnen' : 'Quest-App aktualisieren' : 'Weiter');
     byId('operator-connect-next').dataset.operatorGo = context.updateRequired ? 'update' : 'participant';
-    byId('operator-next-session').disabled = !context.status || context.waitingForControl;
+    nextSession.disabled = step !== 'recordings' || !context.nextSessionAllowed;
     if (step === 'settings') {
       sessionReceiptView.disabled = byId('quest-recovery').hidden;
       setupReceiptView.disabled = byId('preview-recovery').hidden;
@@ -632,6 +639,16 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     navigateLocal(control.hasAttribute('data-operator-back') ? { type: 'back' }
       : control.hasAttribute('data-operator-return') ? { type: 'return' }
       : { type: 'go', step: control.dataset.operatorGo });
+    paint();
+  });
+  nextSession.addEventListener('click', () => {
+    if (document.hidden || displayedStep !== 'recordings' || nextSession.disabled) return;
+    participantId = '';
+    participantForm.reset();
+    participant.open = true;
+    text(participantOutput, '—');
+    resetPreview();
+    navigateLocal({ type: 'go', step: 'participant' });
     paint();
   });
   window.addEventListener('popstate', () => {
@@ -974,11 +991,21 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     retry.disabled = waiting || unknown || Boolean(exportAttempt);
     archivePicker.parentElement.hidden = !archiveScope || !archivePicker.options.length;
     download.hidden = !archiveScope || !download.hasAttribute('href');
+    const recoveryRequired = Boolean(recovery || breath.recovery || unknown || pending
+      || status?.pending || nativeRecovering || breath.unknown);
+    // Keep a visible preview during a pause in the same preparation. A
+    // reconnect or return to parked preparation requires choosing a method.
+    const previewAvailable = Boolean(userAction || breath.pending || breath.setup?.playing !== false
+      || displayedStep === 'tracking' && breath.setup?.stage !== 'idle');
+    const calibrationAvailable = Boolean(userAction || breath.pending || breath.instructionFailed || calibrationBaseline && breath.failure
+      || (breath.setup?.playing || displayedStep === 'calibration') && ['waiting', 'collecting'].includes(breath.setup?.calibration));
     paintOperatorLayout({ status, statusMessage, active, waitingForControl, participantComplete,
       updateBlocked: Boolean(recovery && !pendingProbeStart || unknown || nativeRecovering || controllerLease.pending),
       offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
-      requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
-        || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
+      requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired,
+      recovery: recoveryRequired, previewAvailable, calibrationAvailable,
+      nextSessionAllowed: idle && status.rec === false && status.pending === false && !waiting && !recoveryRequired
+        && !breath.instructionPending && !questionnaire?.required && !savingAnswers && !metaControl.pending,
       instructionPending: breath.instructionPending,
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
     renderLive(performance.now());
@@ -1097,10 +1124,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     try { await request; }
     catch (error) { if (!attempt.signal.aborted) throw error; }
     finally {
-      if (userAction === attempt) userAction = null;
-      await rehearsal.refresh();
-      await breathing.refresh();
-      paint();
+      try {
+        await rehearsal.refresh();
+        await breathing.refresh();
+      } finally {
+        if (userAction === attempt) userAction = null;
+        paint();
+      }
     }
   }
 

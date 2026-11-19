@@ -49,9 +49,11 @@ export function resolveOperatorView(step, context) {
   if (!Object.hasOwn(operatorSteps, step)) return 'connect';
   if (context.participantRequired && !context.participantComplete && step !== 'connect') return 'participant';
   if (step === 'participant' && !context.participantRequired) return 'input';
-  if (['battery', 'session'].includes(step) && !context.selectionAllowed) return 'tracking';
+  if (['battery', 'session'].includes(step) && !context.selectionAllowed) return context.previewAvailable === false ? 'input' : 'tracking';
   if (step === 'session' && !context.batteryReviewed) return 'battery';
   if (step === 'calibration' && context.calibrationComplete) return 'tracking';
+  if (step === 'calibration' && context.calibrationAvailable === false
+    || step === 'tracking' && context.previewAvailable === false) return 'input';
   if (['running', 'recovery'].includes(step)) return context.selectionAllowed
     ? context.batteryReviewed ? 'session' : 'battery' : 'signals';
   return step;

@@ -65,6 +65,12 @@ headset and phone.
 - [x] Complete one attended 900-second main and matching phone download on
   Developer 35 r2. The wearer agreed to proceed for the continuity test and
   reported that personal Polar tracking was unsatisfactory.
+- [x] Verify the `20261119-next-participant` PWA flow in the local browser
+  fixture. After save and any required questionnaire, Next Session clears
+  the previous participant and preparation confirmations without sending a
+  Quest command. A stopped preview returns to method selection. Native
+  recording and pending receipt recovery retain priority. The smartphone GUI
+  gate passed all 454 states. Physical phone verification remains pending.
 - [ ] Verify raw recording integrity, a second participant session after
   completion, and physical five-second pause/recovery. Track the distinct
   lifecycle failures and pending source work in the collaborator handoff.

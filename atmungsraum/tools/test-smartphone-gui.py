@@ -656,6 +656,14 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
             page.reload(wait_until="load")
             expect(link).to_be_visible()
             expect(form).to_be_hidden()
+        if tag == "320" and live:
+            before = mutations(page)
+            page.locator("#operator-next-session").click()
+            expect(page.locator("#participant-screen")).to_be_visible()
+            expect(page.locator("#patient-id")).to_have_text("—")
+            page.go_back()
+            expect(link).to_be_visible()
+            assert mutations(page) == before
     finally:
         page.context.close()
 

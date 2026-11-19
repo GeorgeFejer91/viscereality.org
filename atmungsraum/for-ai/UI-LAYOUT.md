@@ -40,6 +40,13 @@ when selected → tracking check → battery review → scenario tiles and Start
 signals route and the earlier browser-recordings route usable. Pairing codes
 belong only to an actual incoming pairing request.
 
+After saving the session and answering any required questionnaire, **Nächste
+Sitzung** clears the previous participant form and the tracking and battery
+confirmations. It opens participant entry for the next run. The action requires
+a confirmed idle Quest and settled requests. Returning to stopped preparation
+through browser history or after reconnect opens the method chooser. Live
+calibration and recovery still take priority over local navigation.
+
 The connection page groups Bluetooth pairing, live ECG, installation and Drive
 setup beside the shared status toolbar. Require an
 authenticated WLAN connection and eligible control state for **Weiter**. Polar

@@ -1770,22 +1770,22 @@ def capture_parked_calibration(review):
         ("200-text", {"width":320,"height":568}, "200%"),
     ):
         page = review.page(initial, viewport=viewport, reduced_motion="no-preference")
-        enter_participant(page,then='tracking')
+        enter_participant(page)
         page.evaluate("size=>document.documentElement.style.fontSize=size", text_size)
         page.clock.run_for(2700)
         assert page.evaluate("window.reviewSetupCommands") == [], "Opening the app started native audio"
         assert page.evaluate("window.reviewQuest.setup.playing") is False
-        expect(page.locator("#preview-status")).to_have_text("Automatic ist bereit.")
-        expect(page.locator("#preview-input-volume")).to_have_text("0 %")
+        expect(page.locator("#input-screen")).to_be_visible()
+        expect(page.locator("#input-screen [data-operator-go='tracking']")).to_be_disabled()
         expect(page.locator("#preview-calibrate")).to_be_enabled()
         expect(page.locator("#preview-controller")).to_be_enabled()
         expect(page.locator("#preview-start")).to_be_hidden()
-        assert page.locator("#preview-circle").evaluate("node=>node.style.transform") == "scale(0.46)"
+        expect(page.locator("#preview-circle")).to_be_hidden()
         review.shot(page, f"parked-{slug}", f"Automatic {slug} · parked until the calibration button",
                     page.locator("#preview-calibrate"), "Parked startup")
         page.locator("#preview-calibrate").focus()
         page.keyboard.press("Enter")
-        expect(page.locator("#preview-detail")).to_contain_text("zwei vollständige Atemzyklen")
+        expect(page.locator("#preview-detail")).to_have_text("Folge zwei Atemzyklen.")
         assert page.evaluate("window.reviewSetupCommands.map(command=>command.op)") == ["calibrate"]
         assert page.evaluate("window.reviewQuest.setup.playing") is True
         quality = {"accepted":150,"masked":8,"motion":5,"timing":2,"invalid":1,"usable_fraction":.9,"warning":"motion"}
