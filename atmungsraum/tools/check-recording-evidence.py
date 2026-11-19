@@ -50,6 +50,26 @@ def require(condition, message):
         raise EvidenceError(message)
 
 
+class EcgPacketCoverage:
+    """Detect missing prefixes/interior samples; source packet lengths may vary.
+
+    Official Start may clip the first packet. This does not establish receipt
+    of an entirely absent packet or the buffered tail after the final cutoff.
+    """
+    def __init__(self):
+        self.frame = None
+        self.index = None
+
+    def observe(self, frame, index):
+        require(frame.isdecimal() and index.isdecimal(), "ECG packet sample metadata is missing")
+        index = int(index)
+        if self.frame == frame:
+            require(index == self.index + 1, "ECG packet sample index is discontinuous")
+        elif self.frame is not None:
+            require(index == 0, "ECG packet sample prefix is missing")
+        self.frame, self.index = frame, index
+
+
 def read_json(path):
     require(path.stat().st_size <= 1024 * 1024, "evidence JSON exceeds size limit")
     return json.loads(path.read_text(encoding="utf-8-sig"))
@@ -259,6 +279,7 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected, requir
     require(expected_name == terminal["participant_csv"]["name"], "official start filename mismatch")
     common = {key: str(identity[key]) for key in ("participant_id", "session_id", "run_index", "scenario_id")}
     counts = Counter()
+    ecg_packets = EcgPacketCoverage() if require_uninterrupted else None
     allow_controller = manifest.get("participant_csv_controller_breath") is True
     last = None
     with ExitStack() as resources:
@@ -275,6 +296,8 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected, requir
             require(row["schema_version"] == "4" and all(row[key] == value for key, value in common.items()),
                     "CSV row identity mismatch")
             kind = row["record_type"]
+            if kind == "ecg" and ecg_packets is not None:
+                ecg_packets.observe(row["sensor_frame_sequence"], row["sensor_sample_index"])
             require(kind in CSV_RECORD_TYPES and counts["end"] == 0, "CSV row beyond terminal or unknown kind")
             require(0 <= int(row["elapsed_us"]) <= (end - start) // 1000, "CSV row outside start/end clock bounds")
             if kind in PROJECTED:

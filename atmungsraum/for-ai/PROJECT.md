@@ -39,12 +39,21 @@ and Quest → phone → Drive data flow. Keep the existing lifecycle owner here.
   matching the native final descriptor. Native final saved:true/completed:false,
   writer drops0. Events record audio-error before pause and later sensor
   interruption markers; the original pre-cleanup audio guard remains unknown.
-- [ ] Implement the user's five-second Polar usability pause and usable-data-only
-  manual Continue policy, then qualify the next local Developer candidate.
+- [x] Implement the user's five-second Polar usability pause and usable-data-only
+  manual Continue policy.926 serialized native tests pass,6 isolated peers remain
+  separate; actual Java/Rust Pause→quality recovery→manual Resume passes.
 - [x] Verify the conditional phone warning and Continue gate:368 automated tests
   without skips,454 rendered states, context check and independent review pass.
-  Native receipt/dispatch gates remain authoritative; actual new-APK acceptance
-  and publication of this phone increment are pending.
+  Native receipt/dispatch gates remain authoritative. PR166, merge
+  `0728b1e1eda14d4fbf53bcda810406c0abf0c51a`, Pages44595575308 succeeds;
+  eight runtime/evidence/policy files match exact live bytes, the publisher
+  checked all10 affected files, and the actual Pixel loads `20261119-polar-pause`.
+- [x] Build/install the corrected local Developer35 candidate and verify signed
+  bytes, JNI, duration closure and actual private readiness projection. See the
+  [APK record](../quest/apks/README.md#developer35-main-signal-recovery-candidate--2026-11-19).
+- [ ] Run wearer calibration, five-second pause/recovery, and the full main/data
+  flow on35. The user explicitly requests waiting for their next go-ahead;
+  leave calibration and the session stopped meanwhile.
 - [ ] After local hardware qualification, publish that qualified candidate through Meta and
   align the latest hint; Meta currently remains33.
 - [ ] Repeat attended preparation, full 900-second completion, verified phone
@@ -88,15 +97,20 @@ phone must ask the experimenter to check strap position/contact and battery.
 Continue remains disabled until usable data returns; recovery never resumes
 automatically. Keep raw acquisition traffic distinct from usable breathing
 evidence and keep real source/audio/clock retirement barriers. This follow-up
-is in progress and is not part of installed34 or published Meta33.
+is implemented in the installed local35 replacement. Physical pause/recovery
+testing remains pending; published Meta33 does not implement this policy.
 
 Raw ECG coverage blocker found in the saved34 partial:9521 CSV ECG rows for
 about155 seconds, with73-sample source packets represented only by their last
 33–36 samples. The recording admission owner applies its250ms audio-head
 window to every raw ECG sample, rejecting older samples before writer counters.
 Zero writer drops does not establish complete acquisition. A receipt-bound raw
-packet admission correction and actual writer/export regressions are required
-before claiming full ECG coverage; preserve source/clock and session boundaries.
+packet admission correction passes actual writer/export73-ECG/36-ACC tests,
+retaining source/clock and session boundaries. The strict evidence checker now
+rejects missing ECG packet prefixes/interior indices (20 tests pass and the old
+partial fails as expected), while allowing the first Start-clipped packet. This
+cannot prove an entirely absent packet or the final buffered sensor tail after
+producer cutoff. Hardware capture and sample-exact end coverage remain open.
 
 ### Active: Quest background music across releases — 2026-11-19
 
