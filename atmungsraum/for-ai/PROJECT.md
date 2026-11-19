@@ -37,6 +37,14 @@ Pixel to the Quest LAN gateway. The Pixel reaches the public PWA. Use the
 authorized Wi-Fi recovery and an attended headset window for paired checks.
 Meta currently serves Developer 33 from the separate update test below.
 
+On the 17:18 UTC recheck, Android reported `CAPTIVE_PORTAL` on the
+awake Quest and `VALIDATED` on the Pixel even though both had joined the
+same Wi-Fi. A fresh scan on both devices returned no other shared saved
+profile in range. The Quest signaling and Pixel-to-Quest LAN probes both
+returned `No route to host`. The installed bench 42 bytes still match the
+signed SHA-256, and the live version policy still lists Developer 33.
+The next device step is the headset's attended Wi-Fi sign-in.
+
 Release `20261119-all-release-music` merged in [PR 164](https://github.com/GeorgeFejer91/viscereality.org/pull/164)
 as `5ff43cd23dede790f1bf36a642972deb212e9186`. Exact
 [Pages run 44573460025](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44573460025)
