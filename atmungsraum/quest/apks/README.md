@@ -61,6 +61,18 @@ and was not accessed. The public latest hint is33; the qualification floor stays
 PWA detection, a later restart-only comparison if needed, delivery and relaunch
 are pending the wearer's return. Publication alone is not update-test success.
 
+Attended delivery subsequently passed: one PWA Update tap at16:17:46UTC
+found33 while32 remained open, about55minutes after publication. Meta replaced
+the package at16:17:56 and the app relaunched automatically in a new process;
+the wearer confirms stimulus return. Installed bytes exactly match the signed33
+hash, and installer/initiator are `com.oculus.ocms`. There was no Store visit,
+host install/launch or restart before delivery. SDK/helper3 relaunch causality
+is not isolated. Propagation delay remains a hypothesis, not an inferred bound.
+The phone required selecting the existing Quest again; saved membership and
+automatic control recovered without new headset approval. Its live DOM then
+confirmed33 and the exact new fingerprint. Automatic post-update phone rejoin
+is a separate remaining acceptance item; see [PROJECT](../../for-ai/PROJECT.md).
+
 ## Meta Developer 32 publication — 2026-11-19
 
 The user explicitly selected code32 for this private distribution/update test,

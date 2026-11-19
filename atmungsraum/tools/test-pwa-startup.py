@@ -73,15 +73,27 @@ const mode = new URL(location.href).searchParams.get('fixture');
 const savedSearch = mode === 'saved-search-release';
 const unreachable = mode === 'lan-unreachable';
 const legacy = mode.startsWith('legacy-commissioning');
-const owner = unreachable || legacy ? {v: 2, device, serial: '', epoch: '1', native_epoch: '2', identity_kind: 'app-installation'}
+const savedBuild = mode.startsWith('saved-build-');
+const owner = savedBuild ? {v: 2, device, serial: '', epoch: '3', native_epoch: '4', identity_kind: 'app-installation'}
+  : unreachable || legacy ? {v: 2, device, serial: '', epoch: '1', native_epoch: '2', identity_kind: 'app-installation'}
   : {v: 1, device, serial: 'TEST-QUEST', epoch: '1', native_epoch: '2'};
 const mark = value => sessionStorage.events = JSON.stringify([...JSON.parse(sessionStorage.events || '[]'), value]);
 const storage = 'atmungsraum-quest-pair';
-const savedOwner = legacy ? {device: '0'.repeat(32), serial: 'OLD-QUEST', epoch: '1', native_epoch: '2'} : owner;
+const savedOwner = legacy ? {device: '0'.repeat(32), serial: 'OLD-QUEST', epoch: '1', native_epoch: '2'}
+  : savedBuild ? {...owner, epoch: '1', native_epoch: '2'} : owner;
 localStorage.setItem(storage, localStorage.getItem(storage) || JSON.stringify({
-  ...savedOwner, enrollment: {controller, key}, bluetoothId: 'saved', build,
+  ...savedOwner, enrollment: {controller, key}, bluetoothId: 'saved', build: savedBuild ? '9'.repeat(64) : build,
+  ...(mode === 'saved-build-no-device' ? {device: undefined} : {}),
+  ...(mode === 'saved-build-unenrolled' ? {enrollment: undefined} : {}),
   ...(savedSearch ? {} : {endpoint: gateway(oldIp)})
 }));
+if (savedBuild) {
+  window.testSavedPair = localStorage.getItem(storage);
+  sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({
+    owner: savedOwner, op: 'recenter', id: '1'.repeat(16), generation: 0,
+  }));
+  window.testSavedPending = sessionStorage.getItem('atmungsraum-quest-pending');
+}
 if (mode === 'legacy-commissioning-pending') {
   sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({
     owner: savedOwner, op: 'recenter', id: '1'.repeat(16), generation: 0,
@@ -109,7 +121,7 @@ radio.getDevices = async () => [{
   }
 }}];
 radio.requestDevice = async () => { mark('chooser'); throw Error('Unexpected chooser'); };
-if (mode === 'companion' || savedSearch) delete radio.getDevices;
+if (mode === 'companion' || savedSearch || savedBuild && mode !== 'saved-build-discovery-mismatch') delete radio.getDevices;
 Object.defineProperty(navigator, 'bluetooth', {value: radio});
 const fetchPage = window.fetch.bind(window);
 let witness = 0;
@@ -138,23 +150,28 @@ window.fetch = async (url, init) => {
   if (!init.body) {
     mark('wifi:' + address.hostname);
     if (unreachable) throw new TypeError('Failed to fetch');
-    if (address.hostname === oldIp && !['wifi-only', 'companion'].includes(mode)) throw new TypeError('Unreachable');
-    return Response.json({...owner, enabled: true, remote_available: true});
+    if (address.hostname === oldIp && !savedBuild && !['wifi-only', 'companion'].includes(mode)) throw new TypeError('Unreachable');
+    return Response.json({...owner,
+      ...(mode === 'saved-build-foreign' ? {device:'f'.repeat(32)} : {}),
+      ...(mode === 'saved-build-discovery-mismatch' ? {epoch:'99'} : {}),
+      enabled: true, remote_available: true});
   }
   const {action, nonce} = JSON.parse(init.body);
   if (action !== 'status') throw Error('Unexpected command: ' + action);
   if (legacy) mark('native-status');
+  if (savedBuild) mark('native-status:' + owner.epoch);
+  const replyNonce = mode === 'saved-build-replay' ? '0'.repeat(32) : nonce;
   const payload = JSON.stringify({v: 1, wifi_snapshot: 1, build: {v: 1, packaging_fingerprint: build},
     recordings: 0, control_mode: 'remote', p: 'IDLE', g: 0, r: 0, ms: 0, pending: false, rec: false,
-    ...(legacy ? {controller_access: {v: 1, role: 'active', active_phone: 'Phone', revision: 0}} : {}),
+    ...(legacy || savedBuild ? {controller_access: {v: 1, role: 'active', active_phone: 'Phone', revision: 0}} : {}),
     o: {v: 1, s: 'observed', e: owner.native_epoch, i: String(++witness), a: 0, g: 0, r: 0}});
   const macKey = await crypto.subtle.importKey('raw', encode.encode(key),
     {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
   const bytes = await crypto.subtle.sign('HMAC', macKey,
-    encode.encode(['RQG1-REPLY', controller, device, owner.epoch, nonce, action, payload].join('|')));
+    encode.encode(['RQG1-REPLY', controller, device, owner.epoch, replyNonce, action, payload].join('|')));
   const mac = Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('');
-  return Response.json({v: 1, device, epoch: owner.epoch, nonce, action, payload,
-    mac: mode === 'legacy-commissioning-rejected' ? '0'.repeat(64) : mac});
+  return Response.json({v: 1, device, epoch: owner.epoch, nonce:replyNonce, action, payload,
+    mac: ['legacy-commissioning-rejected', 'saved-build-forged'].includes(mode) ? '0'.repeat(64) : mac});
 };
 if (legacy) {
   let waitForStatus = ['legacy-commissioning', 'legacy-commissioning-superseded'].includes(mode);
@@ -232,6 +249,43 @@ def verify_reconnect(browser, url, release):
         context.close()
     print('PASS ordered startup, saved headset, changed address, companion, Bluetooth recovery and Wi-Fi fallback')
     print('PASS failed signaling and LAN use fitted connection guidance at 320px and 200% text')
+
+
+def verify_saved_build_rejoin(browser, url, release):
+    from playwright.sync_api import expect
+
+    modes = ('changed', 'forged', 'foreign', 'replay', 'discovery-mismatch', 'no-device', 'unenrolled')
+    for suffix in modes:
+        release.update(app_url=OLD, probe_result=None)
+        with browser.new_context(viewport={'width':390,'height':844}, is_mobile=True, has_touch=True) as context:
+            context.add_init_script(QUEST_STARTUP)
+            page = context.new_page()
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            target = url.replace('?live-sync=off#daten', '?fixture=saved-build-' + suffix)
+            page.goto(target)
+            if suffix == 'changed':
+                expect(page.locator('#check-bridge')).to_have_attribute('data-check', 'ok', timeout=3000)
+                expect(page.locator('#check-control')).to_have_attribute('data-check', 'ok', timeout=3000)
+                assert page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).build") == 'c'*64
+                assert page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).enrollment") == page.evaluate('JSON.parse(testSavedPair).enrollment')
+            else:
+                event = 'companion' if suffix == 'unenrolled' else 'wifi:'
+                page.wait_for_function('prefix => JSON.parse(sessionStorage.events).some(e=>e.startsWith(prefix))', arg=event)
+                expect(page.locator('#quest-find')).to_have_attribute('aria-disabled', 'false')
+                expect(page.locator('#check-bridge')).not_to_have_attribute('data-check', 'ok')
+                assert page.evaluate("localStorage.getItem('atmungsraum-quest-pair') === testSavedPair")
+            events = page.evaluate('JSON.parse(sessionStorage.events)')
+            assert 'chooser' not in events and 'wrong headset' not in events, events
+            assert page.evaluate("sessionStorage.getItem('atmungsraum-quest-pending') === testSavedPending")
+            if suffix == 'changed':
+                assert 'wifi:192.168.10.3' in events and 'native-status:3' in events, events
+                assert not any(event.startswith('ble:') for event in events), events
+            if suffix == 'unenrolled':
+                assert not any(event.startswith('wifi:') for event in events), events
+            assert not errors, errors
+    print('PASS signed saved-address reconnect learns a new epoch/build without getDevices/companion/chooser; original membership/journal retained')
+    print('PASS forged HMAC, foreign installation, replay, fresh discovery mismatch, missing device and unenrolled fallback remain rejected')
 
 
 def verify_legacy_commissioning(browser, url, release):
@@ -367,6 +421,7 @@ def run():
         print('PASS cached launch and idle resume update; settings, URL, storage and error/timeout fallback preserved')
         context.close()
         verify_reconnect(browser, url, release)
+        verify_saved_build_rejoin(browser, url, release)
         verify_legacy_commissioning(browser, url, release)
         verify_idle_release_timer(browser, url, release)
         verify_release_during_saved_search(browser, url, release)

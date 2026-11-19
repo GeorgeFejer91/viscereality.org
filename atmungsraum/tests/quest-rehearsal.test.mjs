@@ -291,6 +291,32 @@ test('learns the signed build during enrollment and pins the saved headset on re
   await assert.rejects(joinQuest({ endpoint, serial: owner.serial, fetcher: first.fetch }));
 });
 
+test('learning an enrolled build preserves explicit pins, signed device identity and fresh observations', async () => {
+  const enrollment = { controller, key };
+  const newBuild = 'e'.repeat(64);
+  const current = { ...snapshot(), build: { v: 1, packaging_fingerprint: newBuild } };
+  const options = { endpoint, serial: owner.serial, device: owner.device, enrollment };
+  await assert.rejects(joinQuest({ ...options, discovery: owner, build,
+    fetcher: server({ status: current }).fetch }), /Build hat sich geändert/);
+  await assert.rejects(joinQuest({ ...options,
+    fetcher: server({ status: current, tamper: true }).fetch }), /Antwort konnte nicht bestätigt/);
+  const foreign = server({ identity: { ...owner, device: 'f'.repeat(32) }, status: current });
+  await assert.rejects(joinQuest({ ...options, fetcher: foreign.fetch }), /Quest oder Fernmodus/);
+  assert.deepEqual(foreign.requests, ['GET']);
+  const gateway = await joinQuest({ ...options, fetcher: server({ status: current }).fetch });
+  try {
+    assert.equal(gateway.initial.build.packaging_fingerprint, newBuild);
+    current.o = { ...current.o, i: '101' };
+    assert.equal((await gateway.status()).o.i, '101');
+    current.build = { v: 1, packaging_fingerprint: build };
+    current.o = { ...current.o, i: '102' };
+    await assert.rejects(gateway.status(), /Build hat sich geändert/);
+    current.build = { v: 1, packaging_fingerprint: newBuild };
+    current.o = { ...current.o, i: '101' };
+    await assert.rejects(gateway.status(), /Kein aktueller Status/);
+  } finally { gateway.close(); }
+});
+
 test('participant Arm encrypts the identity and observed generation for the enrolled Quest', async () => {
   const state = { ...snapshot(), participant_arm: 1, recordings: 1, ecg_preview: 1 };
   const fixture = server({ status: state });
