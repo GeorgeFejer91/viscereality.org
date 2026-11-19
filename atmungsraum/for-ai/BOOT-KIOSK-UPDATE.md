@@ -14,9 +14,22 @@ The own-app watcher checks it before counting departures. Time cannot end that
 protection: actual platform completion, owner retirement or loss of the exact
 current owner ends it. Generic prompt timing/default-off behavior and ordinary
 escape after completion are preserved. Host regressions replay120seconds and
-the after-completion triple escape. The next physical check must leave a real
+the after-completion triple escape. Physical acceptance requires leaving a real
 prompt open past60seconds, verify no exit, then allow it and verify native
 focus/control. No helper binary or Meta update policy changes are required.
+
+Attended bench39 result: the real Android GrantPermissionsActivity remained
+top-resumed after99seconds while the same app process and kiosk service stayed
+alive. After the wearer allowed the requested access, the stimulus returned
+in that same process, native frames advanced and kiosk reported ready-armed.
+Bluetooth rediscovery then reused saved membership and the Pixel confirmed
+active control with the new build fingerprint. An initial empty scan may have
+been a range issue, as reported by the wearer; PC scanning independently saw
+the correct discovery service. Specific LAN/TURN transport and a new physical
+triple-escape check are not established by this result. The warm-relaunch Polar
+issue remains separate. Developer32 is built locally, not Meta-published.
+The normal Meta27 app and Pixel pairing were restored afterward, with fresh
+native `IDLE/rec:false/pending:false`, active phone control and kiosk ready-armed.
 
 ## Actual boot/update acceptance — 2026-11-17
 
