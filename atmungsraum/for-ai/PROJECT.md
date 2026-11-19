@@ -1,6 +1,35 @@
 # Project
 
-### Active: Quest background music controls — 2026-11-19
+### Active: Quest background music across releases — 2026-11-19
+
+The user requests the same Quest-owned playback and phone-only controls
+across the supported release profiles, including UI usability and paired
+device verification. Historical APKs remain available by their recorded hashes.
+
+- [x] Require the music asset and button-confirmed phone enrollment in every
+  build. Cover canonical Developer, WebRTC bench, open and closed rehearsal,
+  local boot opt-in, and the authored-audio candidate. Keep each profile's
+  startup panel policy and preserve the existing authored session mix.
+- [x] Preserve rapid keyboard/slider input through a delayed Quest reply, with
+  one request in flight and only the newest committed value queued. Drop that
+  queued value when the gateway or controller lease changes. Test focus, gain
+  confirmation and absence of phone media playback/resource loading.
+- [ ] Verify the full smartphone usability gate and release-matrix suite,
+  signed artifacts and current live Pages version. Exercise the idle installed
+  Pixel release when the lab phone is available.
+- [x] Build and inspect canonical Developer 34 with the retained signer and
+  existing updater. Exact track, signature, alignment and signed session
+  closure pass. [Developer 34 APK record](../quest/apks/README.md#background-music-developer-34-candidate--2026-11-19)
+- [ ] Qualify Developer 34 on paired hardware, then verify private-channel
+  processing and actual delivery.
+- [ ] Exercise Play, volume and Stop with real paired devices for each
+  applicable release and prove playback is on the Quest. Cover reconnect,
+  lost control, pending playback, and audible same-headset gain changes.
+
+The USB headset shows Developer 27 and bench 42. It reports no route to the
+PWA and signaling hosts. Use the authorized Wi-Fi recovery and an attended
+headset window for the paired checks. Meta currently serves Developer 33 from
+the separate update test below. Same-profile release qualification remains open.
 
 - [x] Add the German Settings dialog with Play, Stop and a 0–100% volume
   slider. Show native loading and failure states and gate changes on current

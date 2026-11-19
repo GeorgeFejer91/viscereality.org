@@ -210,7 +210,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const musicPlay = byId('music-play');
   const musicVolume = byId('music-volume');
   const musicOutput = musicVolume.previousElementSibling;
-  let musicGateway, musicState, musicAttempt;
+  let musicGateway, musicState, musicAttempt, musicQueuedVolume, musicControlRevision;
   let musicReady = false;
   let musicDraft = false;
   let musicError = null;
@@ -228,8 +228,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (musicGateway !== gateway) {
       musicGateway = gateway;
       musicState = musicAttempt = null;
+      musicQueuedVolume = undefined;
       musicDraft = false;
       musicError = null;
+    }
+    const revision = status?.controller_access?.revision;
+    if (musicControlRevision !== revision) {
+      musicControlRevision = revision;
+      musicQueuedVolume = undefined;
+      musicDraft = false;
     }
     const observed = backgroundMusicStatus(status?.background_music);
     const supported = Boolean(gateway?.backgroundMusic && observed);
@@ -239,14 +246,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         && ['off', 'playing'].includes(observed.state))) musicError = null;
     musicReady = supported && active;
     musicPlay.disabled = musicVolume.disabled = !musicReady;
-    for (const control of [musicPlay, musicVolume]) {
-      if (musicAttempt) control.setAttribute('aria-disabled', 'true');
-      else control.removeAttribute('aria-disabled');
-    }
+    if (musicAttempt) musicPlay.setAttribute('aria-disabled', 'true');
+    else musicPlay.removeAttribute('aria-disabled');
     const canStop = supported && ['starting', 'playing'].includes(musicState.state);
     text(musicPlay.firstElementChild, canStop ? 'Stoppen' : 'Abspielen');
-    if (!musicReady) musicDraft = false;
-    if (!musicDraft && supported) musicVolume.value = musicState.volume;
+    if (!musicReady) {
+      musicDraft = false;
+      musicQueuedVolume = undefined;
+    }
+    if (!musicDraft && supported) {
+      musicVolume.value = musicReady ? musicQueuedVolume ?? musicAttempt?.volume ?? musicState.volume : musicState.volume;
+    }
     byId('music-volume-control').hidden = !supported;
     musicPlay.hidden = !supported;
     showMusicVolume(musicVolume.value);
@@ -254,13 +264,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       : !supported ? 'Diese Quest-App unterstützt Hintergrundmusik noch nicht.'
         : !active ? 'Übernimm die Quest-Steuerung, um die Musik zu ändern.'
           : musicState.state === 'starting' ? 'Die Quest lädt die Musik …'
-            : musicState.state === 'failed' ? 'Die Quest konnte die Musik nicht abspielen.' : musicError ? 'Die Quest hat die Einstellung nicht bestätigt.' : '';
+            : musicState.state === 'failed' ? 'Die Quest konnte die Musik nicht abspielen.'
+              : musicAttempt?.volume !== undefined ? 'Lautstärke wird eingestellt …'
+                : musicError ? 'Die Quest hat die Einstellung nicht bestätigt.' : '';
     const musicMessage = byId('music-message');
     text(musicMessage, message);
     musicMessage.hidden = !message;
   }
   async function changeMusic(change) {
-    if (!musicReady || musicAttempt || document.hidden) { paint(); return; }
+    if (!musicReady || document.hidden) { paint(); return; }
+    if (musicAttempt) {
+      if (change.volume !== undefined) musicQueuedVolume = change.volume;
+      paint();
+      return;
+    }
     const gateway = musicGateway;
     const attempt = { ...change, revision: musicState.revision };
     musicAttempt = attempt;
@@ -270,17 +287,27 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       const applied = await gateway.backgroundMusic({ v: 1, ...change }, AbortSignal.timeout(4000));
       if (musicAttempt === attempt && applied.revision >= musicState.revision) musicState = applied;
     } catch {
-      if (musicAttempt === attempt) musicError = attempt;
+      if (musicAttempt === attempt) {
+        musicError = attempt;
+        musicQueuedVolume = undefined;
+      }
     } finally {
-      if (musicAttempt === attempt) musicAttempt = null;
-      paint();
+      if (musicAttempt === attempt) {
+        const volume = musicQueuedVolume;
+        const revision = musicControlRevision;
+        musicAttempt = null;
+        musicQueuedVolume = undefined;
+        paint();
+        if (gateway === musicGateway && revision === musicControlRevision && volume !== undefined
+          && volume !== musicState?.volume) void changeMusic({ volume });
+      }
     }
   }
   musicPlay.addEventListener('click', () => {
     if (musicState) void changeMusic({ playing: !['starting', 'playing'].includes(musicState.state) });
   });
   musicVolume.addEventListener('input', () => {
-    if (!musicReady || musicAttempt) { paint(); return; }
+    if (!musicReady) { paint(); return; }
     musicDraft = true;
     showMusicVolume(musicVolume.value);
   });

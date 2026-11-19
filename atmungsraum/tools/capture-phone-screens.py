@@ -330,9 +330,12 @@ export async function joinQuest({ endpoint }) {
         : settings.receiptState ? {v:1,id,state:settings.receiptState}
           : receipts[id] ?? {v:1,id,state:'outcome_unknown'};
     }),
-    backgroundMusic: settings.music ? controlled(value => {
+    backgroundMusic: settings.music ? controlled(async value => {
       (window.reviewMusicCommands ??= []).push(structuredClone(value));
       const { playing, volume } = value;
+      if (volume !== undefined && window.reviewHoldMusicVolume) {
+        await new Promise(resolve => { window.reviewReleaseMusicVolume = resolve; });
+      }
       Object.assign(settings.music, playing === undefined ? { volume } : { state: playing ? 'starting' : 'off' });
       settings.music.revision++;
       return { ...settings.music };

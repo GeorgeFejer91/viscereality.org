@@ -1,5 +1,18 @@
 # Atmungsraum Quest 2 APKs
 
+## Background music Developer 34 candidate — 2026-11-19
+
+Canonical package `org.viscereality.atmungsraum.developer`, code 34,
+version `0.2.33-dev`, 73,629,757 bytes. APK SHA-256
+`d32e96729c86c31861e32be414c39daecbf9a1d48af9395863730c219e4c1f49`.
+Native source `f6bcfd58b060e6ea21aef7c9152d5adf1b33a11d`, tree
+`06e8bf8bb7b23c407bc78474e4177f47aae3c1e9`. Assembly used
+`-CanonicalRelease`, the retained original Experimenter profile and private
+provider and Meta SDK207. Exact signed MP3, v3 Developer signer, ARM64 OpenXR,
+16 KiB alignment and signed 900-second session closure pass. This is a local
+release candidate awaiting paired-device playback qualification. The latest
+published Developer channel build is 33.
+
 ## Background music bench 42 — 2026-11-19
 
 Bench 42 supersedes the independently signed bench 41 for the lab Quest.

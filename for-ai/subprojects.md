@@ -14,8 +14,10 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 - Quest background music (2026-11-19). The phone settings dialog sends
   Play, Stop and 0–100% gain to the paired APK. The supplied track loops
-  on the Quest, starts off at 35%, and uses independent gain. The phone
-  reports the APK state, including loading and unavailable older builds.
+  on the Quest, starts off at 35%, and uses independent gain. Every current
+  build profile packages it and selects authenticated phone enrollment.
+  The phone reports the APK state and keeps the most recent slider edit
+  during a delayed reply under the same active controller lease.
   See the [Quest setup](../atmungsraum/quest/README.md#optional-background-music).
 
 - PWA startup updates (2026-11-16): each fresh launch checks the published web

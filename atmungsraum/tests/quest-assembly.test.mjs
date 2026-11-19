@@ -52,7 +52,7 @@ test('the WebRTC lab APK resolves to its own package and locked bridge', {
   skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to the WebRTC native source checkout.',
 }, async () => {
   const runName = `asm-webrtc-${randomUUID().slice(0, 10)}`;
-  const result = invoke(runName, ['-PhonePairing', '-WebRtc']);
+  const result = invoke(runName, ['-WebRtc']);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.match(result.stdout, /dry-run accepted: atmungsraum_webrtc_bench/);
   const run = await resolvedRun(runName, 'atmungsraum_webrtc_bench');
@@ -63,6 +63,7 @@ test('the WebRTC lab APK resolves to its own package and locked bridge', {
   assert.ok(run.lock.build_inputs.assets.some(path => path.endsWith('/atmungsraum-webrtc')));
   assert.ok(run.lock.panel_source_closure.source_files.some(file => file.path.endsWith('/ExperimentSessionWebRtc.java')));
   await assertPhonePairing(run);
+  await assertBackgroundMusic(run);
 });
 
 test('canonical assembly binds automatic pairing and Meta update to the one Developer package', {
@@ -101,6 +102,7 @@ test('canonical assembly binds automatic pairing and Meta update to the one Deve
   assert.deepEqual(await readFile(join(questRepo, webRtcAssets, 'release-protocol.md')), protocol);
   assert.ok(run.lock.panel_source_closure.source_files.some(file => file.path.endsWith('/ExperimentSessionWebRtc.java')));
   await assertPhonePairing(run);
+  await assertBackgroundMusic(run);
   await assertControllerOnly(run);
 });
 
@@ -141,13 +143,21 @@ async function assertControllerOnly(run) {
   assert.ok(spec.settings_assertions.required_modules.includes('breath/controller-assessment'));
 }
 
-async function assertPhonePairing(run) {
+async function assertBackgroundMusic(run) {
+  const musicPath = join(run.specPath, '..', 'atmungsraum-music', 'ji3ji3.mp3');
+  assert.equal(run.lock.build_inputs.assets.filter(path => path.endsWith('/atmungsraum-music')).length, 1);
+  const bundled = await readFile(musicPath);
+  const supplied = await readFile(new URL('../assets/audio/background/ji3ji3.mp3', import.meta.url));
+  assert.equal(sha256(bundled), sha256(supplied));
+}
+
+async function assertPhonePairing(run, initiallyClosed = true) {
   assert.equal(run.lock.android_manifest.experiment_phone_pairing_enabled, true);
-  assert.equal(run.lock.android_manifest.experiment_panel_initially_closed, true);
+  assert.equal(run.lock.android_manifest.experiment_panel_initially_closed, initiallyClosed);
   assert.equal(run.lock.android_manifest.experiment_headset_setup_enabled, false);
   assert.match(run.manifest, /android:name="rusty\.quest\.experiment\.phone_pairing\.enabled" android:value="true"/);
   assert.deepEqual(run.lock.build_inputs.env.filter(entry => entry.name === 'RUSTY_QUEST_NATIVE_RENDERER_PANEL_INITIALLY_CLOSED')
-    .map(entry => entry.value), ['true']);
+    .map(entry => entry.value), initiallyClosed ? ['true'] : []);
   assert.doesNotMatch(run.manifest, /debug-experiment-control|\.headset-setup/);
   assert.equal(run.lock.headset_setup_sources.length, 0);
   assert.equal(run.lock.debug_experiment_operator_sources.length, 0);
@@ -184,8 +194,8 @@ test('assembly binds the real looping audio and selected Java definitions before
     assert.doesNotMatch(run.manifest, /android:installLocation=/);
     assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.rehearsal"/);
     assert.match(run.manifest, /android:name="rusty\.quest\.experiment\.breathing_setup\.enabled" android:value="true"/);
-    assert.equal(run.lock.android_manifest.experiment_phone_pairing_enabled, false);
-    assert.doesNotMatch(run.manifest, /rusty\.quest\.experiment\.phone_pairing\.enabled/);
+    await assertBackgroundMusic(run);
+    await assertPhonePairing(run, false);
     const schemaCheck = spawnSync('pwsh', ['-NoProfile', '-Command',
       'if (!(Test-Json -Json (Get-Content -Raw -LiteralPath $env:ASM_TEST_SPEC) -SchemaFile $env:ASM_TEST_SCHEMA)) { throw "Assembled app violates schema" }; if (!(Test-Json -Json (Get-Content -Raw -LiteralPath $env:ASM_TEST_FEATURE) -SchemaFile $env:ASM_TEST_FEATURE_SCHEMA)) { throw "Scenario feature violates schema" }'],
     { encoding: 'utf8', env: { ...process.env, ASM_TEST_SPEC: run.specPath,
@@ -204,7 +214,19 @@ test('rehearsal can opt into the same closed startup and phone pairing as develo
     assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.rehearsal"/);
     assert.match(run.manifest, /android:debuggable="true"/);
     await assertPhonePairing(run);
+    await assertBackgroundMusic(run);
   });
+
+test('authored-audio APK includes the separate phone-controlled music asset', {
+  skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to a patched native checkout.',
+}, async () => {
+  const runName = `asm-music-study-${randomUUID().slice(0, 10)}`;
+  const result = invoke(runName, ['-MainStudyAudio']);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const run = await resolvedRun(runName, 'atmungsraum_quest2');
+  await assertBackgroundMusic(run);
+  await assertPhonePairing(run, false);
+});
 
 test('boot autostart opt-in resolves the actual own-app receiver and permission closure',
   { skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to a patched native checkout.' }, async () => {
@@ -213,6 +235,8 @@ test('boot autostart opt-in resolves the actual own-app receiver and permission 
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const run = await resolvedRun(runName, 'atmungsraum_quest2');
     await assertControllerOnly(run);
+    await assertBackgroundMusic(run);
+    await assertPhonePairing(run, false);
     for (const feature of ['ui.experiment_boot_autostart', 'ui.same_apk_soft_kiosk', 'ui.experiment_session_ble_control']) {
       assert.ok(run.lock.selected_feature_ids.includes(feature), feature);
     }
@@ -246,6 +270,7 @@ test('developer resolution selects a distinct non-debuggable app and requires an
     assert.equal(run.lock.android_manifest.target_sdk_version, 34);
     assert.equal(run.lock.android_manifest.install_location, 'auto');
     await assertPhonePairing(run);
+    await assertBackgroundMusic(run);
     const noKey = invoke(runName + '-nokey', ['-Developer', '-VersionCode', '31']);
     assert.notEqual(noKey.status, 0);
     assert.match(noKey.stdout + noKey.stderr, /Developer requires an explicit existing -Keystore/);

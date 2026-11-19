@@ -117,6 +117,62 @@ def capture_dialogs(review, tag, viewport, font):
     page.context.close()
 
 
+def capture_music_keyboard_burst(review):
+    viewport = {"width": 320, "height": 640}
+    music = {"v": 1, "state": "playing", "volume": 35, "revision": 1}
+    page = review.page(initial(c, {"music": music}), viewport=viewport)
+    try:
+        page.clock.run_for(4000)
+        expect(page.locator("#check-control")).to_have_attribute("data-check", "ok")
+        go(page, "settings")
+        page.locator("#music-open").click()
+        dialog = page.get_by_role("dialog", name="Musik")
+        slider = dialog.get_by_role("slider", name="Lautstärke")
+        page.evaluate("""() => {
+          window.reviewHoldMusicVolume = true;
+          window.reviewPhoneAudioStarts = 0;
+          const originalPlay = HTMLMediaElement.prototype.play;
+          HTMLMediaElement.prototype.play = function (...args) {
+            window.reviewPhoneAudioStarts++;
+            return originalPlay.apply(this, args);
+          };
+        }""")
+        slider.focus()
+        page.keyboard.press("ArrowRight")
+        page.wait_for_function("Boolean(window.reviewReleaseMusicVolume)", timeout=4000)
+        page.keyboard.press("ArrowRight")
+        page.keyboard.press("ArrowRight")
+        snapshot = page.evaluate("""() => ({
+            value: document.querySelector('#music-volume').value,
+            commands: window.reviewMusicCommands,
+        })""")
+        assert snapshot == {"value": "38", "commands": [{"v": 1, "volume": 36}]}, snapshot
+        page.evaluate("window.reviewHoldMusicVolume = false; window.reviewReleaseMusicVolume()")
+        page.wait_for_function("window.reviewMusicCommands.length === 2", timeout=3000)
+        expect(slider).to_be_focused()
+        expect(dialog.locator("output")).to_have_text("38 %")
+        assert page.evaluate("window.reviewMusicCommands") == [{"v": 1, "volume": 36}, {"v": 1, "volume": 38}]
+        page.evaluate("window.reviewHoldMusicVolume = true; window.reviewReleaseMusicVolume = undefined")
+        page.keyboard.press("ArrowRight")
+        page.wait_for_function("Boolean(window.reviewReleaseMusicVolume)", timeout=4000)
+        page.keyboard.press("ArrowRight")
+        expect(slider).to_have_value("40")
+        page.evaluate("window.reviewQuest.access.revision++")
+        page.clock.run_for(1100)
+        page.evaluate("window.reviewHoldMusicVolume = false; window.reviewReleaseMusicVolume()")
+        expect(slider).to_have_value("39")
+        assert len(page.evaluate("window.reviewMusicCommands")) == 3, "Old lease must retire the unsent volume."
+        dialog.get_by_role("button", name="Stoppen").click()
+        expect(dialog.get_by_role("button", name="Abspielen")).to_be_visible()
+        dialog.get_by_role("button", name="Abspielen").click()
+        expect(dialog.get_by_role("button", name="Stoppen")).to_be_visible()
+        assert page.evaluate("window.reviewPhoneAudioStarts") == 0
+        assert not page.evaluate("performance.getEntriesByType('resource').some(r => r.name.includes('ji3ji3.mp3'))")
+        review.shot(page, "music-keyboard-burst", "Music keyboard controls", dialog, "Dialogs")
+    finally:
+        page.context.close()
+
+
 def capture_recordings(review, tag, viewport, font):
     page = review.page(initial(c), viewport=viewport)
     page.evaluate("size => document.documentElement.style.fontSize = size", font)
@@ -781,6 +837,7 @@ def verify():
         for font in ("", "200%"):
             capture_disconnected_recordings(review, font)
             capture_disconnected_recordings(review, font, cached=True)
+        capture_music_keyboard_burst(review)
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)
