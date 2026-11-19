@@ -42,6 +42,46 @@ return. The idle Pixel 10 reopened its installed standalone app, loaded
 the same release and both new runtime modules, retained its saved pairing,
 and exercised the dialog through the unconnected-state message and return
 to Connect. USB headset HTTPS and WebRTC signaling still report no route.
+### Active: controlled32-to33 preparation and manual-update help — 2026-11-19
+
+The user explicitly authorizes publishing33 while32 stays running, with no
+Store visit, to isolate update detection and a later restart-only check. The
+phone is in personal use: do not inspect or operate it. Attended PWA checks,
+any restart and screenshot capture wait for the user's return.
+
+- [x] Observe live installed32 and its current process without launch/restart.
+- [x] Build signed33 from the exact32 production source with version metadata
+  changed; verify source, signer, assets, alignment and actual signed duration.
+- [x] Publish33 to the private Developer channel while preserving the observed
+  running32 actor. Confirm Meta processing and align the public latest hint.
+- [x] Prepare an optional read-only manual-update page from Settings/Update,
+  using existing PWA navigation and style; reserve screenshot integration without
+  displaying invented images or unfinished screenshot placeholders.
+- [ ] Review/qualify/publish the help and evidence; verify exact Pages/live bytes.
+- [ ] On wearer return, check PWA detection without Store access or restart;
+  if needed, isolate restart alone and confirm actual delivery/relaunch.
+- [ ] Capture the real manual Quest update route later and add verified images.
+
+Ruling: preserve main32 and helper3 behavior for this probe. No restart
+automation or helper change belongs in this version-only test. Screenshot
+assets remain absent until genuinely captured; a text guide may ship meanwhile.
+Reuse this owner rather than introducing a competing plan or lifecycle.
+
+Preparation evidence: Meta current build1470412299491115 is33/0.2.32-dev,
+Quest2, Complete. Exact signed APK SHA256
+`28e0b1e5f7eef8f4050ce555b75dfb15cab5deba657d6332884a8e8be9304b53`,
+65,974,254bytes, uses the exact32 production commitfe22d7d4/treea99d4eb8.
+Signature,16KiB alignment, signed900000ms closure and98 unchanged payload
+assets pass; three generated metadata JSON files differ. Source/SDK/helper
+behavior is unchanged. Forward-only private observations retain32/PID20269
+through publication; no headset Store, phone access or update/restart command.
+First PWA detection and restart-only comparison remain attended work.
+
+The help's independent scoped review found no actionable issue;18 navigation
+tests pass independently. Full fixture-backed suite passes362/362 without
+skips. Final responsive reruns and exact Pages/live publication are pending.
+Private build/observation/render evidence remains outside Git. The optional
+guide ships text only; genuine headset screenshot capture remains unchecked.
 
 ### Active: publish Meta32 and test the PWA update — 2026-11-19
 
