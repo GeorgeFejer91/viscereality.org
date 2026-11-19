@@ -1,6 +1,25 @@
 # Autoboot, kiosk and Meta update qualification — 2026-11-16
 
-## Controlled32-to33 test staged — 2026-11-19
+## Controlled32-to33 delivery — 2026-11-19
+
+The attended PWA-only delivery succeeded at16:17UTC, about55minutes after
+publication. The phone's release hint detected33 while32 stayed open. One
+Update tap led to Meta installation of the exact signed33 APK and automatic
+app relaunch, confirmed by the wearer. No headset Store visit, host installation,
+host launch or intervening restart was used. Meta owns both installer and
+initiator. This does not establish a guaranteed propagation delay, and no
+restart-only recovery was needed. SDK and helper3 were both active; relaunch
+was observed without isolating which one caused it.
+
+Automatic phone reconnection did not pass. The existing Quest was selected
+again in the phone chooser, saved membership was reused without headset
+approval, and active control/code33 readback recovered. The phone lacks
+`navigator.bluetooth.getDevices`; the enrolled saved-address fallback's old
+build pin can reject an authenticated updated build. Its signed-response
+regression and repair are tracked in [PROJECT](PROJECT.md). A later physical
+update must qualify automatic rejoin after the repair.
+
+The following paragraphs record the untouched pre-test baseline and protocol.
 
 Developer33 (`0.2.32-dev`, Meta build1470412299491115) is current/Complete
 for Quest2. The production source is identical to32; helper3 is unchanged.

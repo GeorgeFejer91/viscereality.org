@@ -1505,9 +1505,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     try {
       const selection = chooseDevice ? selectQuest(bluetooth) : null;
       paint();
-      const join = (endpoint, discovery, transport) => joinQuest({ endpoint, transport, serial: discovery?.owner.serial ?? settings.serial,
+      const join = (endpoint, discovery, transport, { learnEnrolledBuild = false } = {}) => joinQuest({ endpoint, transport, serial: discovery?.owner.serial ?? settings.serial,
         identity_kind: discovery?.owner.identity_kind ?? settings.identity_kind,
-        device: discovery?.owner.device ?? settings.device, build: chooseDevice || discovery ? undefined : settings.build,
+        device: discovery?.owner.device ?? settings.device,
+        build: chooseDevice || discovery || learnEnrolledBuild && settings.enrollment && settings.device ? undefined : settings.build,
         enrollment: settings.enrollment, discovery: discovery?.owner, signal });
       let peer = selection ? await selection : null;
       let gateway;
@@ -1547,7 +1548,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
             return null;
           });
           if (discovery?.state !== 'ready' && trySavedAddress) {
-            gateway = await join(endpoint).catch(() => null);
+            // A replaced APK changes its build. Reuse this installation's saved
+            // enrollment to learn and pin the fresh authenticated status instead.
+            gateway = await join(endpoint, undefined, undefined, { learnEnrolledBuild: true }).catch(() => null);
             signal.throwIfAborted();
             if (!gateway) nextSavedProbe = performance.now() + 8000;
           }
