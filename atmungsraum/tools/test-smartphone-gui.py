@@ -58,7 +58,7 @@ def capture_dialogs(review, tag, viewport, font):
     kiosk_status = {"v": 1, "g": 2, "requested": True, "effective": True, "state": "active",
                     "service": "connected", "blocked": "", "detail": "Quest-App und Kiosk-Dienst verbunden.",
                     "retry_available": False}
-    page = review.page(initial(c, {"kiosk": kiosk_status}), viewport=viewport)
+    page = review.page(initial(c, {"kiosk": kiosk_status, "music": {"v": 1, "state": "off", "volume": 35, "revision": 0}}), viewport=viewport)
     page.evaluate("size => document.documentElement.style.fontSize = size", font)
     page.clock.run_for(4000)
     for check in ("bluetooth", "bridge", "control", "polar"):
@@ -74,6 +74,30 @@ def capture_dialogs(review, tag, viewport, font):
         page.keyboard.press("Escape")
         expect(trigger).to_be_focused()
     go(page, "settings")
+    music = page.get_by_role("button", name="Hintergrundmusik")
+    music.focus()
+    page.keyboard.press("Enter")
+    music_dialog = page.get_by_role("dialog", name="Musik")
+    review.shot(page, f"{tag}-music", "Background music", music_dialog, "Dialogs")
+    play = music_dialog.get_by_role("button", name="Abspielen")
+    volume = music_dialog.get_by_role("slider", name="Lautstärke")
+    expect(volume).to_have_value("35")
+    assert volume.bounding_box()["height"] >= 48
+    play.click()
+    expect(music_dialog.get_by_role("button", name="Stoppen")).to_be_visible()
+    expect(music_dialog.get_by_role("status")).to_have_text("Die Quest lädt die Musik …")
+    page.evaluate("Object.assign(window.reviewQuest.music, {state: 'playing', revision: 2})")
+    page.clock.run_for(1100)
+    expect(music_dialog.get_by_role("status")).to_be_hidden()
+    volume.focus()
+    page.keyboard.press("ArrowRight")
+    expect(music_dialog.locator("output")).to_have_text("36 %")
+    music_dialog.get_by_role("button", name="Stoppen").click()
+    expect(play).to_be_visible()
+    assert page.evaluate("window.reviewMusicCommands") == [
+        {"v": 1, "playing": True}, {"v": 1, "volume": 36}, {"v": 1, "playing": False}]
+    page.keyboard.press("Escape")
+    expect(music).to_be_focused()
     kiosk = page.locator("#quest-settings > summary")
     kiosk.click()
     review.shot(page, f"{tag}-kiosk", "Kiosk", page.locator("#kiosk-dialog"), "Dialogs")
