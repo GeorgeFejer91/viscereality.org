@@ -18,6 +18,25 @@ Signature, 16 KiB alignment, original ARM64 OpenXR loader, exact music bytes,
 74 unchanged authored guidance entries and signed 900-second session closure
 pass. The APK is local. Audible Quest and paired-phone acceptance are pending.
 Developer 32 remains the private Meta channel build.
+## Developer 33: controlled running-app probe — 2026-11-19
+
+Meta build `1470412299491115` is current in the same private Developer channel
+`1529361979246951`, app `1459506690581676`, with Quest2 targeting and processing
+`Complete`. Version is `0.2.32-dev`/33, 65,974,254 bytes, SHA256
+`28e0b1e5f7eef8f4050ce555b75dfb15cab5deba657d6332884a8e8be9304b53`.
+It uses the exact32 production source `fe22d7d4`/tree `a99d4eb8`, SDK207,
+helper3 and retained Developer v3 signer. Signature,16KiB alignment and the
+actual signed900000ms session closure pass. All98 non-metadata assets and both
+OpenXR/Meta loaders match32; the three changed asset JSON files carry generated
+paths, identity and binding hashes. The audio descriptor matches after run-path
+normalization. No breathing or updater behavior was changed for this probe.
+
+The existing installed32 actor, PID20269, remained alive while33 was uploaded
+and processed. No headset Store visit, restart, PWA update request, host install
+or launch was performed during this preparation. The phone is in personal use
+and was not accessed. The public latest hint is33; the qualification floor stays27.
+PWA detection, a later restart-only comparison if needed, delivery and relaunch
+are pending the wearer's return. Publication alone is not update-test success.
 
 ## Meta Developer 32 publication — 2026-11-19
 
