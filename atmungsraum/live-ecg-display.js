@@ -1,5 +1,6 @@
 const visibleNs = 2000000000n;
-const retainedNs = 4000000000n;
+const retainedMs = 4000;
+const retainedNs = BigInt(retainedMs) * 1000000n;
 const playoutDelayNs = 1000000000n;
 const gapNs = 12000000n;
 const maxSamples = 780;
@@ -21,6 +22,12 @@ export class LiveEcgDisplay {
   reset() {
     this.#watermark = null;
     this.#clear();
+  }
+
+  suspend() {
+    // Missing evidence hides the image immediately. The next fresh snapshot
+    // must prove continuity before it can reuse this bounded history.
+    this.#deadline = -Infinity;
   }
 
   #clear() {
@@ -48,10 +55,15 @@ export class LiveEcgDisplay {
     const latest = incoming.at(-1).timestamp;
     if (this.#watermark !== null && latest <= this.#watermark) return false;
     nowMs = Math.max(nowMs, this.#clock ?? nowMs);
-    if (nowMs >= this.#deadline) this.#clear();
-    else this.#advance(nowMs);
 
     const merged = new Map(this.#points.map(point => [point.timestamp, { ...point }]));
+    if (nowMs >= this.#deadline && (this.#clock === null
+      || nowMs - this.#clock > retainedMs || !incoming.some(point => merged.has(point.timestamp)))) {
+      this.#clear();
+      merged.clear();
+    } else {
+      this.#advance(nowMs);
+    }
     for (let index = 0; index < incoming.length; index++) {
       const point = incoming[index];
       const prior = merged.get(point.timestamp);
@@ -107,7 +119,7 @@ export class LiveEcgDisplay {
     if (!Number.isFinite(nowMs) || this.#cursor === null) return null;
     nowMs = Math.max(nowMs, this.#clock);
     if (nowMs >= this.#deadline) {
-      this.#clear();
+      this.suspend();
       return null;
     }
     this.#advance(nowMs);

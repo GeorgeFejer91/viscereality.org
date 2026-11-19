@@ -113,6 +113,41 @@ test('the trace expires at the validated age-adjusted deadline even with data st
   assert.equal(display.frame(1200), null);
 });
 
+test('a fresh overlapping snapshot resumes native history after the old image expires', () => {
+  const display = new LiveEcgDisplay();
+  const packet = trace(0, 260, 1450);
+  display.push(packet, 0);
+  const before = display.frame(1000);
+  assert.equal(before.points.length, 260);
+  assert.equal(display.frame(1050), null);
+  assert.equal(display.push(packet, 1060), false);
+  assert.equal(display.frame(1060), null);
+
+  assert.equal(display.push(trace(120, 240), 1070), true);
+  const resumed = display.frame(1070);
+  assert.equal(resumed.cursorTimestamp, before.cursorTimestamp);
+  assert.deepEqual(resumed.points, before.points);
+  assert.equal(resumed.path.match(/M/g).length, 1);
+});
+
+test('suspended history still rejects contradictory overlap and does not join a disjoint source interval', () => {
+  const display = new LiveEcgDisplay();
+  display.push(trace(), 0);
+  display.suspend();
+  assert.equal(display.frame(1000), null);
+
+  const changed = trace(120, 240, 0, index => index === 180 ? 700 : index % 2 ? -40 : 80);
+  assert.equal(display.push(changed, 1000), false);
+  assert.equal(display.frame(1000), null);
+  assert.equal(display.push(changed, 1050), false);
+  assert.equal(display.frame(1050), null);
+
+  display.push(trace(400), 1100);
+  const resumed = display.frame(1100);
+  assert.equal(resumed.oldestTimestamp, start + 400n * step);
+  assert.ok(resumed.points.every(point => point.timestamp >= resumed.oldestTimestamp));
+});
+
 test('a missing packet keeps an open SVG segment across separate deliveries', () => {
   const display = new LiveEcgDisplay();
   display.push(trace(0, 130), 0);

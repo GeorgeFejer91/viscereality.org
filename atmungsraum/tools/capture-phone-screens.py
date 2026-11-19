@@ -123,7 +123,7 @@ function ecgPacket() {
   if (settings.ecgGap === 'first-packet') settings.ecgGap = [first + 90, first + 110];
   const packet = window.reviewLastEcg = {
     v: 1, unit: 'uV', rate: 130, age_ms: 0,
-    samples: Array.from({ length: 260 }, (_, offset) => first + offset)
+    samples: Array.from({ length: settings.ecgSamples ?? 260 }, (_, offset) => first + offset)
       .filter(index => !settings.ecgGap || index < settings.ecgGap[0] || index >= settings.ecgGap[1])
       .map(index => {
         const cycle = index % 95;
@@ -1762,6 +1762,44 @@ def capture_live_display(review):
     page.context.close()
 
 
+def capture_ecg_continuity(review):
+    paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    page = review.page(paired + "window.reviewInitialQuest={polar:'ready',ecgSamples:170};",
+                       reduced_motion="no-preference")
+    expect(page.locator("#quest-polar-status")).to_contain_text("Quest empfängt EKG und Beschleunigungsdaten")
+    page.clock.run_for(4500)
+    geometry = r"""() => {
+      const coordinates = [...document.querySelector('#quest-ecg-trace').getAttribute('d')
+        .matchAll(/([ML])([\d.]+)/g)];
+      return {count:coordinates.length,left:Number(coordinates[0]?.[2]),
+        right:Number(coordinates.at(-1)?.[2]),segments:coordinates.filter(point=>point[1]==='M').length,
+        calls:window.reviewEcgCalls};
+    }"""
+    before = page.evaluate(geometry)
+    assert before["count"] >= 245 and before["left"] < 25, before
+    for _ in range(3):
+        page.evaluate("""() => {
+          window.reviewQuest.statusDrop=true;
+          dispatchEvent(new Event('online'));
+        }""")
+        expect(page.locator("#quest-ecg")).to_be_hidden()
+        assert page.evaluate(geometry)["count"] == 0
+        page.evaluate("window.reviewQuest.statusDrop=false")
+        calls = page.evaluate(geometry)["calls"]
+        for _ in range(110):
+            page.clock.run_for(10)
+            if page.evaluate(geometry)["calls"] > calls:
+                break
+        after = page.evaluate(geometry)
+        assert after["calls"] > calls and after["count"] >= 245 and after["left"] < 25, after
+        assert after["right"] > 398 and after["segments"] == 1, after
+    review.shot(page, "live-ecg-recovered-continuity",
+                "Live ECG · current signal restores the overlapping measured history",
+                page.locator("#quest-ecg"), "Live presentation")
+    review.regressions.append({"kind":"live-ecg-recovered-continuity","before":before,"after":after})
+    page.context.close()
+
+
 def capture_parked_calibration(review):
     initial = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));" + """
       window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};"""
@@ -2024,6 +2062,7 @@ def main():
             capture_polar_stream_recovery(review)
         if args.scope in ("all", "live"):
             capture_live_display(review)
+            capture_ecg_continuity(review)
         if args.scope in ("all", "parked"):
             capture_parked_calibration(review)
         if args.scope in ("all", "automatic"):

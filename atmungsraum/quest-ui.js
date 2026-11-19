@@ -14,7 +14,7 @@ import { BreathingSetup } from './breathing-setup.js?v=24';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
-import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
+import { LiveEcgDisplay } from './live-ecg-display.js?v=3';
 import { KioskControl } from './kiosk-control.js?v=10';
 import { ApkRelease } from './quest-release.js?v=2';
 import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta-update.js?v=6';
@@ -785,9 +785,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       ecgGeneration = status.g;
       ecgSensor = sensor;
     }
-    if (sourceChanged) ecgDisplay.reset();
-    // An unavailable status clears the image, but cannot retire its replay fence.
-    if (sourceChanged || !status) showTrace(null);
+    if (sourceChanged) {
+      ecgAttempt?.abort();
+      ecgDisplay.reset();
+    }
+    if (sourceChanged || !status) suspendTrace();
     const ready = setup?.p && setup.b && setup.c && setup.e && setup.a;
     const idle = status?.p === 'IDLE' && !active;
     const participantComplete = Boolean(!requiresParticipant || armedWithParticipant && participantId);
@@ -990,7 +992,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (!activeForSync(rehearsal.state)) liveAttempt?.abort();
     if (!idleForSync(rehearsal.state) && !activeForSync(rehearsal.state)) drive.cancel();
     data.hidden = status?.ecg_preview !== 1;
-    if (data.hidden) showTrace(null);
+    if (status && data.hidden) showTrace(null);
     exportStatus.hidden = !exportMessage || !status && !archiveScope;
     text(exportStatus, exportMessage === 'Keine gespeicherten Aufnahmen auf der Quest.' ? 'Keine gespeicherten Aufnahmen.' : exportMessage);
     retry.hidden = !rehearsal.gateway?.recordings || status?.p !== 'IDLE';
@@ -1141,12 +1143,21 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function showTrace(value) {
-    clearTimeout(ecgTimer);
     const now = performance.now();
     ecgDisplay.push(value, now);
+    paintTrace(now);
+  }
+
+  function suspendTrace() {
+    ecgDisplay.suspend();
+    paintTrace();
+  }
+
+  function paintTrace(now = performance.now()) {
+    clearTimeout(ecgTimer);
     const current = ecgDisplay.frame(now);
     renderEcg(current);
-    if (current) ecgTimer = setTimeout(() => showTrace(null), current.ttl);
+    if (current) ecgTimer = setTimeout(paintTrace, Math.ceil(current.ttl));
     scheduleAnimation();
   }
 
@@ -1536,17 +1547,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       }
       if (!liveAttempt && performance.now() >= nextLive) void syncLive(gateway, status.g);
     }
-    if (!gateway.ecg || ecgAttempt) return;
+    if (!gateway.ecg || status.ecg_preview !== 1 || ecgAttempt) return;
     const attempt = new AbortController();
     ecgAttempt = attempt;
     const start = performance.now();
     try {
       const frame = await gateway.ecg(attempt.signal);
-      if (ecgAttempt === attempt && rehearsal.gateway === gateway && !document.hidden && !attempt.signal.aborted) {
+      if (ecgAttempt === attempt && rehearsal.gateway === gateway && rehearsal.state.status?.ecg_preview === 1
+        && !document.hidden && !attempt.signal.aborted) {
         showTrace(ecgTrace(frame, performance.now() - start));
       }
     } catch {
-      if (ecgAttempt === attempt && !attempt.signal.aborted) showTrace(null);
+      if (ecgAttempt === attempt && rehearsal.gateway === gateway && !attempt.signal.aborted) suspendTrace();
     } finally {
       if (ecgAttempt === attempt) ecgAttempt = null;
     }
@@ -1730,7 +1742,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       rehearsal.attach(gateway);
       void apkRelease.refresh();
       void drive.setOwner(gateway.recordings ? gateway.owner : null);
-      showTrace(null);
+      suspendTrace();
       if (rehearsal.state.pending) await rehearsal.refresh();
     } catch (error) {
       if (connecting !== attempt) return;
