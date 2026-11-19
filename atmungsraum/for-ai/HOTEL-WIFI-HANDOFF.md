@@ -41,18 +41,46 @@ DevTools confirmed the saved pairing was unchanged. The private lab evidence
 directory contains the `pixel-reinstall-*` frames and version readbacks.
 The Quest's post-recovery egress and authenticated pairing remain open.
 
+## Current USB validation
+
+On November 19, the Quest on this PC matched Meta-installed Developer 27
+and signed WebRTC bench 37 by package, version and installed APK hash.
+Developer 32 is active on the Meta channel. Use the
+[earlier delivery record](PROJECT.md#active-publish-meta32-and-test-the-pwa-update--2026-11-19)
+for the prior observed installation of code 32. Verify the installed
+package separately on each selected USB target.
+
+The existing watchdog kept this Quest awake with the display on. Android
+reported captive Wi-Fi. TCP 443 from the Quest to the PWA and VDO.Ninja failed.
+The Pixel reached both public hosts. Its connection to the Quest's listening
+LAN gateway on port 8766 failed.
+
+RustDesk verified Settings and Back, the real Android Bluetooth chooser,
+selection of the Quest 2, and the on-screen network failure with experiment
+controls disabled. A separate launcher start returned to the standing
+Bluetooth search on the latest PWA. Chrome DevTools confirmed standalone
+mode, `20261119-idle-refresh`, the expected connection UI module and unchanged
+saved pairing. Authenticated controls remained unavailable. At `b48a21d`,
+the 421-state GUI gate and all 361 web and assembly tests passed with zero
+skips using the recorded button-pairing native test tree. The private evidence
+directory contains the `pixel-current-validation-*` frames and result logs.
+
+Complete the headset's hotel sign-in and recheck Quest signaling reachability.
+Use the regular Meta delivery path and read back the exact installed APK
+before qualifying code 32. Continue with fresh pairing, a matched native
+receipt, reconnect, and the remaining hardware and recording gates below.
+
 ## Release and evidence boundaries
 
 - The [live PWA](https://viscereality.org/atmungsraum/) serves
   `20261119-idle-refresh`, including the button-only pairing path and the idle
   refresh repair. [Runtime Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44427512855).
-- Meta Developer code 27, `0.2.26-dev`, is the installed baseline for the
-  guarded study and update sequence. Use [WebRTC bench 37](../quest/apks/README.md#webrtc-bench-37-with-button-only-pairing)
-  for the new pairing test. Its installed digest was checked, and its
-  button-only physical pairing and reconnect still need qualification.
-  [Developer code 30](../quest/apks/README.md#canonical-developer-30-candidate)
-  is the single signed canonical candidate in private staging. Code 28 is
-  reserved for the guarded Meta update test.
+- Meta Developer publishes [code 32](../quest/apks/README.md#meta-developer-32-publication--2026-11-19)
+  as `0.2.31-dev`. The current USB target retains Meta Developer code 27,
+  `0.2.26-dev`, and verified [WebRTC bench 37](../quest/apks/README.md#webrtc-bench-37-with-button-only-pairing).
+  Button-only fresh pairing and saved reconnect on the current hotel setup
+  still need qualification. Code 28 remains unpublished under the later
+  code 32 publication decision.
 - The hotel network supported TURN on November 18 in the commissioned lab
   profile with bench 32. Thirty fresh-slot joins and thirty saved rejoins
   passed, and a separate relay-only recovery returned an original native
@@ -109,5 +137,5 @@ experiment controls on either route. Follow the
    receipt or error for diagnosis.
 5. Continue the real Touch, tracking, worn-H10, recording, recovery, and
    custody checks in the [active project checklist](PROJECT.md). Coordinate
-   the [guarded Meta update](BOOT-KIOSK-UPDATE.md#queued-meta-update-amendment--2026-11-17)
-   with the release owner after the verified baseline recording gate.
+   any further [guarded Meta update](BOOT-KIOSK-UPDATE.md) with the release
+   owner and follow the current version and acceptance sequence.
