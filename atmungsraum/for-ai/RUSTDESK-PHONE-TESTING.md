@@ -136,6 +136,18 @@ live session with capture still active.
   scrolling of OS surfaces, or page transitions. Use raw remote frame
   coordinates for `mouse_click`. Use `keyboard_input` only after verifying
   the intended field is focused.
+- For a cold launch on the gesture-navigation Pixel, the RustDeskMCP
+  desktop viewer's **Mobile Actions** toolbar exposes Home and Recents.
+  Use the viewer for swipes when MCP has no gesture call. Confirm the PWA
+  is idle with no participant draft, dismiss only its task card, return
+  Home, and swipe up for the app drawer. Restore any temporary viewer
+  toolbar or window changes. Use a fresh MCP frame to tap the installed
+  Atmungsraum icon and verify the foreground PWA release. Resume from
+  Recents when testing a visibility change.
+- If a fresh launch and its Reload button reach a browser network error,
+  capture both outcomes. Compare a scoped reachability check from the
+  phone with the live release response from the workstation before
+  diagnosing the PWA. Keep site data and other Android tasks intact.
 - Exercise the installed app's launcher, safe areas, keyboard, rotation, and
   connection, participant, input, tracking, battery, session, recording,
   settings, update, and recovery views. Before each mutation, check eligible

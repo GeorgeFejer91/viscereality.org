@@ -57,7 +57,13 @@ endpoint: the fresh-phone path stops before opening WebRTC.
 - [ ] Verify that the installed Pixel has refreshed to
   `20261119-idle-refresh`. The standalone readback after deployment
   still showed `20261118-saved-quest-service` and its saved pairing.
-  Check the loaded entry and connection modules before counting the phone test.
+  On 2026-11-19 the RustDesk viewer dismissed the idle PWA task in Android
+  Recents. A RustDesk MCP tap on its launcher icon opened Chrome's
+  `ERR_ADDRESS_UNREACHABLE` page, and its Reload button returned the same
+  error. The phone's IPv4 connection to the live host on port 443 failed
+  with `No route to host`; the workstation received HTTP 200 with the
+  current release. No app data was cleared. Restore phone egress and verify
+  the loaded entry and connection modules before counting the phone test.
 - [x] Build and inspect signed bench 37 and the selected canonical Developer
   candidate 30. Match the bench 37 installed SHA-256 and retained UID. Preserve
   the installed Meta 27 bytes and process and the staged code 28 update.
@@ -69,8 +75,10 @@ endpoint: the fresh-phone path stops before opening WebRTC.
   status and Recenter receipt, then test automatic reconnect in both startup
   orders and measure the ICE route. Cross-device and worn-H10 evidence remains open.
   The lab readback marked the Quest's active Wi-Fi captive and the Pixel's
-  validated. Clear any Quest sign-in and verify application egress before
-  attributing a connection failure to TURN.
+  validated. Both devices returned `No route to host` for IPv4 TCP to the
+  VDO.Ninja signaling host on port 443. Clear any Quest sign-in and verify
+  application egress on both devices before attempting or attributing a
+  relay failure.
 
 Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
 navigate the Quest autonomously where the platform provides a supported
