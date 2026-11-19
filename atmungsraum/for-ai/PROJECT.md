@@ -71,6 +71,54 @@ headset and phone.
   Quest command. A stopped preview returns to method selection. Native
   recording and pending receipt recovery retain priority. The smartphone GUI
   gate passed all 454 states. Physical phone verification remains pending.
+- [x] Build and locally install Developer 36 (0.2.35-dev) with the native
+  next-session coordinator fix, guided preparation rollback, and the 300 ms
+  source-time Polar tilt filter at zero guidance bias. The native library
+  gate passed 931 tests with six isolated cases ignored. The signed 900-second
+  package closure, 16 KiB alignment and exact installed-byte checks passed.
+  The existing Pixel pairing controlled the new build, and the Quest watchdog
+  reported the display awake after install.
+- [x] On Developer 36 start an attended main with calibrated Polar tilt and
+  zero bias. Loss of usable input paused the main at 42.720 seconds and
+  kept its writer open. The phone showed the five-second warning and kept
+  Continue disabled. On reconnect, raw ECG and motion returned with the
+  calibration already failed as `source_replaced`. Save through the phone
+  returned the Quest to idle and incremented its early-end count.
+- [x] Start a second synthetic participant in the same Developer 36 app
+  process after the early end. The installed baseline PWA required returning
+  from its stopped preview through method choice to the participant form.
+  The Quest confirmed a second Arm generation and advancing main time.
+- [x] Resume the second Developer 36 main twice after five seconds of
+  unusable motion on the same Bluetooth connection. Each time the fit and
+  writer stayed valid, and manual Continue advanced the original timer.
+  When the Pixel returned, the second writer was still open and paused at
+  149.655 seconds. The fit reported `source_replaced` after transport turnover.
+  The phone completed the partial save and the Quest confirmed idle with
+  early-end count advanced, writer closed and no pending command.
+- [x] Build and locally install Developer 37 (0.2.36-dev), source
+  `77017bdc0016dd7129287339f81cc4e07997d482`. Keep a personal fit across a clock
+  retirement only when the current Bluetooth connection proves the same strap
+  and the composition binding is unchanged. Require a warm new clock and fresh
+  usable data before manual Continue. Native library tests passed 932 with six
+  existing cases ignored. Signed package closure, 16 KiB alignment and exact
+  installed bytes passed. The paired Pixel confirmed an idle Quest with zero
+  bias and fresh ECG and motion. The watchdog reported its display awake.
+- [ ] Verify full-duration continuity and recovery after actual range loss on
+  Developer 37. Capture the sanitized transition marker to distinguish a
+  same-strap clock reanchor from an actual composition or sensor retirement.
+  Then complete a full main and start the next participant in the same app.
+- [x] Verify the phone's pause message explains an invalidated fit even if
+  ECG and motion are back and the pause latch has cleared. The message keeps
+  Finish available and leaves Continue subject to native readiness.
+- [x] Fix retained participant notice height in the rendered regression.
+  Fix the reproduced ECG history loss across brief missing readbacks. The
+  ECG graph stays blank without current evidence and only restores retained
+  history after a fresh overlapping snapshot from the same source.
+  Combined release 20261120-polar-continuity passed 462 rendered states,
+  one focused mounted ECG recovery fixture and 352 Node tests (19 skipped).
+- [ ] Deploy the phone changes and repeat participant and ECG checks on the
+  installed Pixel. The H10's own battery reports changed 90%, 100%, and
+  90% during the attended test. Independent charge verification is pending.
 - [ ] Verify raw recording integrity, a second participant session after
   completion, and physical five-second pause/recovery. Track the distinct
   lifecycle failures and pending source work in the collaborator handoff.

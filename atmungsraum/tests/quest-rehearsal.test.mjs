@@ -99,6 +99,10 @@ test('an invalidated personal fit tells the operator to save even when raw Polar
   assert.match(notice.message, /speichere/i);
   assert.equal(rehearsalActions(paused).play, undefined);
   assert.equal(rehearsalActions(paused).finish, 'save-next');
+  const reconnected = { ...paused, pd: { native: { ...paused.pd.native, pause_latched: false, last_pause: null } } };
+  assert.equal(rehearsalContract.polarSessionPause(reconnected).message, notice.message);
+  assert.equal(rehearsalActions(reconnected).play, undefined);
+  assert.equal(rehearsalActions(reconnected).finish, 'save-next');
   const waitingForRebind = { ...paused, setup: { ...paused.setup, calibration: 'ready' } };
   assert.match(rehearsalContract.polarSessionPause(waitingForRebind).message, /Gurtposition/);
 });

@@ -715,7 +715,7 @@ def capture_polar_signal_pause(review, tag, viewport, font):
     }
     for state, message in messages.items():
         recovered = state == "ready"
-        health = {"required": True, "pause_latched": True, "invalid_timeout_ms": 5000,
+        health = {"required": True, "pause_latched": state != "invalidated", "invalid_timeout_ms": 5000,
                   "usable_fresh": recovered, "last_pause": {"reason": "breathing-data-unusable"}}
         setup = {"stage": "waiting", "input": "polar-tilt", "calibration": "failed",
                  "failure": "source_replaced"} if state == "invalidated" else None
