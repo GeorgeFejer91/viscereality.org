@@ -3,7 +3,7 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=21';
 import { pairPhone } from './quest-pairing.js?v=9';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=44';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=45';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=30';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { mountQuestDrive } from './quest-drive-ui.js?v=9';
@@ -1795,7 +1795,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function currentSessionControls(status, control = controllerLease.update(rehearsal.gateway, rehearsal.state, controlContext())) {
-    return Boolean((status?.rec && ['RUNNING', 'PAUSED', 'RECORDING'].includes(status.p)
+    return Boolean((status?.rec && ['RUNNING', 'PAUSED', 'RECORDING', 'ERROR'].includes(status.p)
       || status?.p === 'ARMED' && rehearsalActions(status, operatorCondition).finish === 'save-next')
       && control.active && !controllerLease.pending && !document.hidden);
   }

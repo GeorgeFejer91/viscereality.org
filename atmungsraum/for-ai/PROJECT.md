@@ -1,5 +1,70 @@
 # Project
 
+### Active: main Start rejection and retained calibration — 2026-11-19
+
+The user requests diagnosis and repair before repeating the complete main run
+and Quest → phone → Drive data flow. Keep the existing lifecycle owner here.
+
+- [x] Reproduce the attended Developer33 failure: personal Polar calibration
+  succeeds, participant accepts tracking, Arm succeeds, but two Start requests
+  reject with the main timer at zero. Cues and stimulus remain present.
+- [x] End/save the failed attempt through the actual phone UI. Fresh signed
+  status confirms IDLE, no active writer or pending command. The saved native
+  core records started/armed only, completed:false and zero writer drops;
+  this is not a completed main run.
+- [x] Reproduce two failure classes: a400ms delayed PMD packet invalidates
+  queued Start under the250ms history deadline, and a posted callback can
+  reject transiently unready input after native boundary admission. The original
+ 33 hardware receipt did not retain its precise rejected guard; do not claim
+  that historical guard was recovered.
+- [x] Replace destructive failed-start cleanup with frame/owner-bound
+  cancellation that retains a still-valid input calibration; preserve terminal
+  end/reset semantics and all actual Start readiness checks.
+- [x] Run focused native/Java regressions, independent review and signed APK
+  closure checks.912 native tests pass (6 isolated fixtures separate), the
+  real Java/Rust audio peer passes9 groups,83 boundary and30 rejection controls
+  pass, and365 PWA/assembly/interop tests pass without skips. Native boundary
+  scan and actual Android boot-class-path compilation pass. The older aggregate
+  composition token checker is stale and is not represented as passing.
+- [x] Build and locally install Developer34 with exact signed-byte readback.
+  See the [APK log](../quest/apks/README.md#developer34-start-recovery-candidate--2026-11-19).
+- [ ] Publish the qualified source/evidence and verify exact Pages deployment.
+- [ ] After local hardware qualification, publish Developer34 through Meta and
+  align the latest hint; Meta currently remains33.
+- [ ] Repeat attended preparation, full 900-second completion, verified phone
+  export, questionnaire and private Drive custody. Configure this Pixel6a's
+  missing Drive authorization separately; it is not the cause of Start rejection.
+
+Private diagnostics and the failed trial remain outside Git. No successful
+900-second run is claimed for Developer33. Earlier completed runs and matching
+Quest/phone/Drive files remain valid historical evidence.
+
+Attended34: keep-awake was explicitly renewed and verified Awake/displayON.
+The typed File Manager launch uses a bare component intent, which does not
+admit cold-root automatic H10 startup. After a confirmed idle stop, an exact
+normal MAIN/LAUNCHER intent activates automatic acquisition; both streams and
+phone control are green. This is a tooling launch gap, not a sensor-permission
+change. Personal calibration completed at18:14UTC, wearer accepted tracking,
+and the first actual Start request at18:16:26UTC proceeded through Arm and
+the next-cycle boundary. The phone showed00:04/15:00 at18:16:45UTC and a
+running local recording. At02:35.647 the session entered ERROR with its writer
+still active. The wearer reports uninterrupted cues and stimulus, no Meta menu,
+and Automatic stimulus control after cleanup. The post-fault snapshot shows
+fresh ECG/ACC and a healthy playing shared loop, but cannot establish the
+pre-fault cause. Native cleanup cleared the personal input model. Developer34
+is not qualified for Meta publication; a bounded pre-cleanup fault latch and
+reservation-only error cleanup are in progress. Preserve this partial writer
+until normal save completes; do not restart the app to recover it.
+
+The PWA omitted ERROR from its existing active-writer save action. The scoped
+recovery change enables Beenden/save-next only with recording:true, confirmed
+control and no pending request; Start remains disabled.367 automated tests pass
+without skips, including the errored writer, stale signals, absent writer,
+pending request and foreign-controller cases.438 rendered states and a focused
+finish-before-update ERROR-writer check pass. Independent review confirms the
+save guards; physical recovery and publication are pending. No900-second completion or new Drive custody is
+claimed for34.
+
 ### Active: Quest background music across releases — 2026-11-19
 
 The user requests the same Quest-owned playback and phone-only controls
@@ -99,9 +164,10 @@ to Connect. USB headset HTTPS and WebRTC signaling still report no route.
 ### Active: controlled32-to33 preparation and manual-update help — 2026-11-19
 
 The user explicitly authorizes publishing33 while32 stays running, with no
-Store visit, to isolate update detection and a later restart-only check. The
-phone is in personal use: do not inspect or operate it. Attended PWA checks,
-any restart and screenshot capture wait for the user's return.
+Store visit, to isolate update detection and a later restart-only check.
+During preparation the phone was in personal use and remained untouched.
+The wearer returned, connected the Pixel6a by USB and authorized controls;
+the attended PWA check below then proceeded without a Store visit or restart.
 
 - [x] Observe live installed32 and its current process without launch/restart.
 - [x] Build signed33 from the exact32 production source with version metadata
@@ -112,8 +178,12 @@ any restart and screenshot capture wait for the user's return.
   using existing PWA navigation and style; reserve screenshot integration without
   displaying invented images or unfinished screenshot placeholders.
 - [x] Review/qualify/publish the help and evidence; verify exact Pages/live bytes.
-- [ ] On wearer return, check PWA detection without Store access or restart;
+- [x] On wearer return, check PWA detection without Store access or restart;
   if needed, isolate restart alone and confirm actual delivery/relaunch.
+- [ ] Repair and publish the enrolled saved-address reconnect fallback for a
+  changed APK build; retain signed identity, nonce and epoch checks.
+- [ ] Qualify automatic phone reconnection across a later real APK replacement;
+  this trial required selecting the existing Quest again.
 - [ ] Capture the real manual Quest update route later and add verified images.
 
 Ruling: preserve main32 and helper3 behavior for this probe. No restart
@@ -129,7 +199,30 @@ Signature,16KiB alignment, signed900000ms closure and98 unchanged payload
 assets pass; three generated metadata JSON files differ. Source/SDK/helper
 behavior is unchanged. Forward-only private observations retain32/PID20269
 through publication; no headset Store, phone access or update/restart command.
-First PWA detection and restart-only comparison remain attended work.
+That preparation baseline was retained until the attended check below.
+
+Attended result,16:17UTC: the phone PWA showed the newer-release recommendation
+while native32/PID20269 was still running. One actual ADB-driven tap on its
+Update button at16:17:46 started SDK download/install. Package replacement
+occurred16:17:56, followed by automatic native33/PID29753 startup. The installed
+APK exactly matches the signed33 SHA256 above; installer and initiator are
+`com.oculus.ocms`. The wearer confirms automatic stimulus return. There was
+no headset Store visit, host installation, host launch or intervening restart.
+Helper3 logged fallback requested; SDK and helper were both active, so this
+does not isolate which actor caused relaunch. Restart-only recovery was not
+needed and was not tested. This check was about55minutes after publication;
+propagation delay is plausible, not a proven explanation for earlier failures.
+
+Phone reconnection was partial: it remained disconnected with the handoff
+instructions. Selecting the existing Quest2 in Chrome's Bluetooth chooser
+reused saved membership without a new headset approval and automatically
+regained control. Four status icons turned green. Fresh DOM readback reports
+`0.2.32-dev`/33 and exact build6f8e55ed7d501f4455c585c809ac6175f7560443cafe4bb6a3c1f66b2b14addf.
+The phone's `navigator.bluetooth.getDevices` is unavailable. A signed-response
+fixture reproduces a source flaw in the saved-address fallback: it pins the old
+build fingerprint and rejects a legitimate new build from the same enrollment.
+Manual selection learns that build. This fits the physical symptoms, but no
+pre-click raw route error was retained, so exact causal attribution remains open.
 
 The help's independent scoped review found no actionable issue. The full Node
 suite passes364/364 with zero skips; the strict smartphone gate passes429 GUI
@@ -147,8 +240,9 @@ run44558218628 succeeded and root already verified all three live files.
 The forward-only observer ended cleanly at15:36UTC with32/PID20269 unchanged;
 owned logcat and leases were released. The phone remained untouched, with no
 headset Store visit and no restart or install action. The guide is prepared
-text-only. Authentic screenshots, the attended PWA first check, restart-only
-isolation and delivery remain unchecked. Keep the overall goal open.
+text-only. That preparation receipt predates the successful attended delivery
+above. Authentic screenshots and automatic post-update phone reconnection
+qualification remain open. Keep the overall goal open.
 Private build/observation/render evidence remains outside Git. The optional
 guide ships text only; genuine headset screenshot capture remains unchecked.
 

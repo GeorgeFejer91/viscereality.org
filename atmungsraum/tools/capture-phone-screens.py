@@ -79,7 +79,7 @@ function snapshot() {
   return {
     v: 1, wifi_snapshot: 1, control_mode: 'remote',
     build: { v: 1, packaging_fingerprint: 'e'.repeat(64) }, p: phase, h: host, g: generation, r: 0,
-    rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
+    rec: phase !== 'IDLE' && (phase !== 'ERROR' || settings.errorRecording === true), c: condition, ms: clock,
     ...(Number.isSafeInteger(settings.duration_ms) ? {duration_ms: settings.duration_ms} : {}),
     ...(settings.probeInstructionPlaying ? {pre_session_instruction: 'probe-5'} : {}),
     pending, participant_arm: settings.participantArm === false ? undefined : 1, ecg_preview: 1, recenter: 1, recordings: 1,

@@ -23,7 +23,7 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
-The installed Meta Developer baseline is fixed27-r2. Its source, signer,
+The installed Meta Developer baseline is code33. Its source, signer,
 checksum and remaining physical acceptance are recorded in the APK log.
 The historical 0.1.30 rehearsal entry retains its original artifact and
 verification history.
@@ -154,6 +154,29 @@ production Android bridge and the hashed WebRTC assets. The ordinary rehearsal
 and the Meta Developer builds use their established package IDs.
 
 ## Shared breathing setup
+
+### Start recovery and retained calibration
+
+Apply [main-start-recovery.patch](main-start-recovery.patch) after the
+published [background-music.patch](background-music.patch) on the Developer32
+source above. It reconstructs native commit
+`e71ea147fccff9b6712de14a85d634563ad3b7cf`, tree
+`5a868ed5cf4a6ce074bdbf8400d3b8e9fd76ce8e`. The patch is78,345bytes,
+SHA256 `f349e8ccc9b43ee2d053f3cfe2bc5afd9cd24babfe2c067a19d823366ee4a87d`.
+An independent temporary-index reconstruction matches that exact tree.
+
+Queued Start separates packet-delivery liveness from the short audio-history
+window. Fresh input is still required at admission. A missed boundary can move
+to a future full cycle at most twice; it cannot start an already-completed
+interval. Failed Start cancels only its generation/frame-bound reservation and
+retains a still-valid calibration and selected method. A normal session end
+still resets preparation. Definitive native rejection uses the original full
+session fence; unknown and duplicate outcomes cannot clear a newer session.
+
+The focused regressions include actual Java audio-owner/Rust peer tests with
+36-sample/200Hz packets, one delayed packet, revision-race cleanup and unknown
+outcomes. Device acceptance belongs to the signed candidate recorded in the
+[APK log](apks/README.md); host checks do not establish a completed experiment.
 
 The selected Atmungsraum build uses one looping PCM AudioTrack. Its actual
 playback-head frames own the cues, intended phases, automatic visual input,
