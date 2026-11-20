@@ -137,9 +137,17 @@ headset and phone.
   could not reach the Developer 27 LAN gateway. Install the Meta Developer
   update through the headset Library, then verify signed status, active control
   and an original Recenter receipt through the installed PWA.
-- [ ] Deploy the phone changes and repeat participant and ECG checks on the
-  installed Pixel. The H10's own battery reports changed 90%, 100%, and
-  90% during the attended test. Independent charge verification is pending.
+- [x] Publish MesmerPrism's PRs #170 and #171 and the reviewed follow-up in
+  `514e8ff738f872d63f614cad5e1f8c41940fca31`. The exact pre-push gate passed
+  462 rendered phone states. The Node run passed 352 tests and skipped 19
+  cases that require native fixtures. [Pages run 44644098815](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44644098815)
+  succeeded. The public entry and all six changed runtime file responses
+  matched Git. A RustDesk launcher tap after dismissing the idle app card
+  reloaded the installed Pixel 10 standalone PWA. Its entry and controller
+  module report `20261120-polar-continuity-r2` and text measurement is ready.
+- [ ] Repeat participant and ECG checks on the installed Pixel once the Quest
+  connection is restored. The H10's own battery reports changed 90%, 100%,
+  and 90% during the attended test. Independent charge verification is pending.
 - [ ] Verify raw recording integrity, a second participant session after
   completion, and physical five-second pause/recovery. Track the distinct
   lifecycle failures and pending source work in the collaborator handoff.
