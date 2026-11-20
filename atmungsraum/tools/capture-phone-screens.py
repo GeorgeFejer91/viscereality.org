@@ -116,6 +116,7 @@ function snapshot() {
 function ecgPacket() {
   window.reviewEcgCalls = (window.reviewEcgCalls ?? 0) + 1;
   if (!(settings.ecg ?? settings.polar === 'ready')) return null;
+  if (settings.ecgEmpty) return {v:1,unit:'uV',rate:130,age_ms:1501,samples:[]};
   if (settings.ecgReplay && window.reviewLastEcg) return window.reviewLastEcg;
   // Absolute native sample indices preserve every overlapping timestamp/value.
   // The virtual browser clock advances the delivered 130 Hz window at 1 Hz.
@@ -1777,15 +1778,19 @@ def capture_ecg_continuity(review):
     }"""
     before = page.evaluate(geometry)
     assert before["count"] >= 245 and before["left"] < 25, before
-    for _ in range(3):
-        page.evaluate("""() => {
-          window.reviewQuest.statusDrop=true;
+    for interrupted in ("ecgEmpty", "statusDrop", "statusDrop"):
+        page.evaluate("""key => {
+          window.reviewQuest[key]=true;
           dispatchEvent(new Event('online'));
-        }""")
+        }""", interrupted)
         expect(page.locator("#quest-ecg")).to_be_hidden()
         assert page.evaluate(geometry)["count"] == 0
-        page.evaluate("window.reviewQuest.statusDrop=false")
         calls = page.evaluate(geometry)["calls"]
+        page.clock.run_for(20)
+        page.evaluate("""key => {
+          window.reviewQuest[key]=false;
+          if (key==='ecgEmpty') dispatchEvent(new Event('online'));
+        }""", interrupted)
         for _ in range(110):
             page.clock.run_for(10)
             if page.evaluate(geometry)["calls"] > calls:

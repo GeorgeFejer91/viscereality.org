@@ -156,8 +156,9 @@ to the real operator and recovery flow.
 
 ## Behavior invariants
 
-- Local navigation, Back/Next and browser history send zero native commands;
-  do not clear drafts, participant identity, acceptance tokens or journals.
+- Local navigation, Back/Next and browser history send zero native commands.
+  They preserve drafts, participant identity, acceptance tokens and journals
+  unless the operator explicitly starts the next participant.
 - Existing domain helpers alone own readiness. Do not gate access to the
   Controller fallback on ECG/ACC readiness or add a stricter wizard policy.
 - Original controls have one persistent DOM instance and their original IDs.
@@ -180,9 +181,11 @@ to the real operator and recovery flow.
   returning to recordings. Use five-point Likert choices and 0–100 sliders.
   Preserve responses during scrolling and keep native running/recovery state
   higher priority. See [the questionnaire data contract](DATA-LOGGING.md#haupt-runde-questionnaire).
-- On other native completions, show recordings. “Nächste Sitzung” is local navigation:
-  retain the participant and return through tracking if the native generation
-  invalidated the previous acceptance; never fabricate a new accepted token.
+- Native completion opens recordings. Enable “Nächste Sitzung” after confirmed
+  idle, reconciliation of the current recording generation and storage of any
+  required questionnaire, once active calibration has settled. The action clears
+  the previous participant and local tracking and battery confirmations and opens
+  the participant form.
 - A Quest that does not require a participant ID skips that page in both
   directions. Native completion replaces the current history entry with
   Recordings so returning from the earlier browser exports opens Recordings.

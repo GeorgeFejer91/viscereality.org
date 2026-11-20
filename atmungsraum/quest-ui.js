@@ -136,6 +136,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (view) setRecordingsView(view);
   });
   let ecgTimer, ecgAttempt, exportAttempt, nextSync = 0, exportMessage = '';
+  let reconciledRecordings;
   let liveAttempt, liveGeneration, nextLive = 0;
   let archiveRead = 0;
   let archiveListRead = 0, archiveScope = '', archivesSuspended = false;
@@ -989,6 +990,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       exportAttempt?.abort();
       nextSync = 0;
     }
+    if (status && (status.p !== 'IDLE' || status.rec)) reconciledRecordings = undefined;
     if (!activeForSync(rehearsal.state)) liveAttempt?.abort();
     if (!idleForSync(rehearsal.state) && !activeForSync(rehearsal.state)) drive.cancel();
     data.hidden = status?.ecg_preview !== 1;
@@ -1007,12 +1009,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       || displayedStep === 'tracking' && breath.setup?.stage !== 'idle');
     const calibrationAvailable = Boolean(userAction || breath.pending || breath.instructionFailed || calibrationBaseline && breath.failure
       || (breath.setup?.playing || displayedStep === 'calibration') && ['waiting', 'collecting'].includes(breath.setup?.calibration));
+    const gateway = rehearsal.gateway;
+    // Native idle can arrive before its final archive reveals a required form.
+    const recordingsReady = !gateway?.recordings || (reconciledRecordings?.gateway === gateway
+      && reconciledRecordings.generation === status?.g);
+    const calibrating = ['waiting', 'collecting'].includes(breath.setup?.calibration);
     paintOperatorLayout({ status, statusMessage, active, waitingForControl, participantComplete,
       updateBlocked: Boolean(recovery && !pendingProbeStart || unknown || nativeRecovering || controllerLease.pending),
       offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
       requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired,
       recovery: recoveryRequired, previewAvailable, calibrationAvailable,
       nextSessionAllowed: idle && status.rec === false && status.pending === false && !waiting && !recoveryRequired
+        && !calibrating && recordingsReady && (!archiveScope || archiveListLoaded)
         && !breath.instructionPending && !questionnaire?.required && !savingAnswers && !metaControl.pending,
       instructionPending: breath.instructionPending,
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
@@ -1328,6 +1336,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     archiveListRead++;
     archiveScope = '';
     archiveListLoaded = false;
+    reconciledRecordings = undefined;
     nextSync = 0;
     exportMessage = '';
     archivePicker.replaceChildren();
@@ -1387,6 +1396,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   async function syncRecordings(gateway) {
+    const generation = rehearsal.state.status.g;
+    const scope = localArchiveKey();
     const attempt = new AbortController();
     const { signal } = attempt;
     exportAttempt = attempt;
@@ -1401,6 +1412,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           const [saved, pendingForm] = await Promise.all([store.ids(), store.pendingQuestionnaire()]);
           signal.throwIfAborted();
           if (pendingForm && !questionnaire?.required) setQuestionnaire(pendingForm);
+          if (scope && scope === localArchiveKey()) archiveListLoaded = true;
           showArchives(saved);
           const known = new Set(saved);
           exportMessage = 'Quest-Aufnahmen werden abgeglichen …';
@@ -1429,6 +1441,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
             if (existing && archivePicker.value === id) void selectArchive();
             if (pendingForm) paint();
           }
+          signal.throwIfAborted();
+          if (rehearsal.gateway !== gateway || rehearsal.state.status?.g !== generation) {
+            nextSync = 0;
+            return;
+          }
+          reconciledRecordings = { gateway, generation };
           exportMessage = known.size ? 'Aufnahmen gespeichert.' : 'Keine gespeicherten Aufnahmen auf der Quest.';
           nextSync = performance.now() + 60000;
         } finally { store.close(); }
@@ -1555,7 +1573,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       const frame = await gateway.ecg(attempt.signal);
       if (ecgAttempt === attempt && rehearsal.gateway === gateway && rehearsal.state.status?.ecg_preview === 1
         && !document.hidden && !attempt.signal.aborted) {
-        showTrace(ecgTrace(frame, performance.now() - start));
+        const trace = ecgTrace(frame, performance.now() - start);
+        if (trace) showTrace(trace);
+        else suspendTrace();
       }
     } catch {
       if (ecgAttempt === attempt && rehearsal.gateway === gateway && !attempt.signal.aborted) suspendTrace();

@@ -440,6 +440,26 @@ def session_particle_layout(review):
         page.context.close()
 
 
+def active_calibration_protects_participant(review):
+    page = review.page(initial(c))
+    try:
+        c.enter_participant(page)
+        page.locator('#preview-calibrate').click()
+        page.wait_for_function("reviewQuest.setup.calibration === 'collecting'")
+        page.clock.run_for(1200)
+        before = mutations(page)
+        saved_name = page.locator('#patient-surname').input_value()
+        c.show_operator(page, 'recordings')
+        next_session = page.locator('#operator-next-session')
+        expect(next_session).to_be_disabled(timeout=1000)
+        next_session.dispatch_event('click')
+        expect(page.locator('#recordings-screen')).to_be_visible()
+        expect(page.locator('#patient-surname')).to_have_value(saved_name)
+        assert mutations(page) == before
+    finally:
+        page.context.close()
+
+
 def run():
     init = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({c.PAIRED}));" + """
 window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};
@@ -455,6 +475,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         optional_participant_navigation(review)
         completed_session_history(review)
         stopped_preview_history(review)
+        active_calibration_protects_participant(review)
         page = review.page(init)
         page.clock.run_for(4000)
         expect(page.locator('#quest')).to_be_visible()

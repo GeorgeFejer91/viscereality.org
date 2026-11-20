@@ -116,6 +116,27 @@ headset and phone.
   history after a fresh overlapping snapshot from the same source.
   Combined release 20261120-polar-continuity passed 462 rendered states,
   one focused mounted ECG recovery fixture and 352 Node tests (19 skipped).
+- [x] Reproduce and repair early admission to the next participant while the
+  completed archive is still being fetched. The mounted regression delays
+  the final archive after native IDLE, checks that Next Session stays disabled,
+  then saves the required questionnaire and verifies clean participant entry
+  with access to the saved answers. Reconciliation is scoped to the current
+  gateway and observed session generation. A separate mounted regression verifies
+  that Records stays accessible during Polar calibration while Next Session leaves
+  the active participant and calibration intact.
+- [x] Cover the Quest's empty ECG response as well as transient status loss.
+  Both hide the waveform while evidence is unavailable. A fresh packet can
+  restore overlap only for the same sensor, gateway owner and generation.
+- [ ] Qualify this PC's Pixel 10 and Quest 2 connection on the hotel network.
+  The Quest's Meta-installed Developer 27 and Boot Helper 3 were present.
+  The existing watchdog reported awake, display ON and a fresh proximity hold.
+  ADB brought the APK to the foreground and its native frame counter advanced.
+  The installed Pixel PWA was 20261119-polar-pause in standalone mode. RustDesk
+  captured it and a tap opened Einstellungen. Chrome discovered the Quest over
+  Bluetooth. Both devices reached the signaling host over TCP, but the Pixel
+  could not reach the Developer 27 LAN gateway. Install the Meta Developer
+  update through the headset Library, then verify signed status, active control
+  and an original Recenter receipt through the installed PWA.
 - [ ] Deploy the phone changes and repeat participant and ECG checks on the
   installed Pixel. The H10's own battery reports changed 90%, 100%, and
   90% during the attended test. Independent charge verification is pending.

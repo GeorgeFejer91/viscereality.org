@@ -234,6 +234,9 @@ window.reviewRecordings = async (query, owner) => {
     case 'list': return { v:1, state:'ready', entries:reviewQuest.recordingSaved
       ? [{id, exportable:true, participant_csv:true}] : [], next_before:null };
     case 'describe': {
+      if (reviewQuest.deferFinalRecording) {
+        await new Promise(resolve => { window.releaseFinalRecording = resolve; });
+      }
       const emptyHash = await sha(new Uint8Array());
       return { state:'ready', manifest:{ id, manifest_id, schema:'rusty.quest.recording_export.v1', saved:true,
         file_set_policy:'core8-original-no-checkpoints-or-index', device:owner.device, serial:owner.serial,
@@ -534,6 +537,9 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
     quest = {"phase": "RUNNING", "host": "vr-session", "generation": 3, "condition": "condition-a",
              "clock": 895000, "duration_ms": 900000, "liveRecording": live,
              "recordingAborted": outcome == "aborted", "recordingScenario": scenario}
+    delayed_final_recording = tag == "320" and live and outcome == "completed" and scenario == "haupt-15"
+    if delayed_final_recording:
+        quest["deferFinalRecording"] = True
     setup = {"stage": "main", "input": "controller-state", "playing": True, "ready": True}
     enrollment = "localStorage.setItem('atmungsraum-quest-pair'"
     fixture = initial(c, quest, setup).replace(enrollment, "if (!localStorage.getItem('atmungsraum-quest-pair')) " + enrollment, 1)
@@ -553,6 +559,12 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
         expect(page.locator("#questionnaire-screen")).to_be_hidden()
         c.wait_state(page, phase="IDLE", host="vr-preparation", recordingSaved=True)
         form = page.locator("#questionnaire-screen")
+        if delayed_final_recording:
+            page.wait_for_function("typeof window.releaseFinalRecording === 'function'")
+            expect(page.locator("#recordings-screen")).to_be_visible()
+            expect(form).to_be_hidden()
+            expect(page.locator("#operator-next-session")).to_be_disabled(timeout=1000)
+            page.evaluate("window.releaseFinalRecording()")
         if outcome != "completed" or scenario != "haupt-15":
             expect(page.locator("#quest-export-download")).to_be_visible()
             expect(form).to_be_hidden()
