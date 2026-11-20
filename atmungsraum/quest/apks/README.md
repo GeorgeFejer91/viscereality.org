@@ -1,5 +1,21 @@
 # Atmungsraum Quest 2 APKs
 
+## Developer 40 calibration storage repair
+
+Apply [calibration-storage-lock.patch](../calibration-storage-lock.patch) to
+Developer 39 native source `3af8a77f429703550b1025fe87d59bd0094faaaa`.
+It reconstructs source `70c85fbb1c519b95ca2677c72989288e91f7a826`, tree
+`65c63764f7aee0bc7124eb5fa287de0eca2a2fea`. Patch SHA-256
+`3871bbb2afda44ec68ad36904f5290151cee2aa4af1f8e744c3edc6ec995e1fc`.
+Use the canonical Developer assembly and audio inputs at website source
+`503316c0b3497278a0876dcb00e0d7dc84125de4` for this lock-only repair.
+
+The Android build uses a nonblocking exclusive `flock` on the existing
+attempt file so a live writer and recovery cannot own it at the same time.
+Seven host capture tests passed and a Quest platform probe confirmed
+lock contention and release on close. Signed APK and attended acceptance
+are pending.
+
 ## Developer 39 calibrated Volume candidate — 2026-11-20
 
 Canonical Developer package `org.viscereality.atmungsraum.developer`,
@@ -17,6 +33,10 @@ The canonical build uses the Developer signer, SDK207, the retained
 private visual profile, and the approved Zen loop from website main
 `857b61f`. It passed signed 900-second session closure, ARM64, APK v3
 and 16 KiB alignment.
+
+The attended test exposed a recording admission rejection before guided
+Polar calibration. Rust 1.96 returns an unsupported error for
+`File::try_lock` on Android. Controller State still reaches preview.
 
 The new audio handoff stops the completed session's condition player
 before the next Arm prepares its track. Status polling keeps its

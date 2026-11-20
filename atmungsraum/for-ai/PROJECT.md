@@ -14,12 +14,14 @@
   smoothing. The tuner compared the previous 20.78 seconds per 32-second
   holdout with 21.93 seconds for the next candidate at zero bias. Cued
   agreement is a replay measure and wearable acceptance is pending.
-- [ ] Publish and verify the [phone ECG recovery](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
-  on top of the pairing and session-handoff changes already on main. The
-  exact `20261120-audio-stall` candidate at `d1992bd` passed the 462-state
-  check and provides headset restart guidance for the verified frame-zero
-  failure. It also fixes the closeout and calibration layout defects.
-  GitHub rejected the merge from the current account, which has read access.
+- [x] Publish the phone ECG recovery, closeout and calibration guidance,
+  Polar Volume picker and rolling sphere-volume chart. The combined
+  `20261120-volume-round-audio` build retains round-audio controls, passes
+  465 rendered states, and is live at merge `26c2b099318053b4f19fc20eb6c2f6cc3e390f44`.
+  Twelve live files match the verified tree, the removed particles module
+  returns 404, and the paired Pixel loads the new entry with Volume enabled.
+  [PR 172](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
+  · [Pages run 44712538548](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44712538548)
 - [x] Install the signed Developer 38 r2 over idle Developer 37 and verify
   installed bytes, saved Pixel pairing, keep-awake and zero guidance bias.
   The shared calibration AudioTrack reported playing at frame zero even
@@ -60,12 +62,15 @@
   in parallel with the lab rerun, as requested. The dashboard shows
   `0.2.38-dev` / 39, Quest 2 and build `1472719655927046` active.
   The basic malware and detailed security checks passed.
-- [ ] Finish the paired Volume test. The exact Developer 39 APK is installed
-  and launched. Cold start recovered the interrupted second Developer 38
-  writer. The Pixel reaches method selection with the saved pairing and
-  fresh Polar streams. Its public `20261120-saved-headsets` PWA expects
-  the previous preset method list and prompts for an APK update. Release
-  the new phone picker before selecting Volume on the physical Pixel.
+- [ ] Finish the paired Volume test. Developer 39 returned signed
+  `calibration-recording-unavailable` for Volume before any cue played,
+  while both Polar streams were fresh. The native log identifies the
+  recording attempt file lock. Rust 1.96 returns an unsupported error
+  for `File::try_lock` on Android. Controller State reaches its preview
+  because it does not open a guided Polar capture. Developer 40 uses the
+  Android nonblocking exclusive lock for admission and recovery. A
+  device storage probe confirmed one owner and release on close. The
+  signed replacement and the two-session hardware run are pending.
 - [x] Compare adaptive axes, state/volume fusion and renderer radius on
   the 13 available guided browser recordings. Six recordings were held out.
   On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,

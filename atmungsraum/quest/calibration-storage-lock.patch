@@ -1,0 +1,60 @@
+diff --git a/apps/native-renderer-android/native/src/personal_tilt_attempt_capture.rs b/apps/native-renderer-android/native/src/personal_tilt_attempt_capture.rs
+index 62f97a81..e4a6b71e 100644
+--- a/apps/native-renderer-android/native/src/personal_tilt_attempt_capture.rs
++++ b/apps/native-renderer-android/native/src/personal_tilt_attempt_capture.rs
+@@ -5,7 +5,7 @@
+ 
+ use std::{
+     fs::{self, File, OpenOptions},
+-    io::Read,
++    io::{self, Read},
+     path::{Path, PathBuf},
+ };
+ 
+@@ -446,6 +446,28 @@ pub(crate) struct AttemptCapture {
+     storage_fault: bool,
+ }
+ 
++#[cfg(target_os = "android")]
++fn lock_attempt(file: &File) -> io::Result<()> {
++    use std::os::fd::AsRawFd;
++
++    loop {
++        // Rust 1.96 reports File::try_lock as unsupported on Android.
++        // SAFETY: The borrowed File keeps this descriptor open during flock.
++        if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0 {
++            return Ok(());
++        }
++        let error = io::Error::last_os_error();
++        if error.kind() != io::ErrorKind::Interrupted {
++            return Err(error);
++        }
++    }
++}
++
++#[cfg(not(target_os = "android"))]
++fn lock_attempt(file: &File) -> io::Result<()> {
++    file.try_lock().map_err(io::Error::from)
++}
++
+ impl AttemptCapture {
+     pub(crate) fn begin(app_files: &Path, spec: AttemptSpec) -> Result<Self, String> {
+         let manifest = spec.manifest()?;
+@@ -459,7 +481,7 @@ impl AttemptCapture {
+             .create_new(true)
+             .open(directory.join(LEASE))
+             .map_err(io_error)?;
+-        lease.try_lock().map_err(io_error)?;
++        lock_attempt(&lease).map_err(io_error)?;
+         publish_json_exclusive(&directory, MANIFEST, &manifest)?;
+         Ok(Self {
+             directory,
+@@ -572,7 +594,7 @@ pub(crate) fn recover_attempt(
+         .write(true)
+         .open(lease_path)
+         .map_err(io_error)?;
+-    lease.try_lock().map_err(io_error)?;
++    lock_attempt(&lease).map_err(io_error)?;
+ 
+     let manifest = read_json(&directory.join(MANIFEST))?;
+     validate_manifest(attempt_id, &manifest)?;
