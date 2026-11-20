@@ -1,6 +1,7 @@
 """Focused real-app local-route regressions; no hardware or account requests."""
 from pathlib import Path
 import importlib.util
+import re
 import tempfile
 from playwright.sync_api import sync_playwright, expect
 from layout_render_fixtures import SIZES, initial, mutations
@@ -265,6 +266,136 @@ def optional_participant_navigation(review):
     page.context.close()
 
 
+def completion_status_gap_keeps_recordings_visible(review):
+    settings = {'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000, 'clock': 898760}
+    page = review.page(initial(c, settings), suffix='#session')
+    try:
+        expect(page.locator('#running-screen')).to_be_visible()
+        before = mutations(page)
+        page.evaluate("Object.assign(reviewQuest, {statusDrop:true, joinDelay:18000})")
+        page.clock.run_for(3600)
+        expect(page.locator('#recordings-screen')).to_be_visible(timeout=1200)
+        expect(page.locator('#quest')).to_be_hidden()
+        expect(page.locator('#quest-status')).to_contain_text('Aufnahmestatus')
+        expect(page.locator('#quest-export-status')).to_be_hidden()
+        expect(page.locator('#recordings-open')).to_be_disabled()
+        page.locator('#recordings-open').dispatch_event('click')
+        assert page.evaluate("location.hash") == '#session'
+        expect(page.locator('#operator-next-session')).to_be_disabled()
+
+        # The phone may display a closeout view but only native IDLE confirms
+        # the recording is over. The original command journal stays untouched.
+        page.evaluate("Object.assign(reviewQuest, {phase:'IDLE', clock:0, statusDrop:false, joinDelay:0})")
+        page.clock.run_for(20000)
+        expect(page.locator('#recordings-screen')).to_be_visible()
+        assert page.evaluate("location.hash") == '#recordings'
+        assert mutations(page) == before
+    finally:
+        page.context.close()
+
+
+def closeout_recovery_expires_without_changing_ordinary_connection_loss(review):
+    for elapsed in (37400, 898760):
+        settings = {'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000, 'clock': elapsed}
+        page = review.page(initial(c, settings), suffix='#session')
+        try:
+            expect(page.locator('#running-screen')).to_be_visible()
+            page.evaluate("Object.assign(reviewQuest, {statusDrop:true, joinDelay:60000})")
+            page.clock.run_for(3600)
+            if elapsed == 898760:
+                expect(page.locator('#recordings-screen')).to_be_visible()
+                expect(page.locator('#operator-next-session')).to_be_disabled()
+                page.clock.run_for(29000)
+            expect(page.locator('#quest')).to_be_visible()
+            expect(page.locator('#recordings-screen')).to_be_hidden()
+        finally:
+            page.context.close()
+
+
+def calibration_panel_order_survives_method_reentry(review):
+    page = review.page(initial(c))
+    try:
+        c.enter_participant(page)
+        page.locator('#preview-calibrate').click()
+        page.wait_for_function("reviewQuest.setup.calibration === 'collecting'")
+        expect(page.locator('#calibration-screen')).to_be_visible()
+
+        def panel_order():
+            return page.locator('#calibration-screen .operator-body').evaluate(
+                "body => [...body.children].map(child => child.id).filter(id => "
+                "['operator-common','operator-live','operator-input-status'].includes(id))")
+
+        original = panel_order()
+        assert original == ['operator-common', 'operator-live', 'operator-input-status'], original
+        page.locator('#calibration-change-input').click()
+        expect(page.locator('#input-screen')).to_be_visible()
+        page.evaluate("location.hash = '#calibration'")
+        expect(page.locator('#calibration-screen')).to_be_visible()
+        assert panel_order() == original, panel_order()
+    finally:
+        page.context.close()
+
+
+def personal_volume_preparation(review):
+    page = review.page(initial(c, {'scenarios': ['haupt-15']}, {
+        'polar_modes': ['calibrated', 'volume'], 'calibration_capture': 1,
+    }), viewport={'width': 390, 'height': 844})
+    try:
+        c.enter_participant(page)
+        volume = page.locator('#preview-polar-volume')
+        expect(volume).to_be_visible()
+        expect(page.locator('#preview-polar-fixed')).to_be_hidden()
+        expect(page.locator('#preview-polar-adaptive')).to_be_hidden()
+        volume.click()
+        expect(page.locator('#calibration-screen')).to_be_visible()
+        page.wait_for_function("['waiting','collecting'].includes(reviewQuest.setup.calibration)")
+        first = page.evaluate("reviewSetupCommands.at(-1)")
+        assert first['op'] == 'polar-volume' and len(first['preparation_id']) == 36
+        c.wait_setup(page, calibration='failed', failure='signal_gap')
+        page.locator('#preview-retry').click()
+        page.wait_for_function("reviewSetupCommands.length === 2")
+        retry = page.evaluate("reviewSetupCommands.at(-1)")
+        assert retry['op'] == 'polar-volume' and retry['preparation_id'] == first['preparation_id']
+        c.wait_setup(page, stage='testing', calibration='ready', input='polar-volume',
+                     input_volume01=.55, ready=True, failure='', completed_frames=1411200)
+        expect(page.locator('#operator-confirmed-input')).to_contain_text('Polar Volume')
+        page.locator('#preview-continue').click()
+        c.review_battery(page)
+        page.locator('#quest-play').click()
+        page.wait_for_function("reviewQuest.commands.includes('arm')")
+        assert page.evaluate("reviewQuest.armedPreparationId") == first['preparation_id']
+    finally:
+        page.context.close()
+
+
+def calibration_audio_stall(review):
+    page = review.page(initial(c), viewport={'width': 320, 'height': 640})
+    try:
+        c.enter_participant(page)
+        page.locator('#preview-calibrate').click()
+        expect(page.locator('#calibration-screen')).to_be_visible()
+        before = mutations(page)
+        clock = {'generation': 2, 'platform_generation': 2, 'actual_playing': True,
+                 'intent_playing': True, 'raw_head': 0, 'timestamp_available': False,
+                 'poll_age_ns': 8000000}
+        c.wait_setup(page, stage='waiting', calibration='failed', failure='clock_stalled',
+                     playing=True, clock_valid=False, audio_generation=2, audio_clock=clock,
+                     audio_recovery_available=True)
+        detail = page.locator('#preview-detail')
+        expect(detail).to_be_visible()
+        expect(detail).to_contain_text('Starte das Quest-Headset neu')
+        expect(detail).to_contain_text('Die Audio-Wiedergabe der Quest steht bei 0.')
+        c.wait_setup(page, audio_recovery_available=False)
+        expect(page.locator('#preview-recovery-detail')).to_contain_text('Starte das Quest-Headset neu')
+        expect(page.locator('#preview-recovery')).to_be_visible()
+        expect(detail).to_be_hidden()
+        c.wait_setup(page, audio_recovery_available=True, audio_clock={**clock, 'raw_head': 512})
+        expect(detail).to_contain_text('Die Atemschleife lief nicht weiter')
+        assert mutations(page) == before
+    finally:
+        page.context.close()
+
+
 def completed_session_history(review):
     page = review.page(initial(c, {'scenarios': ['haupt-15'], 'startDelayMs': 2400}))
     c.enter_participant(page)
@@ -333,91 +464,98 @@ def stopped_preview_history(review):
     page.context.close()
 
 
-def session_particles(review):
-    page = review.page(initial(c, {
-        'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000,
-    }), viewport={'width': 320, 'height': 640}, reduced_motion='no-preference')
-    page.clock.run_for(1500)
+def running_volume_fixture(extra=None):
+    fixture = initial(c, {'phase':'RUNNING', 'host':'vr-session', 'duration_ms':900000,
+                       'generation':7, 'clock':2000, **(extra or {})},
+                   {'stage':'main', 'playing':True, 'audio_state':'playing',
+                    'renderer':{'v':1, 'progress01':.5, 'radius_m':1.5, 'frame':1,
+                                'render_generation':2, 'settings_revision':0,
+                                'observed_ns':'200000000', 'age_ns':0,
+                                'radius_min_m':1, 'radius_max_m':2, 'cue_progress01':.25,
+                                'audio_generation':1}})
+    return fixture + """
+Object.defineProperty(window.reviewInitialSetup.renderer, 'cue_observed_ns', {
+  enumerable: true,
+  get: () => String((Math.floor(performance.now()/100)+1)*100000000-20000000)
+});
+"""
+
+
+def session_volume(review):
+    page = review.page(running_volume_fixture(), viewport={'width':320, 'height':640},
+                       reduced_motion='no-preference')
+    page.clock.run_for(2200)
     scene = page.locator('#session-scene')
-    canvas = scene.locator('canvas')
-    caption = scene.locator('#session-scene-status')
+    graph = page.locator('#session-volume-chart')
+    actual = page.locator('#session-volume-ist')
+    intended = page.locator('#session-volume-soll')
+    caption = page.locator('#session-volume-status')
     expect(scene).to_be_visible()
-    expect(caption).to_have_text('Partikelradius in der Quest')
-
-    def span():
-        return canvas.evaluate("""canvas => {
-          const {width, height} = canvas;
-          const bytes = canvas.getContext('2d').getImageData(0, 0, width, height).data;
-          let left = width, right = -1;
-          for (let i = 3; i < bytes.length; i += 4) {
-            if (!bytes[i]) continue;
-            const x = ((i - 3) / 4) % width;
-            left = Math.min(left, x);
-            right = Math.max(right, x);
-          }
-          return Math.max(0, right - left);
-        }""")
-
-    def radius(progress):
-        page.evaluate("""p => {
-          reviewQuest.setup.renderer = {...reviewQuest.setup.renderer,
-            progress01:p, radius_m:1 + p};
-        }""", progress)
-        page.clock.run_for(450)
+    expect(graph).to_be_visible()
+    expect(scene.locator('canvas')).to_have_count(0)
+    expect(caption).to_have_text('Quest live')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('14,1 m³')
+    expect(page.locator('#session-volume-soll-value')).to_have_text('8,2 m³')
+    expect(page.locator('#session-volume-min')).to_have_text('4,2 m³')
+    expect(page.locator('#session-volume-max')).to_have_text('33,5 m³')
+    page.clock.run_for(450)
+    expect(actual).to_have_attribute('d', re.compile(r' L'))
+    expect(intended).to_have_attribute('d', re.compile(r' L'))
 
     before = mutations(page)
-    radius(.05)
-    small = span()
-    radius(.9)
-    large = span()
-    assert small > 0 and large > small * 1.5, (small, large)
+    page.evaluate('reviewQuest.setup.renderer.radius_m=1.75')
+    page.clock.run_for(300)
+    expect(page.locator('#session-volume-ist-value')).to_have_text('22,4 m³')
 
     c.wait_state(page, phase='PAUSED')
-    expect(caption).to_have_text('Partikelvorschau pausiert')
-    paused = span()
-    radius(.05)
-    assert span() == paused
+    expect(caption).to_have_text('Pausiert.')
+    paused = actual.get_attribute('d')
+    page.evaluate('reviewQuest.setup.renderer.radius_m=1.25')
+    page.clock.run_for(400)
+    assert actual.get_attribute('d') == paused
 
     c.wait_state(page, phase='RUNNING', advanceRenderer=False)
-    expect(scene).to_be_visible()
-    expect(caption).to_have_text('Kein aktueller Partikelradius')
-    expect(page.locator('#session-scene-radius')).to_be_hidden()
-    assert span() == 0
+    expect(caption).to_have_text('Warte auf Quest.')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('—')
+    page.evaluate('reviewQuest.advanceRenderer=true')
+    page.clock.run_for(400)
+    expect(caption).to_have_text('Quest live')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('8,2 m³')
+    assert actual.get_attribute('d').count('M') >= 2
+
+    page.evaluate('reviewQuest.setup.renderer.age_ns=250000000')
+    c.wait_state(page, generation=8, clock=0, advanceRenderer=False)
+    expect(actual).to_have_attribute('d', '')
+    expect(intended).to_have_attribute('d', '')
+    page.evaluate('Object.assign(reviewQuest,{clock:100,advanceRenderer:true})')
+    page.clock.run_for(400)
+    assert actual.get_attribute('d').count('M') == 1
+
+    page.evaluate('delete reviewQuest.setup.renderer.cue_progress01')
+    page.clock.run_for(300)
+    expect(caption).to_have_text('Sollwert fehlt.')
+    expect(page.locator('#session-volume-soll-value')).to_have_text('—')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('8,2 m³')
     assert mutations(page) == before
     c.wait_state(page, phase='SAVING')
     expect(scene).to_be_hidden()
     page.context.close()
 
-    page = review.page(initial(c, {
-        'phase': 'PAUSED', 'host': 'vr-session',
-    }, {'renderer': None}))
-    expect(page.locator('#session-scene')).to_be_visible()
-    caption = page.locator('#session-scene-status')
-    expect(caption).to_have_text('Kein aktueller Partikelradius')
-    c.wait_setup(page, renderer={'v': 1, 'progress01': .5, 'radius_m': 1.5, 'frame': 1,
-                                'render_generation': 2, 'settings_revision': 0,
-                                'observed_ns': '200000000', 'age_ns': 0})
-    expect(caption).to_have_text('Partikelvorschau pausiert')
-    expect(page.locator('#session-scene-radius')).to_have_text('50 %')
-    page.context.close()
-
-
-def session_particle_layout(review):
+def session_volume_layout(review):
     for width, height, font, spacing in (
         (320, 568, 100, False), (320, 640, 100, False), (390, 844, 100, False),
         (844, 390, 100, False), (1440, 900, 100, False),
         (320, 640, 200, False), (390, 844, 100, True),
     ):
-        page = review.page(initial(c, {
-            'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000,
-        }), viewport={'width': width, 'height': height}, reduced_motion='no-preference')
+        page = review.page(running_volume_fixture(), viewport={'width':width, 'height':height},
+                           reduced_motion='no-preference')
         page.evaluate("size => document.documentElement.style.fontSize = size + '%'", font)
         if spacing:
             page.add_style_tag(content="*{line-height:1.5!important;letter-spacing:.12em!important;"
                                        "word-spacing:.16em!important}")
-        expect(page.locator('#session-scene-status')).to_have_text('Partikelradius in der Quest')
+        expect(page.locator('#session-volume-status')).to_have_text('Quest live')
         page.clock.run_for(500)
-        for selector in ['#session-scene-status', '#session-scene-radius']:
+        for selector in ['#session-volume-status', '#session-volume-ist-value', '#session-volume-soll-value']:
             expect(page.locator(selector)).to_have_attribute('data-text-fit', 'fit')
             expect(page.locator(selector)).to_have_attribute('data-text-measurement', 'dom' if spacing else 'pretext')
         bounds = page.evaluate('''() => {
@@ -435,8 +573,8 @@ def session_particle_layout(review):
         if font == 100:
             assert bounds['height'] <= height and bounds['pauseBottom'] <= height, (width, height, bounds)
         page.emulate_media(reduced_motion='reduce')
-        expect(page.locator('#session-scene canvas')).to_be_hidden()
-        expect(page.locator('#session-scene-radius')).to_have_text('50 %')
+        expect(page.locator('#session-volume-chart')).to_be_visible()
+        expect(page.locator('#session-volume-ist-value')).to_have_text('14,1 m³')
         page.context.close()
 
 
@@ -473,6 +611,9 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         authored_round_layout(review)
         guided_probe_instruction(review)
         optional_participant_navigation(review)
+        completion_status_gap_keeps_recordings_visible(review)
+        closeout_recovery_expires_without_changing_ordinary_connection_loss(review)
+        calibration_panel_order_survives_method_reentry(review)
         completed_session_history(review)
         stopped_preview_history(review)
         active_calibration_protects_participant(review)
@@ -574,8 +715,10 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         assert before == mutations(page)
         compact_setup(review)
         calibration_instruction(review)
-        session_particles(review)
-        session_particle_layout(review)
+        personal_volume_preparation(review)
+        calibration_audio_stall(review)
+        session_volume(review)
+        session_volume_layout(review)
         assert not review.errors, review.errors
         browser.close()
     print('PASS real-app scenario Arm, calibration narration and cancellation, receipt recovery, recording status, Drive dialog, draft and history')

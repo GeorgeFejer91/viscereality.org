@@ -75,13 +75,22 @@ test('native observation age, transport and elapsed phone time expire health and
 test('repeated health witnesses cannot renew stale fields, and old connection data cannot return green', () => {
   let now = 1000;
   const model = new OperatorDeviceHealth({ now: () => now });
-  assert.equal(model.update(owner, state()).polar.confirmed, true);
+  const initial = model.update(owner, state());
+  assert.equal(initial.polar.confirmed, true);
+  assert.equal(initial.polarConnectionGeneration, '1');
   now = 6100;
   const repeated = state(); repeated.statusTiming.receivedAt = now;
-  assert.notEqual(model.update(owner, repeated).polar.confirmed, true);
+  const stale = model.update(owner, repeated);
+  assert.notEqual(stale.polar.confirmed, true);
+  assert.equal(stale.polarConnectionGeneration, null);
   const newer = state(health({ connection_generation: '2', observed_at_ns: '1000000002' })); newer.statusTiming.receivedAt = now;
-  assert.equal(model.update(owner, newer).polar.confirmed, true);
-  assert.notEqual(model.update(owner, state()).polar.confirmed, true);
+  const current = model.update(owner, newer);
+  assert.equal(current.polar.confirmed, true);
+  assert.equal(current.polarConnectionGeneration, '2');
+  const regressive = state(); regressive.statusTiming.receivedAt = now;
+  const prior = model.update(owner, regressive);
+  assert.notEqual(prior.polar.confirmed, true);
+  assert.equal(prior.polarConnectionGeneration, null);
 });
 
 test('battery facts are optional, never invented, and not reused across a lost Polar link', () => {
