@@ -3,14 +3,14 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=21';
 import { pairPhone } from './quest-pairing.js?v=9';
-import { canRecenter, polarSetup, polarReadiness, polarSessionPause, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=47';
+import { canRecenter, polarSetup, polarReadiness, polarSessionPause, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=48';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=30';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { mountQuestDrive } from './quest-drive-ui.js?v=9';
 import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-completion';
 import { mountQuestionnaireForm } from './questionnaire-form.js?v=2';
 import { captureUtc } from './collection-time.js?v=1';
-import { BreathingSetup } from './breathing-setup.js?v=25';
+import { BreathingSetup, guidedCalibration } from './breathing-setup.js?v=26';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { LiveSphereVolume } from './live-sphere-volume.js?v=1';
@@ -94,6 +94,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let calibrationBaseline;
   const previewPersonalReturn = byId('preview-personal-return');
   const previewPolarFixed = byId('preview-polar-fixed');
+  const previewPolarVolume = byId('preview-polar-volume');
   const previewPolarAdaptive = byId('preview-polar-adaptive');
   const previewController = byId('preview-controller');
   const previewContinue = byId('preview-continue');
@@ -135,6 +136,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const nextSession = byId('operator-next-session');
   const reviewMovement = byId('input-screen').querySelector('[data-operator-go="tracking"]');
   let participantId = '';
+  let preparationId = '';
   let previewAccepted = '';
   let batteryAccepted = '';
   const data = byId('quest-data');
@@ -402,10 +404,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const sessionScene = byId('session-scene');
   const sphereVolume = new LiveSphereVolume();
   const volumeStatus = byId('session-volume-status');
-  const volumePaths = [byId('session-volume-ist'), byId('session-volume-soll')];
-  const volumeValues = [byId('session-volume-ist-value'), byId('session-volume-soll-value')];
   const volumePlot = byId('session-volume-plot');
   const volumeKey = byId('session-volume-key');
+  const volumePaths = [byId('session-volume-ist'), byId('session-volume-soll')];
+  const volumeValues = [byId('session-volume-ist-value'), byId('session-volume-soll-value')];
   const volumeBounds = [byId('session-volume-min'), byId('session-volume-max')];
   const volumeFormat = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
   const smallVolumeFormat = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 3 });
@@ -687,6 +689,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   nextSession.addEventListener('click', () => {
     if (document.hidden || displayedStep !== 'recordings' || nextSession.disabled) return;
     participantId = '';
+    preparationId = '';
     participantForm.reset();
     participant.open = true;
     text(participantOutput, '—');
@@ -847,12 +850,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const idle = status?.p === 'IDLE' && !active;
     const participantComplete = Boolean(!requiresParticipant || armedWithParticipant && participantId);
     const setupComplete = Boolean(ready && participantComplete);
-    const breath = breathing.update(rehearsal.gateway, { status, statusTiming, busy, pending, unknown }, setupComplete);
+    const breath = breathing.update(rehearsal.gateway, { status, statusTiming, busy, pending, unknown, preparationId }, setupComplete);
     // This is the operator's judgement of this exact method/attempt, not a
     // sample-level readiness grant. A brief unknown phase cannot erase it.
     const reviewable = breath.available && breath.setup.stage === 'testing' && breath.setup.playing
       && breath.setup.input !== 'automatic'
-      && (breath.setup.input !== 'polar-tilt' || breath.setup.calibration === 'ready');
+      && (!['polar-tilt', 'polar-volume'].includes(breath.setup.input) || breath.setup.calibration === 'ready');
     if (previewAccepted !== breath.acceptance || !reviewable || !idle) previewAccepted = '';
     const batteryBinding = previewAccepted && `${previewAccepted}/${participantId}`;
     if (!batteryBinding || batteryAccepted !== batteryBinding) batteryAccepted = '';
@@ -1112,6 +1115,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const testingMethod = view.available && native.stage === 'testing' && native.playing && native.input !== 'automatic';
     const method = {
       'polar-tilt': 'Polar kalibriert',
+      'polar-volume': 'Polar Volume',
       'polar-tilt-fixed': 'Polar · feste Achse',
       'polar-tilt-adaptive': 'Polar · dynamische Achse',
       'controller-state': 'Controller State',
@@ -1157,7 +1161,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(previewProgressText, `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(view.progress.value)} von 2 Atemzyklen`);
     previewCalibrate.disabled = waiting || !view.actions.calibrate;
     previewCalibrate.hidden = !view.showPolarCalibration;
-    text(previewCalibrate.firstElementChild, native?.attempt > 0 ? 'Polar erneut einrichten' : 'Polar persönlich einrichten');
+    const volumeAvailable = view.supportedModes.includes('volume');
+    text(previewCalibrate.firstElementChild, volumeAvailable ? 'Polar State einrichten'
+      : native?.attempt > 0 ? 'Polar erneut einrichten' : 'Polar persönlich einrichten');
     previewPersonalReturn.hidden = view.showPolarCalibration;
     previewPersonalReturn.disabled = waiting || !view.actions.calibrate;
     for (const [button, mode, input] of [[previewPolarFixed, 'fixed', 'polar-tilt-fixed'], [previewPolarAdaptive, 'adaptive', 'polar-tilt-adaptive']]) {
@@ -1165,6 +1171,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       button.disabled = waiting || !view.actions[`polar-${mode}`];
       button.setAttribute('aria-pressed', String(native?.input === input));
     }
+    previewPolarVolume.hidden = !volumeAvailable;
+    previewPolarVolume.disabled = waiting || !view.actions['polar-volume'];
+    previewPolarVolume.setAttribute('aria-pressed', String(native?.input === 'polar-volume'));
     byId('preview-modes-compatibility').hidden = !view.polarModesUpdateRequired;
     previewController.hidden = false;
     previewController.setAttribute('aria-pressed', String(native?.input === 'controller-state'));
@@ -1180,7 +1189,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       : 'Folgen die Partikel im Headset der Atmung?');
     previewRestart.hidden = !testingMethod || !view.showPolarCalibration;
     previewRetry.hidden = !(view.failure || view.instructionFailed) || collecting || view.instructionPending;
-    previewRestart.disabled = previewRetry.disabled = waiting || !view.actions.calibrate;
+    previewRestart.disabled = previewRetry.disabled = waiting || !view.actions[retryCalibrationOperation(native)];
     byId('preview-recovery').hidden = !view.recovery;
     apkView.querySelector('[value="receipt"]').disabled = !view.recovery;
     if (!view.recovery && apkView.value === 'receipt') {
@@ -1206,11 +1215,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (userAction || controllerLease.inFlight || connecting || document.hidden || !breathing.view?.actions[op]) return;
     const attempt = new AbortController();
     userAction = attempt;
-    if (op === 'calibrate') calibrationBaseline ??= { owner: breathing.gateway.owner, attempt: breathing.view.setup.attempt };
+    if (guidedCalibration(op)) calibrationBaseline ??= { owner: breathing.gateway.owner, attempt: breathing.view.setup.attempt };
     const request = selectBreathingMethod(breathing, op, { signal: attempt.signal,
       refresh: async () => { await rehearsal.refresh(); await breathing.refresh(); paint(); },
       onPending: paint });
-    navigateLocal({ type: 'go', step: op === 'calibrate' ? 'calibration' : 'tracking' });
+    navigateLocal({ type: 'go', step: guidedCalibration(op) ? 'calibration' : 'tracking' });
     paint();
     try { await request; }
     catch (error) { if (!attempt.signal.aborted) throw error; }
@@ -1420,6 +1429,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   function clearArchives() {
     ecgDisplay.reset();
     breathDisplay.reset();
+    sphereVolume.reset();
     showTrace(null);
     exportAttempt?.abort();
     liveAttempt?.abort();
@@ -1427,7 +1437,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     nextLive = 0;
     archiveRead++;
     archiveListRead++;
-    sphereVolume.reset();
     archiveScope = '';
     archiveListLoaded = false;
     reconciledRecordings = undefined;
@@ -1993,7 +2002,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const attempt = new AbortController();
     userAction = attempt;
     const scenario = scenarioChoices.hidden ? '' : selectedScenario();
-    try { await rehearsal.run(action, attempt.signal, operatorCondition, participantId, scenario); }
+    try { await rehearsal.run(action, attempt.signal, operatorCondition, participantId, scenario, { preparationId }); }
     finally { if (userAction === attempt) userAction = null; }
   }
 
@@ -2002,6 +2011,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     catch { text(participantOutput, '—'); }
     if (participantId) {
       participantId = '';
+      preparationId = '';
       resetPreview();
       paint();
     }
@@ -2011,11 +2021,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (participantFields.disabled) return;
     try {
       participantId = participantIdentity(Object.fromEntries(new FormData(participantForm))).id;
+      preparationId ||= crypto.randomUUID();
       participant.open = true;
       navigateLocal({ type: 'go', step: 'input' });
       paint();
     } catch {
       participantId = '';
+      preparationId = '';
       paint();
     }
   });
@@ -2142,8 +2154,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (userAction || connecting || document.hidden) return;
     kiosk.acknowledge(); paint();
   });
-  for (const button of [previewCalibrate, previewRestart, previewRetry]) {
-    button.addEventListener('click', () => setupAct('calibrate'));
+  function retryCalibrationOperation(setup) {
+    return setup?.calibration_input === 'polar-volume' ? 'polar-volume' : 'calibrate';
+  }
+  previewCalibrate.addEventListener('click', () => setupAct('calibrate'));
+  for (const button of [previewRestart, previewRetry]) {
+    button.addEventListener('click', () => setupAct(retryCalibrationOperation(breathing.view?.setup)));
   }
   instructionCancel.addEventListener('click', async () => {
     if (instructionCancel.disabled || document.hidden) return;
@@ -2156,6 +2172,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   });
   previewPersonalReturn.addEventListener('click', () => setupAct('calibrate'));
   previewPolarFixed.addEventListener('click', () => setupAct('polar-fixed'));
+  previewPolarVolume.addEventListener('click', () => setupAct('polar-volume'));
   previewPolarAdaptive.addEventListener('click', () => setupAct('polar-adaptive'));
   previewController.addEventListener('click', () => setupAct('controller'));
   previewAcknowledge.addEventListener('click', () => {
@@ -2219,6 +2236,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       cancelAnimationFrame(animationFrame);
       animationFrame = 0;
       breathDisplay.reset();
+      sphereVolume.reset();
       renderLive(performance.now());
       if (pairingChoice) connecting?.abort();
       userAction?.abort();
@@ -2234,7 +2252,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       showTrace(null);
       paint();
     } else {
-      sphereVolume.reset();
       nextConnect = nextSavedProbe = nextSync = 0;
       paint();
       renderLive(performance.now());

@@ -149,7 +149,7 @@ async function observedStatus() {
     return current;
   } finally { window.reviewStatusInFlight--; }
 }
-function command({ id, op, condition, d, scenario }) {
+function command({ id, op, condition, d, scenario, preparation_id }) {
   settings.commands ??= [];
   settings.commands.push(op);
   const states = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 'RUNNING', 'save-next': 'IDLE' };
@@ -157,6 +157,7 @@ function command({ id, op, condition, d, scenario }) {
     settings.generation++;
     settings.condition = condition;
     settings.armedScenario = scenario;
+    settings.armedPreparationId = preparation_id;
     settings.host = 'vr-session';
   }
   const guidedStart = op === 'start' && settings.armedScenario === 'probe-5' && settings.probeInstructionMs;
@@ -226,7 +227,7 @@ function breathSetup(command) {
     return rejected;
   }
   if (v !== 1 || !/^[a-f0-9]{16}$/.test(id) || g !== setup.g || r !== setup.r
-    || !['start', 'calibrate', 'controller', 'polar-fixed', 'polar-adaptive'].includes(op)) {
+    || !['start', 'calibrate', 'polar-volume', 'controller', 'polar-fixed', 'polar-adaptive'].includes(op)) {
     return receipts[id] = { v: 1, id, state: 'rejected' };
   }
   if (settings.audioRecovery) {
@@ -235,7 +236,8 @@ function breathSetup(command) {
     return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'audio-recovery-pending',recovery_generation:null};
   }
   if (settings.deferSetup) return receipts[id] = {v:1,id,state:'pending'};
-  if (settings.calibrationInstruction && op === 'calibrate' && setup.attempt === 0) {
+  const guided = op === 'calibrate' || op === 'polar-volume';
+  if (settings.calibrationInstruction && guided && setup.attempt === 0) {
     setup.instruction_id = id;
     settings.pending = true;
     return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'calibration-instruction-pending'};
@@ -243,10 +245,11 @@ function breathSetup(command) {
   setup.r++;
   const parked = setup.stage === 'idle' && !setup.playing;
   if (op === 'start') Object.assign(setup, { stage: 'testing', playing: true, audio_state:'playing', parked:false });
-  if (op === 'calibrate') Object.assign(setup, {
+  if (guided) Object.assign(setup, {
     stage: parked ? 'calibrating' : 'waiting', input: 'automatic', ready: false, attempt: setup.attempt + 1,
     playing:true,audio_state:'playing',parked:false,
-    calibration: parked ? 'collecting' : 'waiting', failure: '', target_frames: 1411200, completed_frames: 0
+    calibration: parked ? 'collecting' : 'waiting', calibration_input: op === 'polar-volume' ? 'polar-volume' : 'polar-tilt',
+    failure: '', target_frames: 1411200, completed_frames: 0
   });
   if (op === 'controller') Object.assign(setup, {
     stage: 'testing', input: 'controller-state', ready: true, calibration: 'idle', playing:true,audio_state:'playing',parked:false,

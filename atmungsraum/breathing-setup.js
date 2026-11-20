@@ -3,17 +3,20 @@ import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=6';
 
 const stages = new Set(['idle', 'recovering', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
 const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt · persönlich eingerichtet',
+  'polar-volume': 'Polar Volume · persönlich eingerichtet',
   'polar-tilt-fixed': 'Polar tilt STATE · vortrainiert · feste Achse',
   'polar-tilt-adaptive': 'Polar tilt STATE · vortrainiert · dynamische Achse',
   'controller-state': 'Controller State · feste Ausrichtung' };
 const polarModes = setup => Array.isArray(setup?.polar_modes) && setup.polar_modes.length <= 3
   && new Set(setup.polar_modes).size === setup.polar_modes.length
-  && setup.polar_modes.every(mode => ['calibrated', 'fixed', 'adaptive'].includes(mode)) ? setup.polar_modes : [];
+  && setup.polar_modes.every(mode => ['calibrated', 'volume', 'fixed', 'adaptive'].includes(mode)) ? setup.polar_modes : [];
 const phases = ['inhale', 'hold_in', 'exhale', 'hold_out'];
 const phaseLabels = ['Einatmen', 'Atem halten', 'Ausatmen', 'Atem halten'];
 const inputPhases = { inhale: 'Einatmen', exhale: 'Ausatmen', hold: 'Atem halten', unknown: 'noch nicht erkannt', 'bad-tracking': 'Tracking unzuverlässig' };
 const calibrations = new Set(['idle', 'waiting', 'collecting', 'ready', 'failed']);
-const operations = new Set(['start', 'calibrate', 'controller', 'polar-fixed', 'polar-adaptive']);
+const operations = new Set(['start', 'calibrate', 'polar-volume', 'controller', 'polar-fixed', 'polar-adaptive']);
+export const guidedCalibration = op => op === 'calibrate' || op === 'polar-volume';
+const validPreparationId = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const journalKey = 'atmungsraum-breathing-setup-pending';
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
@@ -109,7 +112,9 @@ export function breathingSetup(status, owner) {
     || ['waiting', 'collecting'].includes(setup.calibration) && (setup.input !== 'automatic' || setup.ready)
     || setup.calibration === 'collecting' && setup.target_frames !== setup.cycle_frames * 2
     || setup.ready && (setup.input === 'automatic' || !['testing', 'main-pending', 'main', 'complete'].includes(setup.stage))
-    || setup.input === 'polar-tilt' && setup.ready && setup.calibration !== 'ready'
+    || ['polar-tilt', 'polar-volume'].includes(setup.input) && setup.ready && setup.calibration !== 'ready'
+    || setup.input === 'polar-volume' && !polarModes(setup).includes('volume')
+    || Object.hasOwn(setup, 'calibration_input') && !['polar-tilt', 'polar-volume'].includes(setup.calibration_input)
     || setup.input === 'polar-tilt-fixed' && !polarModes(setup).includes('fixed')
     || setup.input === 'polar-tilt-adaptive' && !polarModes(setup).includes('adaptive')) return null;
   return setup;
@@ -119,9 +124,10 @@ function validJournal(saved) {
   const command = saved?.command;
   return validOwner(saved?.owner) && command?.v === 1 && receiptId(command.id)
     && nonnegative(command.g) && command.g > 0 && nonnegative(command.r) && operations.has(command.op)
-    && Object.keys(command).length === 5
+    && Object.keys(command).length === (Object.hasOwn(command, 'preparation_id') ? 6 : 5)
+    && (!Object.hasOwn(command, 'preparation_id') || guidedCalibration(command.op) && validPreparationId(command.preparation_id))
     && (!Object.hasOwn(saved, 'recovery') || saved.recovery === true)
-    && (!Object.hasOwn(saved, 'instruction') || saved.instruction === true && command.op === 'calibrate');
+    && (!Object.hasOwn(saved, 'instruction') || saved.instruction === true && guidedCalibration(command.op));
 }
 
 export class BreathingSetup {
@@ -170,7 +176,7 @@ export class BreathingSetup {
       this.waitExpired = false;
     }
     this.gateway = gateway;
-    const { status, statusTiming, busy, pending, unknown } = state;
+    const { status, statusTiming, busy, pending, unknown, preparationId } = state;
     this.status = status;
     let setup = breathingSetup(status, gateway?.owner);
     if (this.cursor && sameQuest(this.cursor.owner, gateway?.owner) && setup) {
@@ -179,12 +185,13 @@ export class BreathingSetup {
     }
     if (setup) this.cursor = { owner: { ...gateway.owner }, g: setup.g, r: setup.r, position: setup.position_frames };
     this.setup = setup;
+    this.preparationId = setup?.calibration_capture === 1 && validPreparationId(preparationId) ? preparationId : null;
     if (this.pending && sameQuest(this.pending.owner, gateway?.owner)
       && setup?.recovery?.id === this.pending.command.id && !this.pending.recovery) {
       this.remember({ ...this.pending, recovery: true });
     }
     const instructionPending = Boolean(setup?.instruction_id);
-    if (instructionPending && this.pending?.command.op === 'calibrate'
+    if (instructionPending && guidedCalibration(this.pending?.command.op)
       && setup.instruction_id === this.pending.command.id && sameQuest(this.pending.owner, gateway?.owner)) {
       this.observeInstruction();
     }
@@ -235,7 +242,7 @@ export class BreathingSetup {
     const supportedModes = polarModes(setup);
     const polarChoice = Boolean(gated && (preparing || parked || recoverable)
       && (setup.source_clock_ready !== false || recoverable));
-    const pendingInputLabel = this.pending ? { calibrate: 'Polar einrichten', controller: 'Controller auswählen', start: 'Atemschleife starten',
+    const pendingInputLabel = this.pending ? { calibrate: 'Polar einrichten', 'polar-volume': 'Polar Volume einrichten', controller: 'Controller auswählen', start: 'Atemschleife starten',
       'polar-fixed': inputs['polar-tilt-fixed'], 'polar-adaptive': inputs['polar-tilt-adaptive'] }[this.pending.command.op] : '';
     this.view = {
       available, updateRequired: Boolean(status && status.breath_setup !== 1), setup,
@@ -247,7 +254,7 @@ export class BreathingSetup {
       inputLabel: setup ? inputs[setup.input] : '',
       title: controller ? 'Controller testen' : builtin ? 'Polar STATE testen' : 'Atmung einrichten',
       showPolarCalibration, supportedModes,
-      polarModesUpdateRequired: Boolean(setup && (!supportedModes.includes('fixed') || !supportedModes.includes('adaptive'))),
+      polarModesUpdateRequired: Boolean(setup && !supportedModes.includes('volume') && (!supportedModes.includes('fixed') || !supportedModes.includes('adaptive'))),
       pendingInputLabel,
       inputPhaseLabel: setup && inputPhases[setup.input_phase] || '',
       inputVolume: typeof setup?.input_volume01 === 'number' ? setup.input_volume01 : null,
@@ -271,6 +278,7 @@ export class BreathingSetup {
         cancelInstruction: Boolean(instructionPending && available && canControlQuest(status)
           && status.p === 'IDLE' && !status.rec && !this.busy && !this.cancellingInstruction),
         calibrate: polarChoice,
+        'polar-volume': Boolean(polarChoice && supportedModes.includes('volume')),
         'polar-fixed': Boolean(polarChoice && supportedModes.includes('fixed')
           && (setup.input !== 'polar-tilt-fixed' || recoverable)),
         'polar-adaptive': Boolean(polarChoice && supportedModes.includes('adaptive')
@@ -278,7 +286,7 @@ export class BreathingSetup {
         controller: Boolean(idle && (preparing || parked || recoverable)
           && (setup.input !== 'controller-state' || recoverable)),
         continue: Boolean(gated && testing && setup.ready && setup.clock_valid !== false
-          && ['polar-tilt', 'polar-tilt-fixed', 'polar-tilt-adaptive', 'controller-state'].includes(setup.input)),
+          && ['polar-tilt', 'polar-volume', 'polar-tilt-fixed', 'polar-tilt-adaptive', 'controller-state'].includes(setup.input)),
         // Audio generation changes can belong to an unobserved recovery of
         // this exact operation. Only actual actor retirement permits discard.
         acknowledge: Boolean(ownerIdle && ownerRetired),
@@ -316,7 +324,7 @@ export class BreathingSetup {
   }
 
   observeInstruction() {
-    if (this.pending?.command.op !== 'calibrate' || this.pending.instruction) return;
+    if (!guidedCalibration(this.pending?.command.op) || this.pending.instruction) return;
     this.remember({ ...this.pending, instruction: true });
     this.waitExpired = false;
     this.waitBudget = null;
@@ -362,6 +370,7 @@ export class BreathingSetup {
     signal?.throwIfAborted();
     const gateway = this.gateway;
     const command = { v: 1, id: operationId(), g: this.setup.g, r: this.setup.r, op };
+    if (guidedCalibration(op) && this.preparationId) command.preparation_id = this.preparationId;
     this.remember({ owner: { ...gateway.owner }, command });
     this.busy = true;
     this.message = '';

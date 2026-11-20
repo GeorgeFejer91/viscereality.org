@@ -13,10 +13,10 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261119-music-manual-update-help">
+  <link rel="stylesheet" href="./style.css?v=20261120-calibrated-volume">
   <link rel="stylesheet" href="./questionnaire.css?v=1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261120-audio-stall"></script>
+  <script type="module" src="./app.js?v=20261120-calibrated-volume"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -270,6 +270,7 @@
         <div class="preview-controls">
           <button id="preview-start" disabled hidden type="button"><span data-measure>Atemschleife starten</span></button>
           <button id="preview-calibrate" disabled type="button"><span data-measure>Polar persönlich einrichten</span></button>
+          <button id="preview-polar-volume" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar Volume einrichten</span></button>
           <button id="preview-personal-return" disabled hidden type="button"><span data-measure>Polar persönlich einrichten</span></button>
           <button id="preview-polar-fixed" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar · feste Achse</span></button>
           <button id="preview-polar-adaptive" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar · dynamische Achse</span></button>
@@ -440,8 +441,8 @@
               <div class="session-volume-key-ist"><span data-measure>Ist</span><span id="session-volume-ist-value" data-measure data-measure-sample="88,8 m³" data-live-value>—</span></div>
             </div>
           </figure>
-          <progress id="quest-progress" aria-label="Szenariofortschritt" aria-describedby="quest-clock" value="0" hidden></progress>
           <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure data-measure-sample="88:88 / 88:88" data-live-value>00:00</p>
+          <progress id="quest-progress" aria-label="Szenariofortschritt" aria-describedby="quest-clock" value="0" hidden></progress>
         </div>
       </div>
       <footer class="actions operator-actions">

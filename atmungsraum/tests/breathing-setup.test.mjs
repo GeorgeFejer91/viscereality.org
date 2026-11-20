@@ -63,6 +63,24 @@ test('headset reboot advice requires a confirmed calibration stall at frame zero
   assert.equal(view(snapshot(stalled), null).audioStallMessage, '');
 });
 
+test('personal Volume uses guided calibration admission and carries the current preparation ID', async () => {
+  const preparationId = '01234567-89ab-4cde-8fab-0123456789ab';
+  const model = new BreathingSetup();
+  const peer = fixture();
+  peer.reply('pending');
+  const setup = native({ polar_modes: ['calibrated', 'volume'], calibration_capture: 1 });
+  const view = model.update(peer.gateway, state(snapshot(setup), { preparationId }), true);
+  assert.equal(view.actions['polar-volume'], true);
+  assert.equal(view.actions['polar-fixed'], false);
+  assert.equal(view.actions['polar-adaptive'], false);
+  await model.run('polar-volume');
+  assert.equal(peer.calls[0].op, 'polar-volume');
+  assert.equal(peer.calls[0].preparation_id, preparationId);
+
+  const ready = native({ ...setup, input: 'polar-volume', calibration: 'ready', ready: true });
+  assert.equal(new BreathingSetup().update(peer.gateway, state(snapshot(ready)), true).actions.continue, true);
+});
+
 test('only a bound explicit non-accepted stale rejection permits fresh selection retry', async () => {
   for (const patch of [{}, {accepted:undefined}, {accepted:true}, {reason:'busy'}, {id:'f'.repeat(16)}, {state:'outcome_unknown'}]) {
     const model=new BreathingSetup(), peer=fixture();
