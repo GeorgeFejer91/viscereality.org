@@ -22,7 +22,7 @@ DEFAULT_APK = apk_fixture()
 GATEWAY = """
 // Keep the actual pure access contract; replace transport, never its UI gates.
 import { canControlQuest } from './quest-gateway.js?review-contract=1';
-export { backgroundMusicStatus, canControlQuest, companionAccessDenied, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
+export { audioMixStatus, backgroundMusicStatus, canControlQuest, companionAccessDenied, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
 // Every cache-versioned import shares one fixture, just as it reaches one Quest.
 export const owner = window.reviewOwner ??= {
   serial: 'DEMO-QUEST', device: 'd'.repeat(32), epoch: '7', native_epoch: '8',
@@ -95,6 +95,7 @@ function snapshot() {
     ...(settings.metaUpdate ? {meta_update_control:1} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     ...(settings.music ? {background_music:{...settings.music}} : {}),
+    ...(settings.roundAudio ? {audio_mix:{...settings.roundAudio}} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: settings.participantArm !== false, f: fresh }, a: settings.tracks ?? ['track-ready', 'track-ready'],
     o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5,
@@ -336,6 +337,15 @@ export async function joinQuest({ endpoint, enrollment }) {
         : settings.receiptState ? {v:1,id,state:settings.receiptState}
           : receipts[id] ?? {v:1,id,state:'outcome_unknown'};
     }),
+    audioMix: settings.roundAudio ? controlled(async value => {
+      (window.reviewRoundAudioCommands ??= []).push(structuredClone(value));
+      if (window.reviewHoldRoundAudio) {
+        await new Promise(resolve => { window.reviewReleaseRoundAudio = resolve; });
+      }
+      Object.assign(settings.roundAudio, value);
+      settings.roundAudio.revision++;
+      return { ...settings.roundAudio };
+    }) : null,
     backgroundMusic: settings.music ? controlled(async value => {
       (window.reviewMusicCommands ??= []).push(structuredClone(value));
       const { playing, volume } = value;

@@ -73,6 +73,24 @@ blocked the main timer. The [phone fixes](https://github.com/GeorgeFejer91/visce
 have separate publication and physical acceptance. Developer 38 is a local
 test build.
 
+## Round audio rehearsal candidate 55 — 2026-11-20
+
+Package org.viscereality.atmungsraum.rehearsal, version
+0.2.54-round-audio / 55, 166,393,993 bytes. APK SHA-256
+d47d54d9db5aa80894942c9fe606d3f1f35277f76d8677ad9dbf40ed0ea0fe8c.
+The local bench v3 certificate is
+da5553bd6b95e1b6fc2d8e15173b7100c332148ba087b39222cbecec45bf0568.
+The distribution profile uses the retained signer for release updates.
+
+The [round audio overlay](../round-audio-mix.patch) on the cumulative
+native baseline and [full-round recording overlay](../round-polar-recording.patch)
+produces native source tree bb776c9c790217ad01045527a3f1cbec850707e4.
+Build with BundledAssets and MainStudyAudio. The signed package verifies
+ARM64 OpenXR, the exact canonical MP3 and the session/audio catalog closure.
+The full Haupt-Runde digital mix at 90% speech and 30% music measures
+-24.0 LUFS with a -4.8 dBTP true peak. The local lab transport enumerated no
+headset or phone. Installation, listening and Meta release remain pending.
+
 ## Authored full-round recording candidate 54 — 2026-11-20
 
 Package `org.viscereality.atmungsraum.rehearsal`, version

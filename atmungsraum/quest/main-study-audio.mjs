@@ -245,19 +245,12 @@ export async function buildMainStudyScenario(sourceRoot, original) {
     events: [...timeline.events, closing],
     audio_assets: registry,
   };
-  const music = assets.get(inventory.background);
-  return { plan, files, music: join(sourceRoot, STUDY_DIRECTORY, music.file) };
+  return { plan, files };
 }
 
-export async function renderMainStudyTrack({ plan, files, music }, output, { codec = 'pcm_s16le' } = {}) {
-  const start = plan.events.find(event => event.id === 'inhale').offset_frames;
-  const length = TOTAL_FRAMES - start;
-  const mix = `[1:a]aresample=${plan.sample_rate},aformat=channel_layouts=mono,atrim=end_sample=${length},`
-    + `volume=-24dB,afade=t=in:d=2,afade=t=out:ss=${length - 3 * plan.sample_rate}:ns=${3 * plan.sample_rate},`
-    + `adelay=${start}S[music];[0:a][music]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=0:latency=1`;
+export async function renderMainStudyTrack({ plan, files }, output, { codec = 'pcm_s16le' } = {}) {
   const ffmpeg = spawn('ffmpeg', ['-nostdin', '-v', 'error', '-n', '-f', 's16le', '-ar', String(plan.sample_rate),
-    '-ac', '1', '-i', 'pipe:0', '-i', music, '-filter_complex', mix, '-map_metadata', '-1',
-    '-metadata', 'comment=Music: Wisps of Whorls by Kevin MacLeod (incompetech.com), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); excerpt, level adjusted and faded.',
+    '-ac', '1', '-i', 'pipe:0', '-map_metadata', '-1',
     '-ac', '1', '-sample_fmt', 's16', '-c:a', codec, output], { stdio: ['pipe', 'ignore', 'inherit'], windowsHide: true });
   const result = once(ffmpeg, 'close');
   ffmpeg.stdin.on('error', error => { if (error.code !== 'EPIPE') ffmpeg.kill(); });

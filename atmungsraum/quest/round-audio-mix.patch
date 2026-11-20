@@ -1,0 +1,522 @@
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index ad418567..32969c13 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -126,6 +126,7 @@ public final class ExperimentSessionCommandGateway {
+         }, wifiSetup != null && !phonePairingEnabled, wifiSetup != null || phonePairingEnabled);
+         controlMode.onChange(new Runnable(){@Override public void run(){controlModeChanged();}});
+         preferences=context.getSharedPreferences("experiment-session-command-gateway",Context.MODE_PRIVATE);
++        if (privateLanData) RoundAudioMix.install(context);
+         if(!preferences.contains("device"))preferences.edit().putString("device",ExperimentSessionBleProtocol.newHex(16)).commit();
+         if(phonePairingEnabled)try{
+             trustedPhones=new ExperimentTrustedPhones(new ExperimentTrustedPhones.Store(){
+@@ -679,6 +680,14 @@ public final class ExperimentSessionCommandGateway {
+                         String state = original.optString("state");
+                         if ("confirmed".equals(state) || "rejected".equals(state)) return original;
+                     }
++                    if ("audio-mix".equals(action)) {
++                        if (!privateLanData || !enrolled || !remoteAvailable() || !RoundAudioMix.enabled()) {
++                            throw new SecurityException("audio-mix-unavailable");
++                        }
++                        admittedEffect.check();
++                        controlMode.readSnapshot().requireRemoteCommands();
++                        return RoundAudioMix.apply(payload);
++                    }
+                     if ("meta-update".equals(action)) {
+                         if(!privateLanData||!enrolled||!remoteAvailable())throw new SecurityException("meta-update-controller-unavailable");
+                         admittedEffect.check();
+@@ -728,6 +737,7 @@ public final class ExperimentSessionCommandGateway {
+                         }
+                         if(enrolled)response.put("apk",apkIdentity==null?JSONObject.NULL:new JSONObject(apkIdentity.toString()));
+                         if(enrolled)response.put("kiosk",BreathCompositionPanelModule.remoteKioskProjection());
++                        if (enrolled && RoundAudioMix.enabled()) response.put("audio_mix", RoundAudioMix.status());
+                         if(enrolled){JSONObject update=NativeRendererMetaUpdate.status();if(update!=null){response.put("meta_update",update);if(update.optInt("v")==2){response.put("meta_update_control",1);if(update.opt("can_end_preparation") instanceof Boolean)response.put("meta_update_preparation",1);}}}
+                         response.put("ecg_preview", enrolled ? 1 : 0);
+                         if (!enrolled) response.put("recordings", 0);
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+index 53cd8833..0cebeec2 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+@@ -71,7 +71,8 @@ public final class ExperimentSessionGatewayProtocol {
+                 || "breath-monitor".equals(action) || lan && ("recordings".equals(action)
+                     || privateLan && ("ecg-preview".equals(action) || "scenario-arm".equals(action)
+                         || "participant-arm".equals(action) || "recenter".equals(action)
+-                        || "breath-setup".equals(action) || "kiosk".equals(action) || "meta-update".equals(action)));
++                        || "breath-setup".equals(action) || "kiosk".equals(action) || "meta-update".equals(action)
++                        || "audio-mix".equals(action)));
+             if(!hex(nonce,32) || !allowedAction
+                     || !constant(hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload),string(request,"mac")))
+                 throw new SecurityException("authentication-failed");
+@@ -90,6 +91,7 @@ public final class ExperimentSessionGatewayProtocol {
+             result.remove("breath_setup");
+             result.remove("setup");
+             result.remove("kiosk");
++            result.remove("audio_mix");
+             result.remove("apk");
+             result.remove("meta_update");
+             result.remove("meta_update_control");
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+index 49851ffe..6bd775fe 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+@@ -28,6 +28,8 @@ final class BreathingSetupAudio implements AutoCloseable {
+     private static final AtomicLong GENERATIONS = new AtomicLong();
+     private static volatile BreathingSetupAudio appLifetime;
+     private static volatile boolean selected;
++    private static volatile float speechGain = 1f;
++    static void setSpeechGain(float gain) { speechGain = gain; }
+     private static volatile String installError = "breathing-loop-not-initialized";
+ 
+     interface Clock { long nowNs(); }
+@@ -578,6 +580,7 @@ final class BreathingSetupAudio implements AutoCloseable {
+     private static final class StaticPlayer implements Player {
+         private AudioTrack track;
+         private boolean muted;
++        private float appliedGain = -1f;
+         public void prepare(byte[] pcm, int rate, int frames) {
+             track = new AudioTrack.Builder()
+                 .setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA)
+@@ -593,15 +596,22 @@ final class BreathingSetupAudio implements AutoCloseable {
+             setMuted(muted);
+         }
+         public void setMuted(boolean value) {
+-            if (track != null && track.setVolume(value ? 0f : 1f) != AudioTrack.SUCCESS)
+-                throw new IllegalStateException("breathing-audiotrack-volume-unavailable");
+             muted = value;
++            updateGain();
++        }
++        private void updateGain() {
++            float gain = muted ? 0f : speechGain;
++            if (track != null && appliedGain != gain) {
++                if (track.setVolume(gain) != AudioTrack.SUCCESS)
++                    throw new IllegalStateException("breathing-audiotrack-volume-unavailable");
++                appliedGain = gain;
++            }
+         }
+         public void play() { track.play(); }
+         public void pause() { track.pause(); }
+-        public boolean playing() { return track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING; }
++        public boolean playing() { updateGain(); return track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING; }
+         public int head() { return track.getPlaybackHeadPosition(); }
+-        public void release() { if (track != null) { track.release(); track = null; } }
++        public void release() { if (track != null) { track.release(); track = null; appliedGain = -1f; } }
+         public void diagnostics(JSONObject result) throws Exception {
+             AudioTimestamp timestamp = new AudioTimestamp();
+             boolean available = track.getTimestamp(timestamp);
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+index 963971da..1aba1022 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+@@ -28,6 +28,7 @@ final class ConditionAudioAndroidMediaBackendFactory
+             throw new IllegalStateException("probe-instruction-unavailable");
+         }
+         default boolean hasAuthoredMain() { return false; }
++        default long explorationMusicStartMs() { return Long.MAX_VALUE; }
+         default Runnable playMainOutro(Runnable completed, Runnable failed) throws Exception {
+             throw new IllegalStateException("main-outro-unavailable");
+         }
+@@ -114,14 +115,19 @@ final class ConditionAudioAndroidMediaBackendFactory
+         if (track == null || track.player == null) {
+             throw new IllegalStateException("audio-track-not-ready");
+         }
++        MediaPlayer bed = null;
+         try {
+-            if (scenarioId.isEmpty()) return new SessionBackend(this, provider, track.player, null, listener, false);
++            if (scenarioId.isEmpty()) return new SessionBackend(this, provider, track.player, null, listener, false, false, Long.MAX_VALUE);
++            boolean exploration = "free-exploration".equals(scenarioId);
++            if (RoundAudioMix.enabled() && !exploration) bed = prepareRoundBed(assets);
+             boolean authoredMain = "haupt-15".equals(scenarioId) && scenarios != null && scenarios.hasAuthoredMain();
+             if (!authoredMain && BreathingSetupAudio.continuousMain(scenarioId)) {
+                 if (BreathingSetupAudio.mainRecordingPlan(scenarioId) == null) {
+                     throw new IllegalStateException("breathing-loop-not-ready");
+                 }
+-                return new ContinuousMainBackend(this, provider, track.player, listener);
++                MediaPlayer background = bed == null ? track.player : bed;
++                if (bed != null) track.player.release();
++                return new ContinuousMainBackend(this, provider, background, listener, bed != null);
+             }
+             if (scenarios == null || !scenarios.ids().contains(scenarioId)) {
+                 throw new IllegalArgumentException("scenario-track-unavailable");
+@@ -129,8 +135,12 @@ final class ConditionAudioAndroidMediaBackendFactory
+             MediaPlayer timeline = scenarios.prepare(scenarioId);
+             boolean standalone = authoredMain || "free-exploration".equals(scenarioId)
+                 || "probe-5".equals(scenarioId) && scenarios.hasProbeInstruction();
+-            return new SessionBackend(this, provider, timeline, track.player, listener, standalone);
++            MediaPlayer background = bed == null ? track.player : bed;
++            if (bed != null) track.player.release();
++            return new SessionBackend(this, provider, timeline, background, listener, standalone,
++                    bed != null, exploration ? scenarios.explorationMusicStartMs() : Long.MAX_VALUE);
+         } catch (Exception error) {
++            if (bed != null) bed.release();
+             synchronized (lock) {
+                 if (closed) track.player.release();
+                 else prepared.put(provider.conditionId, track);
+@@ -139,6 +149,18 @@ final class ConditionAudioAndroidMediaBackendFactory
+         }
+     }
+ 
++    private static MediaPlayer prepareRoundBed(AssetManager assets) throws Exception {
++        MediaPlayer player = new MediaPlayer();
++        try (AssetFileDescriptor track = assets.openFd(RoundAudioMix.TRACK)) {
++            player.setDataSource(track.getFileDescriptor(), track.getStartOffset(), track.getLength());
++            player.prepare();
++            return player;
++        } catch (Exception error) {
++            player.release();
++            throw error;
++        }
++    }
++
+     private void prepareTrack(final ConditionAudioContract.Provider provider) {
+         try {
+             verifyPackagedAsset(provider);
+@@ -251,10 +273,13 @@ final class ConditionAudioAndroidMediaBackendFactory
+         private boolean released;
+         private long admittedFrame = -1;
+         private boolean mainEnded;
++        private final boolean managedBackground;
+ 
+         ContinuousMainBackend(ConditionAudioAndroidMediaBackendFactory factory,
+-                ConditionAudioContract.Provider provider, MediaPlayer background, Listener listener) {
++                ConditionAudioContract.Provider provider, MediaPlayer background, Listener listener,
++                boolean managedBackground) {
+             this.factory = factory; this.provider = provider; this.background = background; this.listener = listener;
++            this.managedBackground = managedBackground;
+         }
+         @Override public void prepare(boolean looping) {
+             if (looping) throw new IllegalArgumentException("condition audio must not loop");
+@@ -274,6 +299,7 @@ final class ConditionAudioAndroidMediaBackendFactory
+                 admittedFrame = BreathingSetupAudio.mainAdmissionFrame();
+                 if (admittedFrame < 0) throw new IllegalStateException("breathing-main-not-admitted");
+             }
++            if (managedBackground) RoundAudioMix.attach(background, true);
+             background.start(); listener.onActualStart(position);
+         }
+         @Override public long currentPlaybackPositionMs() {
+@@ -293,6 +319,7 @@ final class ConditionAudioAndroidMediaBackendFactory
+         @Override public void release() {
+             if (released) { endMain(); return; }
+             released = true;
++            RoundAudioMix.detach(background);
+             try { background.release(); } finally {
+                 try { endMain(); } finally { factory.replaceAfterTerminal(provider); }
+             }
+@@ -306,6 +333,9 @@ final class ConditionAudioAndroidMediaBackendFactory
+         private final MediaPlayer background;
+         private final Listener listener;
+         private final boolean standalone;
++        private final boolean managedBackground;
++        private final long musicStartMs;
++        private boolean musicSection;
+         private boolean released;
+ 
+         SessionBackend(
+@@ -314,7 +344,9 @@ final class ConditionAudioAndroidMediaBackendFactory
+             MediaPlayer player,
+             MediaPlayer background,
+             Listener listener,
+-            boolean standalone
++            boolean standalone,
++            boolean managedBackground,
++            long musicStartMs
+         ) {
+             this.factory = factory;
+             this.provider = provider;
+@@ -322,11 +354,25 @@ final class ConditionAudioAndroidMediaBackendFactory
+             this.background = background;
+             this.listener = listener;
+             this.standalone = standalone;
++            this.managedBackground = managedBackground;
++            this.musicStartMs = musicStartMs;
++        }
++
++        private boolean hasBackground() { return background != null && (!standalone || managedBackground); }
++
++        private long observePosition() {
++            long position = Math.max(0L, player.getCurrentPosition());
++            boolean music = position >= musicStartMs;
++            if (musicSection != music) {
++                musicSection = music;
++                RoundAudioMix.attach(player, music);
++            }
++            return position;
+         }
+ 
+         @Override public void prepare(boolean looping) {
+             if (looping) throw new IllegalArgumentException("condition audio must not loop");
+-            if (background != null && !standalone) background.setLooping(true);
++            if (hasBackground()) background.setLooping(true);
+             if (background == null && factory.loopBackground) player.setLooping(true);
+             else player.setLooping(false);
+             listener.onPrepared();
+@@ -336,6 +382,9 @@ final class ConditionAudioAndroidMediaBackendFactory
+             if (standalone) BreathingSetupAudio.pauseLoop();
+             player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                 @Override public void onCompletion(MediaPlayer completedPlayer) {
++                    if (hasBackground()) {
++                        try { background.pause(); } catch (IllegalStateException retired) { }
++                    }
+                     listener.onNaturalEnd(Math.max(0L, completedPlayer.getCurrentPosition()));
+                 }
+             });
+@@ -346,8 +395,13 @@ final class ConditionAudioAndroidMediaBackendFactory
+                 }
+             };
+             player.setOnErrorListener(error);
+-            if (background != null && !standalone) {
++            if (background != null) {
++                observePosition();
++                RoundAudioMix.attach(player, musicSection);
++            }
++            if (hasBackground()) {
+                 background.setOnErrorListener(error);
++                if (managedBackground) RoundAudioMix.attach(background, true);
+                 background.start();
+             }
+             player.start();
+@@ -356,22 +410,24 @@ final class ConditionAudioAndroidMediaBackendFactory
+ 
+         @Override public void stop() {
+             try { player.stop(); }
+-            finally { if (background != null && !standalone) background.stop(); }
++            finally { if (hasBackground()) background.stop(); }
+         }
+ 
+         @Override public long currentPlaybackPositionMs() {
+-            return background == null ? -1L : Math.max(0L, player.getCurrentPosition());
++            return background == null ? -1L : observePosition();
+         }
+ 
+         @Override public long pause() {
+             try { player.pause(); }
+-            finally { if (background != null && !standalone) background.pause(); }
++            finally { if (hasBackground()) background.pause(); }
+             return Math.max(0L, player.getCurrentPosition());
+         }
+ 
+         @Override public void release() {
+             if (released) return;
+             released = true;
++            RoundAudioMix.detach(player);
++            RoundAudioMix.detach(background);
+             try { player.release(); }
+             finally {
+                 if (background != null) background.release();
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/RoundAudioMix.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/RoundAudioMix.java
+new file mode 100644
+index 00000000..4211b6f0
+--- /dev/null
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/RoundAudioMix.java
+@@ -0,0 +1,91 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import android.content.Context;
++import android.content.SharedPreferences;
++import android.content.res.AssetFileDescriptor;
++import android.media.MediaPlayer;
++import java.io.IOException;
++import java.util.IdentityHashMap;
++import java.util.Map;
++import org.json.JSONObject;
++
++/** App-owned volume preferences. The system media stream remains under Android control. */
++final class RoundAudioMix {
++    static final String TRACK = "atmungsraum-music/backgroundmusic.mp3";
++    private static final int DEFAULT_MUSIC = 30;
++    private static final int DEFAULT_INSTRUCTIONS = 90;
++    private static final Map<MediaPlayer, Boolean> players = new IdentityHashMap<>();
++    private static SharedPreferences preferences;
++    private static int music = DEFAULT_MUSIC;
++    private static int instructions = DEFAULT_INSTRUCTIONS;
++    private static long revision;
++
++    private RoundAudioMix() { }
++
++    static synchronized void install(Context context) {
++        if (enabled()) return;
++        try (AssetFileDescriptor track = context.getAssets().openFd(TRACK)) {
++            if (track.getLength() <= 0) return;
++        } catch (IOException absent) {
++            return;
++        }
++        preferences = context.getSharedPreferences("atmungsraum-round-audio", Context.MODE_PRIVATE);
++        music = checkedPreference("music", DEFAULT_MUSIC);
++        instructions = checkedPreference("instructions", DEFAULT_INSTRUCTIONS);
++        BreathingSetupAudio.setSpeechGain(instructions / 100f);
++    }
++
++    private static int checkedPreference(String key, int fallback) {
++        Object value = preferences.getAll().get(key);
++        return valid(value) ? (Integer) value : fallback;
++    }
++
++    private static boolean valid(Object value) {
++        return value instanceof Integer && (Integer) value >= 0 && (Integer) value <= 100;
++    }
++
++    static synchronized boolean enabled() { return preferences != null; }
++
++    static synchronized JSONObject status() throws Exception {
++        return new JSONObject().put("v", 1).put("music", music).put("instructions", instructions)
++            .put("revision", revision);
++    }
++
++    static synchronized JSONObject apply(JSONObject request) throws Exception {
++        if (!Integer.valueOf(1).equals(request.opt("v")) || request.length() != 3
++                || !valid(request.opt("music")) || !valid(request.opt("instructions"))) {
++            throw new IllegalArgumentException("closed-round-audio-mix-required");
++        }
++        int nextMusic = request.getInt("music");
++        int nextInstructions = request.getInt("instructions");
++        if (music != nextMusic || instructions != nextInstructions) {
++            if (!preferences.edit().putInt("music", nextMusic).putInt("instructions", nextInstructions).commit()) {
++                throw new IOException("round-audio-mix-not-saved");
++            }
++            music = nextMusic;
++            instructions = nextInstructions;
++            BreathingSetupAudio.setSpeechGain(instructions / 100f);
++            revision++;
++            for (Map.Entry<MediaPlayer, Boolean> entry : players.entrySet()) {
++                try { applyGain(entry.getKey(), entry.getValue()); }
++                catch (IllegalStateException retiring) { }
++            }
++        }
++        return status();
++    }
++
++    static synchronized void attach(MediaPlayer player, boolean isMusic) {
++        if (!enabled()) return;
++        applyGain(player, isMusic);
++        players.put(player, isMusic);
++    }
++
++    static synchronized void detach(MediaPlayer player) { players.remove(player); }
++
++    static synchronized float speechGain() { return enabled() ? instructions / 100f : 1f; }
++
++    private static void applyGain(MediaPlayer player, boolean isMusic) {
++        float gain = isMusic ? music / 100f : speechGain();
++        player.setVolume(gain, gain);
++    }
++}
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
+index e53302ed..1669287c 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
+@@ -76,6 +76,11 @@ final class ScenarioAudioAndroidTracks
+         return playPackagedClip(path, completed, failed);
+     }
+ 
++    @Override public long explorationMusicStartMs() {
++        ScenarioAudioPackage selected = catalog;
++        return selected == null ? Long.MAX_VALUE : selected.explorationMusicStartMs();
++    }
++
+     @Override public boolean hasAuthoredMain() {
+         ScenarioAudioPackage selected = catalog;
+         return selected != null && selected.hasEncodedTrack("haupt-15");
+@@ -94,13 +99,13 @@ final class ScenarioAudioAndroidTracks
+             player.setDataSource(input.getFileDescriptor(), input.getStartOffset(), input.getLength());
+             player.setLooping(false);
+             player.setOnPreparedListener(ready -> {
+-                try { ready.start(); }
++                try { RoundAudioMix.attach(ready, false); ready.start(); }
+                 catch (RuntimeException unavailable) { failed.run(); }
+             });
+             player.setOnErrorListener((source, reason, extended) -> { failed.run(); return true; });
+             player.setOnCompletionListener(source -> completed.run());
+             player.prepareAsync();
+-            return player::release;
++            return () -> { RoundAudioMix.detach(player); player.release(); };
+         } catch (Exception unavailable) {
+             player.release();
+             throw unavailable;
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
+index 372990f8..f1ae3b31 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
+@@ -28,6 +28,7 @@ final class ScenarioAudioPackage {
+     private final AssetSource source;
+     private final Map<String, FileIdentity> files = new HashMap<>();
+     private final Map<String, JSONObject> scenarios = new HashMap<>();
++    private long explorationMusicStartMs = Long.MAX_VALUE;
+     private final Map<String, String> recordingPlans = new HashMap<>();
+     private final Map<String, FileIdentity> encodedTracks = new HashMap<>();
+     private final FileIdentity calibrationInstruction;
+@@ -118,6 +119,8 @@ final class ScenarioAudioPackage {
+         return java.util.Collections.unmodifiableList(ids);
+     }
+ 
++    long explorationMusicStartMs() { return explorationMusicStartMs; }
++
+     String recordingPlan(String scenarioId) {
+         return recordingPlans.get(scenarioId);
+     }
+@@ -283,6 +286,7 @@ final class ScenarioAudioPackage {
+         FileIdentity track = boundClip(clip, "assets/audio/playground/free-exploration.mp3");
+         verified(track);
+         encodedTracks.put("free-exploration", track);
++        explorationMusicStartMs = Math.round(instructionFrames * 1000d / sampleRate);
+     }
+ 
+     private void verifyFullRound(String scenarioId, JSONObject plan, JSONArray events, int frames)
+diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
+index 22746f1f..60fca8b3 100644
+--- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
++++ b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
+@@ -111,6 +111,7 @@
+         "dependencies": [],
+         "source_files": [
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java",
++          "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/RoundAudioMix.java",
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java",
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java",
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java",
+diff --git a/fixtures/native-app-features/ui/experiment-session-owner/ui.experiment_session_owner.feature.json b/fixtures/native-app-features/ui/experiment-session-owner/ui.experiment_session_owner.feature.json
+index 67e14f71..787de23d 100644
+--- a/fixtures/native-app-features/ui/experiment-session-owner/ui.experiment_session_owner.feature.json
++++ b/fixtures/native-app-features/ui/experiment-session-owner/ui.experiment_session_owner.feature.json
+@@ -98,6 +98,7 @@
+         "dependencies": [],
+         "source_files": [
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java",
++          "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/RoundAudioMix.java",
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java",
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java",
+           "apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioEngine.java",
+diff --git a/tools/checks/Test-BreathingSetupAudioHost.ps1 b/tools/checks/Test-BreathingSetupAudioHost.ps1
+index 52e69699..68510199 100644
+--- a/tools/checks/Test-BreathingSetupAudioHost.ps1
++++ b/tools/checks/Test-BreathingSetupAudioHost.ps1
+@@ -17,7 +17,7 @@ $stubs = Join-Path $repo 'apps/native-renderer-android/tests/phase-audio-platfor
+ $sources = @(
+     'BreathingSetupAudio.java', 'BreathingSetupAudioContract.java',
+     'ConditionAudioContract.java', 'ConditionAudioRuntime.java',
+-    'ConditionAudioAndroidMediaBackendFactory.java'
++    'ConditionAudioAndroidMediaBackendFactory.java', 'RoundAudioMix.java'
+ ) | ForEach-Object { Join-Path $production $_ }
+ $groups = @('BreathingSetupAudioContractTest', 'BreathingSetupAudioOwnerTest', 'BreathingSetupAudioBackendTest', 'BreathingSetupAudioNativeTest')
+ $sources += $groups | ForEach-Object { Join-Path $tests "$_.java" }
+diff --git a/tools/checks/Test-NativeRendererConditionAudio.ps1 b/tools/checks/Test-NativeRendererConditionAudio.ps1
+index 05020fcc..ed872d88 100644
+--- a/tools/checks/Test-NativeRendererConditionAudio.ps1
++++ b/tools/checks/Test-NativeRendererConditionAudio.ps1
+@@ -97,7 +97,17 @@ final class BreathingSetupAudio {
+     static void endMain(long frame) { throw new AssertionError(); }
+ }
+ '@ | Set-Content -LiteralPath $unselectedAudio -Encoding utf8NoBOM
+-    $platformSources += @($contract,$runtime,$androidFactory,$phaseEngine,$unselectedAudio,
++    $unselectedMix = Join-Path $output 'RoundAudioMix.java'
++    @'
++package io.github.mesmerprism.rustyquest.native_renderer;
++final class RoundAudioMix {
++    static final String TRACK = "atmungsraum-music/backgroundmusic.mp3";
++    static boolean enabled() { return false; }
++    static void attach(android.media.MediaPlayer player, boolean music) { }
++    static void detach(android.media.MediaPlayer player) { }
++}
++'@ | Set-Content -LiteralPath $unselectedMix -Encoding utf8NoBOM
++    $platformSources += @($contract,$runtime,$androidFactory,$phaseEngine,$unselectedAudio,$unselectedMix,
+         (Join-Path $javaRoot 'BreathPhaseAudioAndroidOwner.java'),
+         (Join-Path $testRoot 'BreathPhaseAudioAndroidOwnerTest.java'))
+     $platformOutput=Join-Path $output 'platform-controls';[IO.Directory]::CreateDirectory($platformOutput)|Out-Null

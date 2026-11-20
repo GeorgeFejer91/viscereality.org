@@ -299,6 +299,41 @@ partial fails as expected), while allowing the first Start-clipped packet. This
 cannot prove an entirely absent packet or the final buffered sensor tail after
 producer cutoff. Hardware capture and sample-exact end coverage remain open.
 
+### Canonical round audio and remembered mix — 2026-11-20
+
+- [x] Use the supplied backgroundmusic.mp3 as a separately controlled loop
+  from round start through natural or early end, with pause and resume.
+  Freie Erkundung keeps its authored track and switches gain at its
+  verified speech-to-music boundary. The Haupt-Runde render contains the
+  instructions and cues as a separate layer, including its outro.
+- [x] Put Hintergrundmusik and Sprachanleitung sliders at the bottom of
+  Einstellungen. The Quest saves both levels across launches. Reset restores
+  30% music and 90% instructions. The controller uses authenticated readback
+  and retains edits across delayed replies only while it holds the same lease.
+- [x] Verify the audio layer and package resolution, Android 36 Java
+  compilation, host audio gates, and the focused phone layout at 320 px,
+  landscape and 200% text. The browser playground is live in atmungsraum-ui
+  at 4ed96a8 and passed Chrome playback, persistence and reset checks.
+- [x] Publish the production controller and native overlay at a9b01e5.
+  [Pages run 44708716401](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44708716401)
+  deployed the exact commit. Nine live files match Git. The exact-commit
+  smartphone gate passed 465 states.
+- [x] Build and verify local rehearsal code 55. Its v3 bench signature,
+  ARM64 OpenXR, bundled MP3 bytes and full audio/session closure passed.
+  See the [APK evidence](../quest/apks/README.md#round-audio-rehearsal-candidate-55--2026-11-20).
+  The 919-second default digital mix measured -24.0 LUFS and -4.8 dBTP.
+- [ ] Qualify a signed APK on the Quest 2 with the installed phone controller.
+  Test the instruction-to-music handoff in Freie Erkundung, interruption and
+  natural end, then listen at a fixed Quest system volume. Devices were absent
+  from the local transport at preflight.
+
+The MP3 measured -18.1 LUFS integrated. The default gain places that layer at
+about -28.6 LUFS. The playground narration files measure -19.7 to -20.9 LUFS
+before gain. Meta recommends -16 LUFS for the overall digital Quest mix.
+Its guidance provides no conversion from the Quest 2 volume index to dB SPL
+at the listener. The default is a starting mix for the supplied recordings.
+[Meta loudness guidance](https://developers.meta.com/vr/documentation/native/audio-loudness-meter-using/)
+
 ### Active: Quest background music across releases — 2026-11-19
 
 The user requests the same Quest-owned playback and phone-only controls
