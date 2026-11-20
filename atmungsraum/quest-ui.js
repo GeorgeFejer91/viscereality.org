@@ -10,7 +10,7 @@ import { mountQuestDrive } from './quest-drive-ui.js?v=9';
 import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-completion';
 import { mountQuestionnaireForm } from './questionnaire-form.js?v=2';
 import { captureUtc } from './collection-time.js?v=1';
-import { BreathingSetup } from './breathing-setup.js?v=24';
+import { BreathingSetup } from './breathing-setup.js?v=25';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
@@ -707,7 +707,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     return scenarioChoices.querySelector('input:checked:not([disabled])')?.value ?? '';
   }
 
-  function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
+  function paint({ status, statusTiming, busy, pending, unknown, message } = rehearsal.state) {
     refreshLocalArchives();
     if (status) metaHandoff.observe(rehearsal.gateway, { status, busy, pending, unknown });
     else metaHandoff.disconnected();
@@ -841,7 +841,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const idle = status?.p === 'IDLE' && !active;
     const participantComplete = Boolean(!requiresParticipant || armedWithParticipant && participantId);
     const setupComplete = Boolean(ready && participantComplete);
-    const breath = breathing.update(rehearsal.gateway, { status, busy, pending, unknown }, setupComplete);
+    const breath = breathing.update(rehearsal.gateway, { status, statusTiming, busy, pending, unknown }, setupComplete);
     // This is the operator's judgement of this exact method/attempt, not a
     // sample-level readiness grant. A brief unknown phase cannot erase it.
     const reviewable = breath.available && breath.setup.stage === 'testing' && breath.setup.playing
@@ -853,7 +853,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const batteryReviewed = Boolean(batteryAccepted && batteryAccepted === batteryBinding);
     const selectionAllowed = idle && setupComplete && Boolean(previewAccepted) && reviewable;
     clearTimeout(deviceTimer);
-    if (!document.hidden && device.expiresIn !== null) deviceTimer = setTimeout(() => paint(), device.expiresIn + 1);
+    const expiresIn = Math.min(device.expiresIn ?? Infinity, breath.audioStallExpiresIn ?? Infinity);
+    if (!document.hidden && Number.isFinite(expiresIn)) deviceTimer = setTimeout(() => paint(), expiresIn + 1);
     text(byId('battery-quest'), device.battery.quest);
     text(byId('battery-controllers'), device.battery.controllers);
     text(byId('battery-polar'), device.battery.polar);
@@ -1121,6 +1122,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       : view.recovering ? 'Die Quest prüft die Atemschleife und startet sie neu. Warte auf die Bestätigung. Die Einrichtung beginnt erst danach.'
       : view.pending ? 'Warte auf Bestätigung der Quest …'
       : !view.available ? 'Kein aktueller Atemstatus verfügbar. Prüfe die Verbindung zur Quest.'
+      : view.audioStallMessage ? view.audioStallMessage
       : view.recoveryUnavailable ? view.blockedReason
       : view.message ? view.message
       : view.failure && native.input === 'automatic' ? `Einrichtung fehlgeschlagen: ${view.failureLabel}.`
@@ -1134,7 +1136,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(previewDetail, detail);
     // Review has its own permanent instruction beside the circles. Repeat
     // only an actionable warning/error here, never sample-level readiness.
-    previewDetail.hidden = Boolean(view.recovery) || testingMethod && !view.message && !view.failure
+    previewDetail.hidden = Boolean(view.recovery) || testingMethod && !view.audioStallMessage && !view.message && !view.failure
       && !view.blockedReason && !view.pending && !view.unknown && !view.recovering;
     previewProgressGroup.hidden = !view.showPolarCalibration || !view.available || view.recovering || !(collecting || native?.attempt > 0);
     previewProgress.value = view.progress.value;

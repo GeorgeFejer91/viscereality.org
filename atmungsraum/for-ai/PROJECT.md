@@ -122,7 +122,7 @@ headset and phone.
   PWA fix uses a fresh, monotonic, signed Polar connection generation to reset
   that watermark. Mounted regression tests, 352 Node tests (19 skipped) and
   462 rendered phone states passed. The attended phone used
-  `20261120-saved-headsets`. The `20261120-calibration-order` candidate
+  `20261120-saved-headsets`. The `20261120-audio-stall` candidate
   still needs publication and physical Pixel verification.
 - [x] Reproduce the completion-time connection page with a status gap after
   a signed running observation at 898.760 seconds. During a closeout gap on
@@ -134,6 +134,10 @@ headset and phone.
   screen and returning. Place the shared live panel before the method panel
   when entering calibration or tracking. The mounted re-entry regression
   verifies the same order without layout writes on routine polls.
+- [x] Show headset restart guidance on the phone when a signed calibration
+  failure reports a stalled audio clock and fresh diagnostics show the current
+  output trying to play at frame zero without a timestamp. Device reboot
+  restored audio advancement and calibration on the attended Quest 2.
 - [ ] Complete the attended Developer 38 run. The exact signed APK is installed
   and paired. In the first calibration attempts, Android reported playing
   while its playback head remained at zero and provided no timestamp. The

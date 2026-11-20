@@ -335,6 +335,34 @@ def calibration_panel_order_survives_method_reentry(review):
         page.context.close()
 
 
+def calibration_audio_stall(review):
+    page = review.page(initial(c), viewport={'width': 320, 'height': 640})
+    try:
+        c.enter_participant(page)
+        page.locator('#preview-calibrate').click()
+        expect(page.locator('#calibration-screen')).to_be_visible()
+        before = mutations(page)
+        clock = {'generation': 2, 'platform_generation': 2, 'actual_playing': True,
+                 'intent_playing': True, 'raw_head': 0, 'timestamp_available': False,
+                 'poll_age_ns': 8000000}
+        c.wait_setup(page, stage='waiting', calibration='failed', failure='clock_stalled',
+                     playing=True, clock_valid=False, audio_generation=2, audio_clock=clock,
+                     audio_recovery_available=True)
+        detail = page.locator('#preview-detail')
+        expect(detail).to_be_visible()
+        expect(detail).to_contain_text('Starte das Quest-Headset neu')
+        expect(detail).to_contain_text('Die Audio-Wiedergabe der Quest steht bei 0.')
+        c.wait_setup(page, audio_recovery_available=False)
+        expect(page.locator('#preview-recovery-detail')).to_contain_text('Starte das Quest-Headset neu')
+        expect(page.locator('#preview-recovery')).to_be_visible()
+        expect(detail).to_be_hidden()
+        c.wait_setup(page, audio_recovery_available=True, audio_clock={**clock, 'raw_head': 512})
+        expect(detail).to_contain_text('Die Atemschleife lief nicht weiter')
+        assert mutations(page) == before
+    finally:
+        page.context.close()
+
+
 def completed_session_history(review):
     page = review.page(initial(c, {'scenarios': ['haupt-15'], 'startDelayMs': 2400}))
     c.enter_participant(page)
@@ -647,6 +675,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         assert before == mutations(page)
         compact_setup(review)
         calibration_instruction(review)
+        calibration_audio_stall(review)
         session_particles(review)
         session_particle_layout(review)
         assert not review.errors, review.errors

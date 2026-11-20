@@ -170,7 +170,7 @@ export class BreathingSetup {
       this.waitExpired = false;
     }
     this.gateway = gateway;
-    const { status, busy, pending, unknown } = state;
+    const { status, statusTiming, busy, pending, unknown } = state;
     this.status = status;
     let setup = breathingSetup(status, gateway?.owner);
     if (this.cursor && sameQuest(this.cursor.owner, gateway?.owner) && setup) {
@@ -196,6 +196,22 @@ export class BreathingSetup {
       && !busy && !pending && !unknown && !this.busy;
     const recovering = Boolean(setup?.recovery || this.pending?.recovery);
     const recoveryUnavailable = setup?.clock_valid === false && setup.audio_recovery_available === false;
+    const audioClock = setup?.audio_clock;
+    const audioObservationAge = statusTiming
+      ? status?.o?.a + statusTiming.transportMs + Math.max(0, this.now() - statusTiming.receivedAt)
+        + audioClock?.poll_age_ns / 1000000
+      : Infinity;
+    const audioPlaybackStalled = setup?.calibration === 'failed' && setup.failure === 'clock_stalled'
+      && setup.clock_valid === false && setup.playing
+      && nonnegative(setup.audio_generation) && setup.audio_generation > 0
+      && audioClock?.generation === setup.audio_generation && audioClock.platform_generation === setup.audio_generation
+      && audioClock.actual_playing === true && audioClock.intent_playing === true
+      && audioClock.raw_head === 0 && audioClock.timestamp_available === false
+      && nonnegative(audioClock.poll_age_ns) && audioClock.poll_age_ns <= 250000000
+      && audioObservationAge <= 1500;
+    const audioStallMessage = audioPlaybackStalled
+      ? 'Die Audio-Wiedergabe der Quest steht bei 0. Starte das Quest-Headset neu und beginne die Kalibrierung erneut.'
+      : '';
     const updateAllowed = nativeSessionAllowed(status);
     const idle = ownerIdle && updateAllowed && !this.pending && !this.unknown && !recovering && !recoveryUnavailable;
     const gated = idle && participantReady
@@ -224,6 +240,8 @@ export class BreathingSetup {
     this.view = {
       available, updateRequired: Boolean(status && status.breath_setup !== 1), setup,
       pending: Boolean(this.pending || this.busy), unknown: this.unknown, recovering, recoveryUnavailable,
+      audioStallMessage,
+      audioStallExpiresIn: audioPlaybackStalled ? 1500 - audioObservationAge : null,
       instructionPending, instructionFailed: this.instructionFailed,
       phaseLabel: phaseLabels[phaseIndex] ?? '', radius,
       inputLabel: setup ? inputs[setup.input] : '',
@@ -282,8 +300,9 @@ export class BreathingSetup {
         ? 'Die Anfrage wird nicht erneut gesendet. Bleibt die Antwort offen, starte die Quest-App neu und verbinde das Smartphone erneut.'
         : recovering ? 'Die Quest startet den Takt neu.' : this.unknown ? 'Keine Wiederholung.' : 'Bestätigung offen.'}`,
     } : recoveryUnavailable ? {
-      title: 'Atemschleife benötigt einen App-Neustart', action: '',
-      detail: 'Die Quest meldet, dass eine automatische Audio-Wiederherstellung nicht verfügbar ist. Beende und öffne die Atmungsraum-App im Headset erneut; verbinde danach dieses Smartphone. Das startet die App tatsächlich neu. Eine lokale Bestätigung kann diesen Schritt nicht ersetzen.',
+      title: audioPlaybackStalled ? 'Atemschleife benötigt einen Headset-Neustart' : 'Atemschleife benötigt einen App-Neustart',
+      action: '',
+      detail: audioStallMessage || 'Die Quest meldet, dass eine automatische Audio-Wiederherstellung nicht verfügbar ist. Beende und öffne die Atmungsraum-App im Headset erneut; verbinde danach dieses Smartphone. Das startet die App tatsächlich neu. Eine lokale Bestätigung kann diesen Schritt nicht ersetzen.',
     } : null;
     return this.view;
   }
