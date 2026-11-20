@@ -1,5 +1,41 @@
 # Atmungsraum Quest 2 APKs
 
+## Developer 38 two-session candidate — 2026-11-20
+
+Canonical local Developer package `org.viscereality.atmungsraum.developer`,
+version `0.2.37-dev`, code 38, 73,617,469 bytes. APK SHA-256
+`a6ed80c7b1c48e05aaa89fcc32658113f8d9a2f219a5b8fb89dc422da3cc3bda`.
+The retained v3 signer SHA-256 is
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+
+Apply [two-session-polar.patch](../two-session-polar.patch) to the documented
+Developer 35 source `d114c54027995cff5095763ed11fc464cef959fb`.
+It reconstructs native commit `5d053dba13b17f37924aba3b0c41d5b04b5348e1`,
+tree `706f41dd2ef7c610d9626950a8f35d9b3e7c7181`. The patch is 108,143
+bytes, SHA-256 `6143b75afc652c55cc200db1c60f0e9105d29e1ee32c367123c85921a1bf9a8a`.
+Use the canonical assembly with the retained private experiment assets,
+Developer signer and SDK207. Actual signed 900-second session closure,
+ARM64 identity, v3 signature, 16 KiB alignment and exact patch tree
+reconstruction passed. The serialized native suite passed 935 tests with
+six isolated fixtures ignored.
+
+The overlay includes the next-session coordinator, retained fit across a
+verified same-strap reconnect, and zero-bias state tuning. The personal
+classifier enters a direction at 0.14 calibrated spans/s and uses a quarter
+of motion outside the display limits for slope, with the extra interval
+bounded to one calibrated span per side. The 300 ms derivative filter,
+0.055 spans/s exit threshold and visible 0–1 tilt remain. The existing Polar
+ACC Volume route gains a 150 ms output filter. Its history resets on stale input or
+a source or mapping transition and leaves the input to phase and
+the fit unchanged. The tuner separately evaluates first-cycle endpoint adjustment.
+
+The signed candidate is staged locally. Developer 37 remains running at the
+operator's requested between-session checkpoint. Installation, cold launcher
+and paired Pixel confirmation, then two full attended runs in the same app
+process are pending. The [phone ECG reconnect fix](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
+has separate publication and physical acceptance. Developer 38 has not been
+uploaded to Meta.
+
 ## Developer35 main signal recovery candidate — 2026-11-19
 
 Local replacement candidate `0.2.34-dev`/35 uses native commit

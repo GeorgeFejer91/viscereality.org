@@ -1,5 +1,33 @@
 # Project
 
+### Active: two consecutive attended runs — 2026-11-20
+
+- [x] Developer 37 completed a 900-second main with guidance bias at zero.
+  Unusable data paused at 51.435 seconds. After confirmed Bluetooth loss,
+  the same strap returned on a new connection, calibration remained ready,
+  and manual Continue advanced the original writer. The phone briefly showed
+  its connect page at completion, recovered the existing pairing in about
+  15 seconds and showed the saved recording.
+- [x] Prepare the [signed Developer 38 candidate](../quest/apks/README.md#developer-38-two-session-candidate--2026-11-20).
+  The source overlay includes the second-session and retained-fit changes,
+  the updated zero-bias Personal Tilt classifier and legacy Volume output
+  smoothing. The tuner compared the previous 20.78 seconds per 32-second
+  holdout with 21.93 seconds for the next candidate at zero bias. Cued
+  agreement is a replay measure and wearable acceptance is pending.
+- [ ] Publish and verify the [phone ECG recovery](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
+  on top of the pairing and session-handoff changes already on main. The
+  exact phone candidate passed the 462-state check. The current GitHub
+  account can open the pull request and upstream merge requires write access.
+- [ ] At the next attended start, install Developer 38 over the idle Developer
+  37, confirm the APK bytes and the installed Pixel release with the existing
+  pairing, and confirm the watchdog and zero bias. Leave browser Bluetooth
+  disconnected. Complete two 900-second recordings through the installed
+  phone in the same Quest app process. In the first, exercise true Polar
+  range loss, gated manual Continue, and new-clock ECG drawing. At the
+  first save, check recovery and a blank participant form. Verify a new
+  run generation, fresh calibration, advancing time and the second full
+  save. The operator requested a pause before another start.
+
 ### Active: main Start rejection and retained calibration — 2026-11-19
 
 The user requests diagnosis and repair before repeating the complete main run
