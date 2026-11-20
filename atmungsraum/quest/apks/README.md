@@ -1,5 +1,28 @@
 # Atmungsraum Quest 2 APKs
 
+## Authored full-round recording candidate 54 — 2026-11-20
+
+Package `org.viscereality.atmungsraum.rehearsal`, version
+`0.2.53-full-round` / 54, 126,265,473 bytes. APK SHA-256
+`b86de5f4478e39f810cf62d56ff6a4aaad447baffe959ba5693491ae09943d8a`.
+The v3 certificate matches signed authored code 52
+(`da1e642f68f2516473269240c7bd325a43eab328878f323358891786cef8eb88`).
+
+Apply [the recording overlay](../round-polar-recording.patch) to native
+code-52 source `f6bcfd58b060e6ea21aef7c9152d5adf1b33a11d`. It reconstructs
+tree `e95b3bfe6851ee50d2ac3d975c452ce85e434562` (source
+`aa7fe24c8a02a6c4a1473e6085c958af1c602659`). Build with `-BundledAssets
+-MainStudyAudio` and the retained rehearsal key. The original 900-second
+shared-loop profile is still present. The verified authored plans include
+the Probe introduction, Freie Erkundung instructions and full Haupt outro.
+Full-round plans use the recordings selected in website base `74bd788`.
+
+Actual APK v3, ARM64, 16 KiB alignment, session closure and all 67 contents
+bound by the audio catalog pass. Host tests record and export Polar ECG,
+motion and derived breathing with the existing writer and reject samples
+after the media-ended command is queued. Device qualification and Meta
+publication remain pending.
+
 ## Developer35 main signal recovery candidate — 2026-11-19
 
 Local replacement candidate `0.2.34-dev`/35 uses native commit

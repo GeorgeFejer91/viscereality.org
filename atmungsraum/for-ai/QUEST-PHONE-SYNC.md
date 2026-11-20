@@ -650,6 +650,19 @@ Run the following with synthetic participant identities before study use:
 
 ## Check one Haupt-Runde evidence bundle
 
+The strict checker below qualifies the canonical shared-loop Haupt-Runde at
+900 seconds. For an authored round, retain the same private native, phone and
+Drive evidence. Compare the participant UUID, filename, exact CSV bytes and
+SHA-256 across the three destinations. Match native Official Start and Audio
+Started to the first instruction, and Audio Ended and the single terminal
+receipt to the final clip. Use the signed scenario's phase offsets and the
+native clock timestamps to verify ECG, accelerometer and derived breathing
+coverage during the first instruction and final phase. Check that a pause
+retains observations and that an early stop during the instruction is partial.
+Verify 15,232,176 frames for recorded Probe, 19,715,793 for Freie Erkundung
+and 40,527,900 for authored Haupt. CSV v4 leaves playback cells empty on
+high-rate sample rows, so join against the recorded clock events.
+
 Collect a private copy of the native run directory after the writer has
 settled. Keep the authenticated recording export manifest, the committed
 Pixel CSV and a separately downloaded Drive CSV. For a recovered run, retain

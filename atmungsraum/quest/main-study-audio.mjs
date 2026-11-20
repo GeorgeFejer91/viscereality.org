@@ -21,7 +21,10 @@ const LISTENING_BREAKS = [
   { after: [25580, 25320], resumeAt: 57000 }, // Notice the inhale and exhale.
   { after: [44950, 49850], resumeAt: 93000 }, // Return attention to breathing.
 ];
-const PHASES = [['inhale', 'inhale'], ['hold_in', 'hold'], ['exhale', 'exhale'], ['hold_out', 'hold']];
+const PHASES = [
+  ['inhale', 'zen-inhale'], ['hold_in', 'zen-hold'], ['exhale', 'zen-exhale'], ['hold_out', 'zen-hold'],
+];
+const CANONICAL_CUES = { 'zen-inhale': 'inhale_breath', 'zen-hold': 'hold_in', 'zen-exhale': 'exhale_breath' };
 const INSTRUCTIONS = ['instruction_1', 'instruction_2', 'instruction_3'];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const invalid = detail => { throw new Error('Main study audio: ' + detail); };
@@ -101,11 +104,7 @@ export function planMainStudy(inventory) {
   add(instruction.role, instruction.id, instruction.frames_44100);
 
   const cycles = Math.floor(GUIDED_FRAMES / (PHASES.length * PHASE_FRAMES));
-  const addPhase = ([phase, pool], cycle) => {
-    const ids = inventory.pools[pool];
-    const take = cycle + (phase === 'hold_out' ? 1 : 0);
-    add(phase, ids[take % ids.length], PHASE_FRAMES, cycle + 1);
-  };
+  const addPhase = ([phase, asset], cycle) => add(phase, asset, PHASE_FRAMES, cycle + 1);
   for (let cycle = 0; cycle < cycles; cycle++) {
     for (const phase of PHASES) addPhase(phase, cycle);
   }
@@ -160,26 +159,6 @@ function wavePcm(wave, frames) {
   return wave.subarray(44);
 }
 
-async function loadBreathLayer(sourceRoot, phase) {
-  const read = async name => wavePcm(await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, name + '.wav')), PHASE_FRAMES);
-  const [dry, mixed] = await Promise.all([read(phase), read(phase + '_breath')]);
-  return { dry, mixed };
-}
-
-function mixPhase(voice, layer) {
-  let peak = 0;
-  for (let i = 0; i < voice.length; i += 2) peak = Math.max(peak, Math.abs(voice.readInt16LE(i)));
-  if (!peak) invalid('silent voice phase');
-  const voicePeak = 32768 * 10 ** (-8 / 20);
-  for (let i = 0; i < voice.length; i += 2) {
-    const breath = layer ? layer.mixed.readInt16LE(i) - layer.dry.readInt16LE(i) : 0;
-    const sample = Math.round(voice.readInt16LE(i) * voicePeak / peak + breath);
-    if (Math.abs(sample) > 32767) invalid('phase mix clips');
-    voice.writeInt16LE(sample, i);
-  }
-  return voice;
-}
-
 function encodeWav(pcm) {
   const header = Buffer.alloc(44);
   header.write('RIFF', 0);
@@ -211,31 +190,31 @@ export async function buildMainStudyScenario(sourceRoot, original) {
   const registry = {};
   const files = new Map();
   const prefix = 'assets/audio/scenarios/haupt-15';
-  const layers = {
-    inhale: await loadBreathLayer(sourceRoot, 'inhale'),
-    exhale: await loadBreathLayer(sourceRoot, 'exhale'),
-  };
+  const library = JSON.parse(await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, 'manifest.json'), 'utf8'));
   for (const [index, event] of timeline.events.entries()) {
     if (event.asset === null || Object.hasOwn(registry, event.asset)) continue;
-    const source = assets.get(event.asset);
-    const cutoff = source.phase_source_end_seconds;
-    const tempo = cutoff ? Math.max(1, cutoff / 3.92) : 1;
-    const filters = cutoff
-      ? `atrim=end=${cutoff},atempo=${tempo},afade=t=in:d=0.008,afade=t=out:st=3.92:d=0.065,apad`
-      : source.role === 'hold' ? 'afade=t=in:d=0.008,apad' : '';
-    const args = filters ? ['-af', filters, '-t', '4'] : [];
-    let pcm = await decodePcm(join(sourceRoot, STUDY_DIRECTORY, source.file), args);
-    if (index < 2) {
-      if (pcm.length !== source.frames_44100 * 2) invalid('unexpected control length: ' + source.id);
-      pcm = extendControl(pcm, index, event.duration_frames);
+    const canonicalId = CANONICAL_CUES[event.asset];
+    const cue = canonicalId ? library.blocks[canonicalId] : assets.get(event.asset);
+    let wave;
+    if (canonicalId) {
+      wave = await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, cue.file));
+      wavePcm(wave, event.duration_frames);
+      if (wave.length !== cue.bytes || sha256(wave) !== cue.sha256) {
+        invalid('canonical phase integrity mismatch: ' + canonicalId);
+      }
+    } else {
+      let pcm = await decodePcm(join(sourceRoot, STUDY_DIRECTORY, cue.file));
+      if (index < 2) {
+        if (pcm.length !== cue.frames_44100 * 2) invalid('unexpected control length: ' + cue.id);
+        pcm = extendControl(pcm, index, event.duration_frames);
+      }
+      if (pcm.length !== event.duration_frames * 2 || !pcm.some(byte => byte !== 0)) invalid('unexpected PCM: ' + cue.id);
+      wave = encodeWav(pcm);
     }
-    if (event.cycle !== null) pcm = mixPhase(pcm, layers[source.role]);
-    if (pcm.length !== event.duration_frames * 2 || !pcm.some(byte => byte !== 0)) invalid('unexpected PCM: ' + source.id);
-    const wave = encodeWav(pcm);
     const file = stagedCueFilename(index, event);
-    registry[source.id] = {
-      id: source.id, file, frames: event.duration_frames, bytes: wave.length, sha256: sha256(wave),
-      placeholder: false, text: source.phase_text ?? source.text, source_sha256: source.sha256,
+    registry[event.asset] = {
+      id: event.asset, file, frames: event.duration_frames, bytes: wave.length, sha256: sha256(wave),
+      placeholder: false, text: cue.text, source_sha256: cue.sha256,
     };
     files.set(posix.join(prefix, file), wave);
   }
@@ -249,33 +228,37 @@ export async function buildMainStudyScenario(sourceRoot, original) {
     invalid('post-session outro integrity mismatch');
   }
   wavePcm(outroWav, outro.frames);
-  files.set(outroPath, outroWav);
+  const closing = { id: 'outro', asset: 'outro', offset_frames: TOTAL_FRAMES, duration_frames: outro.frames, cycle: null };
+  const outroFile = stagedCueFilename(timeline.events.length, closing);
+  registry.outro = {
+    id: 'outro', file: outroFile, frames: outro.frames, bytes: outro.bytes,
+    sha256: outro.sha256, placeholder: false, text: outro.text,
+  };
+  files.set(posix.join(prefix, outroFile), outroWav);
   const plan = {
     schema_version: original.schema_version,
     library_manifest_sha256: original.library_manifest_sha256,
     audio_assets_base_directory: original.audio_assets_base_directory,
-    ...timeline, audio_assets: registry,
-    post_session_audio: {
-      path: outroPath, offset_frames: TOTAL_FRAMES, duration_frames: outro.frames,
-      bytes: outro.bytes, sha256: outro.sha256, text: outro.text,
-    },
+    ...timeline,
+    full_round: true,
+    total_frames: TOTAL_FRAMES + outro.frames,
+    events: [...timeline.events, closing],
+    audio_assets: registry,
   };
   const music = assets.get(inventory.background);
   return { plan, files, music: join(sourceRoot, STUDY_DIRECTORY, music.file) };
 }
 
-export async function renderMainStudyTrack({ plan, files, music }, output, { timedOnly = false } = {}) {
+export async function renderMainStudyTrack({ plan, files, music }, output, { codec = 'pcm_s16le' } = {}) {
   const start = plan.events.find(event => event.id === 'inhale').offset_frames;
-  const length = plan.total_frames - start;
+  const length = TOTAL_FRAMES - start;
   const mix = `[1:a]aresample=${plan.sample_rate},aformat=channel_layouts=mono,atrim=end_sample=${length},`
     + `volume=-24dB,afade=t=in:d=2,afade=t=out:ss=${length - 3 * plan.sample_rate}:ns=${3 * plan.sample_rate},`
     + `adelay=${start}S[music];[0:a][music]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=0:latency=1`;
-  const codec = timedOnly ? 'flac' : 'pcm_s16le';
-  const cutoff = timedOnly ? ['-t', String(plan.total_frames / plan.sample_rate)] : [];
   const ffmpeg = spawn('ffmpeg', ['-nostdin', '-v', 'error', '-n', '-f', 's16le', '-ar', String(plan.sample_rate),
     '-ac', '1', '-i', 'pipe:0', '-i', music, '-filter_complex', mix, '-map_metadata', '-1',
     '-metadata', 'comment=Music: Wisps of Whorls by Kevin MacLeod (incompetech.com), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); excerpt, level adjusted and faded.',
-    '-ac', '1', '-sample_fmt', 's16', '-c:a', codec, ...cutoff, output], { stdio: ['pipe', 'ignore', 'inherit'], windowsHide: true });
+    '-ac', '1', '-sample_fmt', 's16', '-c:a', codec, output], { stdio: ['pipe', 'ignore', 'inherit'], windowsHide: true });
   const result = once(ffmpeg, 'close');
   ffmpeg.stdin.on('error', error => { if (error.code !== 'EPIPE') ffmpeg.kill(); });
   for (const event of plan.events) {
@@ -285,7 +268,7 @@ export async function renderMainStudyTrack({ plan, files, music }, output, { tim
       : Buffer.alloc(event.duration_frames * 2);
     if (!ffmpeg.stdin.write(pcm)) await Promise.race([once(ffmpeg.stdin, 'drain'), result]);
   }
-  ffmpeg.stdin.end(files.get(plan.post_session_audio.path).subarray(44));
+  ffmpeg.stdin.end();
   const [exitCode] = await result;
   if (exitCode !== 0) invalid('study mix render failed');
 }
@@ -294,7 +277,7 @@ export async function stageMainStudyTrack(study) {
   const dir = await mkdtemp(join(tmpdir(), 'atmungsraum-main-audio-'));
   const rendered = join(dir, 'haupt-15.flac');
   try {
-    await renderMainStudyTrack(study, rendered, { timedOnly: true });
+    await renderMainStudyTrack(study, rendered, { codec: 'flac' });
     const bytes = await readFile(rendered);
     const path = 'assets/audio/scenarios/haupt-15/haupt-15.flac';
     if (bytes.length < 42 || bytes.length > 32 * 1024 * 1024 || bytes.toString('ascii', 0, 4) !== 'fLaC'
@@ -323,16 +306,28 @@ export async function buildProbeStudyScenario(sourceRoot, original, study) {
   const totalFrames = 300 * RATE;
   if (original.scenario_id !== 'probe-5' || original.total_frames !== totalFrames
       || original.sample_rate !== RATE) invalid('probe must be five minutes');
-  const events = study.plan.events.filter(event => event.offset_frames >= OPENING_FRAMES
-    && event.offset_frames < OPENING_FRAMES + totalFrames)
-    .map(event => ({ ...event, offset_frames: event.offset_frames - OPENING_FRAMES }));
-  if (events.length !== totalFrames / PHASE_FRAMES || events.at(-1).id !== 'exhale') {
+  const guidance = study.plan.events.filter(event => event.offset_frames >= OPENING_FRAMES
+    && event.offset_frames < OPENING_FRAMES + totalFrames);
+  if (guidance.length !== totalFrames / PHASE_FRAMES || guidance.at(-1).id !== 'exhale') {
     invalid('probe guidance must end after the final exhale');
   }
 
   const files = new Map();
-  const registry = {};
   const cueDirectory = 'assets/audio/scenarios/probe-5';
+  const instructionFrames = instruction.frames_44100;
+  const opening = { id: 'instruction', asset: instruction.id, offset_frames: 0, duration_frames: instructionFrames, cycle: null };
+  const instructionFile = stagedCueFilename(0, opening);
+  const wav = encodeWav(pcm);
+  const registry = {
+    [instruction.id]: {
+      id: instruction.id, file: instructionFile, frames: instructionFrames, bytes: wav.length,
+      sha256: sha256(wav), placeholder: false, text: instruction.text,
+    },
+  };
+  files.set(posix.join(cueDirectory, instructionFile), wav);
+  const events = [opening, ...guidance.map(event => ({
+    ...event, offset_frames: event.offset_frames - OPENING_FRAMES + instructionFrames,
+  }))];
   for (const [index, event] of events.entries()) {
     if (Object.hasOwn(registry, event.asset)) continue;
     const previous = study.plan.audio_assets[event.asset];
@@ -341,22 +336,16 @@ export async function buildProbeStudyScenario(sourceRoot, original, study) {
     files.set(posix.join(cueDirectory, file), study.files.get(posix.join('assets/audio/scenarios/haupt-15', previous.file)));
   }
 
-  const wav = encodeWav(pcm);
-  const preludePath = posix.join(STUDY_DIRECTORY, 'probe-instructions.wav');
-  files.set(preludePath, wav);
   const plan = {
     schema_version: original.schema_version,
     scenario_id: 'probe-5',
     library_manifest_sha256: original.library_manifest_sha256,
     audio_assets_base_directory: original.audio_assets_base_directory,
     sample_rate: RATE,
-    total_frames: totalFrames,
+    full_round: true,
+    total_frames: totalFrames + instructionFrames,
     events,
     audio_assets: registry,
-    pre_session_audio: {
-      path: preludePath, duration_frames: instruction.frames_44100,
-      bytes: wav.length, sha256: sha256(wav), text: instruction.text,
-    },
   };
   return { plan, files };
 }

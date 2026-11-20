@@ -1,0 +1,71 @@
+{
+  "id": "inhale",
+  "sample_rate": 44100,
+  "duration_seconds": 4,
+  "file": "inhale.wav",
+  "text": "Einatmen, zwei, drei, vier",
+  "frames": 176400,
+  "bytes": 352844,
+  "sha256": "8a8cd1ee73e5f5938526ed9a931b9f22108bd2b52478f535bcfc45dc133a09bf",
+  "processing": {
+    "source": "ElevenLabs Zen – Meditation German",
+    "source_sha256": "2ffd7dbb4653cb4508616aa9b70f22769ebdfc90ae21a26c36562e02cbb92399",
+    "master_wav_sha256": "ab27f1a9a95a3c42d8030db800201b4ac7f4dc218baa68c9e17695f8b75999ca",
+    "speech_time_stretch": false,
+    "alignment": "Whisper small German word timestamp estimates, refined against the decoded waveform for editing",
+    "source_whisper_words": [
+      {
+        "word": " Einatmen,",
+        "start": 0.0,
+        "end": 1.0,
+        "probability": 0.9062214891115824
+      },
+      {
+        "word": " zwei,",
+        "start": 1.78,
+        "end": 2.04,
+        "probability": 0.8624974489212036
+      },
+      {
+        "word": " drei,",
+        "start": 2.86,
+        "end": 3.24,
+        "probability": 0.9940038323402405
+      },
+      {
+        "word": " vier",
+        "start": 3.94,
+        "end": 4.36,
+        "probability": 0.9970279335975647
+      }
+    ],
+    "segments": [
+      {
+        "text": "Einatmen",
+        "start_frame": 441,
+        "end_frame": 49613
+      },
+      {
+        "text": "zwei",
+        "start_frame": 56228,
+        "end_frame": 93052
+      },
+      {
+        "text": "drei",
+        "start_frame": 99667,
+        "end_frame": 131639
+      },
+      {
+        "text": "vier",
+        "start_frame": 138254,
+        "end_frame": 175078
+      }
+    ],
+    "inter_segment_silence_frames": [
+      6615,
+      6615,
+      6615
+    ],
+    "trailing_silence_frames": 1322
+  }
+}

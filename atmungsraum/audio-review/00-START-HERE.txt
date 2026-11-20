@@ -1,11 +1,11 @@
 ATMUNGSRAUM AUDIO REVIEW
 Recorded-speech snapshot: 2026-11-06
 
-CURRENT UI UPDATE: Runtime now uses silent placeholders in
-assets/audio/scenarios/<scenario>/. Their per-asset TXT files are draft intended
-wording, not speech in the WAVs. Final narration awaits approval. The numbered
-scenario manifests/CSVs are current; the speech walkthrough and text scores
-below describe retained original recordings and are a historical review snapshot.
+CURRENT AUDIO UPDATE (2026-11-20): The approved Zen voice supplies all cyclic
+inhale, hold and exhale cues. The numbered scenario manifests and CSVs under
+assets/audio/scenarios/ give the current scripts and timings. Other slots there
+retain their silent placeholders. The walkthroughs and text scores below record
+the 2026-11-06 review snapshot.
 
 Start with 02-PARTICIPANT-EXPERIENCE.txt for the listener's experience.
 Read 01-PROTOCOL-INVENTORY.txt for the scripts, assets and generation rules.

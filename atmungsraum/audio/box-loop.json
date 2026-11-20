@@ -12,7 +12,7 @@
       "duration_frames": 176400,
       "cue": {
         "path": "assets/audio/box-breathing/de/soft-v2/inhale.wav",
-        "sha256": "2f95ae8973dca77b5158fa009977fc6cc357d2b018381bf875e50f9702444127",
+        "sha256": "8a8cd1ee73e5f5938526ed9a931b9f22108bd2b52478f535bcfc45dc133a09bf",
         "bytes": 352844,
         "frames": 176400
       }
@@ -23,7 +23,7 @@
       "duration_frames": 176400,
       "cue": {
         "path": "assets/audio/box-breathing/de/soft-v2/hold_in.wav",
-        "sha256": "7768006729358f242df33325189c5e428b4587e9800a6a9a31a71a0644012f43",
+        "sha256": "9d9b94628cdb4cc04de5412fd6c141beaabf758cb5ee7a6077648d6cc59de073",
         "bytes": 352844,
         "frames": 176400
       }
@@ -34,7 +34,7 @@
       "duration_frames": 176400,
       "cue": {
         "path": "assets/audio/box-breathing/de/soft-v2/exhale.wav",
-        "sha256": "8c55fb895f8b8406b9461648f4250ee39d5e574e73e4a38b8991409fd2571a67",
+        "sha256": "a0928afc435abf65771ad24984f5567154b50c1a1ad363c1bc7886bfc3e690d7",
         "bytes": 352844,
         "frames": 176400
       }
@@ -45,7 +45,7 @@
       "duration_frames": 176400,
       "cue": {
         "path": "assets/audio/box-breathing/de/soft-v2/hold_out.wav",
-        "sha256": "7768006729358f242df33325189c5e428b4587e9800a6a9a31a71a0644012f43",
+        "sha256": "9d9b94628cdb4cc04de5412fd6c141beaabf758cb5ee7a6077648d6cc59de073",
         "bytes": 352844,
         "frames": 176400
       }
