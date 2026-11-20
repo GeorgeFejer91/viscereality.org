@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="./style.css?v=20261120-volume-round-audio">
   <link rel="stylesheet" href="./questionnaire.css?v=1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261120-volume-round-audio"></script>
+  <script type="module" src="./app.js?v=20261120-sphere-radius"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -420,16 +420,16 @@
         <div id="quest-playback" hidden>
           <figure id="session-scene" aria-labelledby="session-volume-title" hidden>
             <figcaption>
-              <strong id="session-volume-title" data-measure>Kugelvolumen</strong>
+              <strong id="session-volume-title" data-measure>Kugelradius</strong>
               <span id="session-volume-status" data-measure>Warte auf Quest.</span>
             </figcaption>
             <div id="session-volume-plot" class="session-volume-plot" hidden>
               <div class="session-volume-axis" aria-hidden="true">
-                <span id="session-volume-max" data-measure data-measure-sample="88,8 m³" data-live-value>—</span>
-                <span id="session-volume-min" data-measure data-measure-sample="88,8 m³" data-live-value>—</span>
+                <span id="session-volume-max" data-measure data-measure-sample="100 %" data-live-value>—</span>
+                <span id="session-volume-min" data-measure data-measure-sample="100 %" data-live-value>—</span>
               </div>
               <svg id="session-volume-chart" viewBox="0 0 400 70" preserveAspectRatio="none"
-                   role="img" aria-label="Kugelvolumen in Kubikmetern über 16 Sekunden. Soll nach Atemtakt und Ist von der Quest.">
+                   role="img" aria-label="Kugelradius von 0 bis 100 Prozent über 16 Sekunden. Soll nach Atemtakt und Ist von der Quest.">
                 <path class="session-volume-grid" d="M0 4H400 M0 35H400 M0 66H400 M100 4V66 M200 4V66 M300 4V66"/>
                 <path id="session-volume-soll" class="session-volume-soll" d=""/>
                 <path id="session-volume-ist" class="session-volume-ist" d=""/>
@@ -437,8 +437,8 @@
               <div class="session-volume-time" aria-hidden="true"><span data-measure>−16 s</span><span data-measure>0 s</span></div>
             </div>
             <div id="session-volume-key" class="session-volume-key" hidden>
-              <div class="session-volume-key-soll"><span data-measure>Soll</span><span id="session-volume-soll-value" data-measure data-measure-sample="88,8 m³" data-live-value>—</span></div>
-              <div class="session-volume-key-ist"><span data-measure>Ist</span><span id="session-volume-ist-value" data-measure data-measure-sample="88,8 m³" data-live-value>—</span></div>
+              <div class="session-volume-key-soll"><span data-measure>Soll</span><span id="session-volume-soll-value" data-measure data-measure-sample="100 %" data-live-value>—</span></div>
+              <div class="session-volume-key-ist"><span data-measure>Ist</span><span id="session-volume-ist-value" data-measure data-measure-sample="100 %" data-live-value>—</span></div>
             </div>
           </figure>
           <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure data-measure-sample="88:88 / 88:88" data-live-value>00:00</p>

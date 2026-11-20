@@ -87,6 +87,14 @@
   was rejected after the run generation advanced. The writer stayed
   closed and the fit stayed ready. Capture the signed Arm receipt before
   classifying this failure.
+- [x] After reopening the idle Developer 41 app, repeat the two Volume
+  cycles at zero bias and start a real Haupt-Runde. Generation 1 and its
+  writer advanced with signed ECG and both branches of the live chart
+  populated. The earlier Start rejection remains unclassified.
+- [ ] Publish the live chart's fixed 0–100% radius scale. Use the same
+  authenticated renderer progress and whole-percent labels as Bewegung
+  prüfen. Use signed audio cue progress for Soll. Keep the active physical
+  session on its loaded PWA through closeout.
 - [x] Compare adaptive axes, state/volume fusion and renderer radius on
   the 13 available guided browser recordings. Six recordings were held out.
   On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,

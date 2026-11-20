@@ -5,32 +5,24 @@ const freshnessMs = 500;
 const maximumGapMs = 320;
 const maximumCueOffsetNs = 250000000n;
 const maximumRadius = 100;
-const volumeUnit = 4 * Math.PI / 3;
 const normalized = value => Number.isFinite(value) && value >= 0 && value <= 1;
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
 const validRadius = value => Number.isFinite(value) && value > 0 && value <= maximumRadius;
 const timestamp = value => typeof value === 'string' && /^[1-9][0-9]{0,19}$/.test(value);
 
-export const sphereVolume = radius => volumeUnit * radius ** 3;
-
 function validSample(sample) {
-  return sample?.v === 1 && validRadius(sample.radius_m)
+  return sample?.v === 1 && validRadius(sample.radius_m) && normalized(sample.progress01)
     && nonnegative(sample.render_generation) && sample.render_generation > 0
     && nonnegative(sample.frame) && nonnegative(sample.settings_revision)
     && nonnegative(sample.age_ns) && sample.age_ns <= freshnessMs * 1000000 && timestamp(sample.observed_ns);
 }
 
-function signedRange(sample) {
-  const { radius_min_m: low, radius_max_m: high } = sample;
-  return validRadius(low) && validRadius(high) && low <= high ? [low, high] : null;
-}
-
-function draw(points, edge, low, high) {
+function draw(points, edge) {
   let path = '';
   let prior = false;
   for (const point of points) {
     const x = 400 * (1 - (edge - point.at) / windowMs);
-    const y = 66 - 62 * (point.value - low) / (high - low);
+    const y = 66 - 62 * point.value;
     const location = `${x.toFixed(1)} ${y.toFixed(1)}`;
     path += `${path ? ' ' : ''}${prior && !point.gap ? 'L' : 'M'}${location}`;
     if (!prior || point.gap) path += ' h0.01';
@@ -54,7 +46,6 @@ export class LiveSphereVolume {
   clearHistory() {
     this.samples = [];
     this.cues = [];
-    this.range = null;
     this.clock = null;
     this.interrupt();
   }
@@ -102,7 +93,7 @@ export class LiveSphereVolume {
       || sample.render_generation === prior.generation && sample.settings_revision < prior.settings)) return;
     const changed = prior && (sample.render_generation !== prior.generation || sample.settings_revision !== prior.settings);
     if (prior && (stamp <= prior.stamp || !changed && sample.frame <= prior.frame)) return;
-    // A new revision has its own physical scale. No prior curve crosses it.
+    // A new profile or renderer starts a new trace on the same percentage scale.
     if (changed) this.clearHistory();
     this.cursor = { generation: sample.render_generation, settings: sample.settings_revision, frame: sample.frame, stamp };
     this.clock ??= { stamp, at: now - age };
@@ -118,24 +109,18 @@ export class LiveSphereVolume {
     }
     const previous = this.samples.at(-1);
     if (previous && at <= previous.at) { this.interrupt(); return; }
-    const range = signedRange(sample);
-    if (this.range && range && (range[0] !== this.range[0] || range[1] !== this.range[1])) {
-      this.interrupt();
-      return;
-    }
-    this.range ??= range;
     this.samples.push({
-      at, expires: now + freshnessMs - age, value: sphereVolume(sample.radius_m),
+      at, expires: now + freshnessMs - age, value: sample.progress01,
       gap: this.interrupted || previous && (at - previous.at > maximumGapMs || previous.expires < now),
     });
     this.samples = this.samples.filter(point => point.at >= at - windowMs - freshnessMs).slice(-256);
     this.interrupted = false;
-    this.updateCue(observation, range, stamp, at, age, now);
+    this.updateCue(observation, stamp, at, age, now);
   }
 
-  updateCue(observation, range, renderStamp, renderTime, renderAge, now) {
+  updateCue(observation, renderStamp, renderTime, renderAge, now) {
     const sample = observation.sample;
-    if (!range || !normalized(sample.cue_progress01) || !timestamp(sample.cue_observed_ns)
+    if (!normalized(sample.cue_progress01) || !timestamp(sample.cue_observed_ns)
       || !nonnegative(sample.audio_generation) || sample.audio_generation === 0 || sample.audio_generation !== this.audio) {
       this.cueInterrupted = true;
       return;
@@ -150,7 +135,7 @@ export class LiveSphereVolume {
       return;
     }
     const previous = this.cues.at(-1);
-    const value = sphereVolume(range[0] + (range[1] - range[0]) * sample.cue_progress01);
+    const value = sample.cue_progress01;
     if (this.pauseStamp !== null && stamp <= this.pauseStamp || previous && stamp < previous.stamp) {
       this.cueInterrupted = true;
       return;
@@ -179,16 +164,13 @@ export class LiveSphereVolume {
     const latestCue = cues.at(-1);
     const live = Boolean(!paused && !this.interrupted && latest && now <= latest.expires);
     const cueLive = Boolean(live && !this.cueInterrupted && latestCue && now <= latestCue.expires);
-    const upper = Math.max(this.range ? sphereVolume(this.range[1]) : 1, ...points.map(point => point.value));
-    const lower = Math.min(this.range ? sphereVolume(this.range[0]) : 0, ...points.map(point => point.value));
-    const high = lower === upper ? upper * 1.01 : upper;
     return {
       paused, live, ttl: live ? Math.max(0, Math.min(latest.expires, cueLive ? latestCue.expires : Infinity) - now) : null,
       actual: live ? latest.value : null,
       intended: cueLive ? latestCue.value : null,
-      actualPath: draw(points, edge, lower, high),
-      intendedPath: draw(cues, edge, lower, high),
-      bounds: [lower, high], confirmedBounds: this.range !== null,
+      actualPath: draw(points, edge),
+      intendedPath: draw(cues, edge),
+      bounds: [0, 1],
     };
   }
 }

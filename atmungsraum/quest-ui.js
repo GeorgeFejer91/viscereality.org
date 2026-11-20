@@ -14,7 +14,7 @@ import { captureUtc } from './collection-time.js?v=1';
 import { BreathingSetup, guidedCalibration } from './breathing-setup.js?v=26';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
-import { LiveSphereVolume } from './live-sphere-volume.js?v=1';
+import { LiveSphereVolume } from './live-sphere-volume.js?v=2';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=3';
 import { KioskControl } from './kiosk-control.js?v=10';
 import { ApkRelease } from './quest-release.js?v=2';
@@ -26,6 +26,7 @@ import { OperatorDeviceHealth } from './operator-device-health.js?v=3';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
+const formatRadiusPercent = progress => progress === null ? '—' : `${Math.round(progress * 100)} %`;
 const needsDialogFocus = dialog => !document.activeElement || document.activeElement === document.body
   || dialog.contains(document.activeElement);
 const operatorCondition = 'condition-a';
@@ -411,8 +412,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const volumePaths = [byId('session-volume-ist'), byId('session-volume-soll')];
   const volumeValues = [byId('session-volume-ist-value'), byId('session-volume-soll-value')];
   const volumeBounds = [byId('session-volume-min'), byId('session-volume-max')];
-  const volumeFormat = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
-  const smallVolumeFormat = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 3 });
   const ecgDisplay = new LiveEcgDisplay();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let animationFrame = 0;
@@ -1292,12 +1291,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     sessionScene.toggleAttribute('data-paused', frame.paused);
     if (volumePlot.hidden === hasData) volumePlot.hidden = !hasData;
     if (volumeKey.hidden === hasData) volumeKey.hidden = !hasData;
-    const format = value => value === null ? '—' : `${(value > 0 && value < 1 ? smallVolumeFormat : volumeFormat).format(value)} m³`;
     [frame.actualPath, frame.intendedPath].forEach((path, i) => {
       if (volumePaths[i].getAttribute('d') !== path) volumePaths[i].setAttribute('d', path);
     });
-    [frame.actual, frame.intended].forEach((value, i) => text(volumeValues[i], format(value)));
-    frame.bounds.forEach((value, i) => text(volumeBounds[i], frame.actualPath ? format(value) : '—'));
+    [frame.actual, frame.intended].forEach((value, i) => text(volumeValues[i], formatRadiusPercent(value)));
+    frame.bounds.forEach((value, i) => text(volumeBounds[i], frame.actualPath ? formatRadiusPercent(value) : '—'));
     text(volumeStatus, frame.paused ? 'Pausiert.'
       : !frame.live ? 'Warte auf Quest.'
       : frame.intended === null ? 'Sollwert fehlt.' : 'Quest live');
@@ -1326,7 +1324,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (!actualCircle.hidden) {
         actualCircle.style.transform = `scale(${current.actualRadius})`;
         actualCircle.toggleAttribute('data-stale', !current.actualLive);
-        text(actualVolume, `${Math.round(current.actualProgress * 100)} %`);
+        text(actualVolume, formatRadiusPercent(current.actualProgress));
         text(actualStatus, current.actualLive ? 'IST-Radius · aktuell: ' : 'IST-Radius · eingefroren, warte auf Renderer: ');
       } else text(actualStatus, breathing.view?.setup && !Object.hasOwn(breathing.view.setup, 'renderer')
         ? 'IST-Radius nicht verfügbar · Quest-App aktualisieren.' : 'IST-Radius nicht verfügbar · warte auf aktuellen Renderer.');
