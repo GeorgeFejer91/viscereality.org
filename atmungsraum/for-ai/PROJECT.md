@@ -2444,6 +2444,13 @@ cloud-backed files; it was left untouched. The verified runtime commit
 
 ### Main study audio — 2026-11-16
 
+Local Zen meditation audition (2026-11-20). The two German cues in
+`audio-assets/ready-to-listen/zen-meditation-de/` each contain 192,000 PCM
+frames at 48 kHz. Whisper confirmed the words in both exports. The three
+inhale gaps measure 150 ms each, and the connected hold has 2.612 seconds
+of trailing silence. The timing and exact text sit beside each local WAV.
+The next step is listening review before any runtime selection.
+
 - [x] Prepare two control WAVs, one instructions WAV, four reusable breathing
   WAVs and `end.wav`. The [cue library](../assets/audio/scenarios/haupt-15/cue-placeholders/README.md)
   owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
