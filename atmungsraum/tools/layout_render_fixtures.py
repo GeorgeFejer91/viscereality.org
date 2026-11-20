@@ -294,14 +294,20 @@ def capture_poll_cadence(review,c):
     page.clock.run_for(1500)
     def counts():
         return page.evaluate('({status:window.reviewStatusReads??0,ecg:window.reviewEcgCalls??0,receipts:(window.reviewSetupReceiptQueries??[]).length,max:window.reviewStatusMaxInFlight??0})')
+    def sample():
+        # Count only the four simulated seconds, including on a busy CI worker.
+        page.clock.pause_at(page.evaluate('(Date.now() + 250) / 1000'))
+        before=counts()
+        page.clock.run_for(4000)
+        after=counts()
+        page.clock.resume()
+        return before,after
     observations=[]
     for step in ('tracking','input','settings'):
         if step!='tracking':
             go(page,step)
             page.clock.run_for(1500)
-        before=counts()
-        page.clock.run_for(4000)
-        after=counts()
+        before,after=sample()
         delta={key:after[key]-before[key] for key in ('status','ecg','receipts')}
         # Forty preview-only reads plus the unchanged four ordinary status reads.
         assert (43<=delta['status']<=45 if step=='tracking' else 3<=delta['status']<=5),(step,delta)
@@ -330,9 +336,7 @@ def capture_poll_cadence(review,c):
     page.locator('#preview-calibrate').click()
     expect(page.locator('#calibration-screen')).to_be_visible()
     page.clock.run_for(1500)
-    before=counts()
-    page.clock.run_for(4000)
-    after=counts()
+    before,after=sample()
     assert 43<=after['status']-before['status']<=45,(before,after)
     assert 3<=after['ecg']-before['ecg']<=5,(before,after)
     assert after['max']==1 and after['receipts']==before['receipts'],(before,after)
@@ -347,9 +351,7 @@ def capture_poll_cadence(review,c):
         +"sessionStorage.setItem('atmungsraum-breathing-setup-pending',JSON.stringify("+json.dumps(journal)+')) ;')
     expect(page.locator('#recovery-screen')).to_be_visible()
     page.clock.run_for(1500)
-    before=counts()
-    page.clock.run_for(4000)
-    after=counts()
+    before,after=sample()
     assert 3<=after['receipts']-before['receipts']<=5,(before,after)
     assert 3<=after['status']-before['status']<=5,(before,after)
     assert mutations(page)['setup']==[]

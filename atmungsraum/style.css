@@ -571,7 +571,9 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
   min-inline-size: min(100%, 8.2ch); font-variant-numeric: tabular-nums; font-weight: 700;
 }
 #session-scene[data-paused] .session-volume-key [data-live-value] { display: none; }
-#session-scene[data-paused] #session-volume-chart { block-size: clamp(28px, 7dvh, 60px); }
+#session-scene[data-paused] #session-volume-chart {
+  block-size: max(28px, calc(clamp(28px, 7dvh, 60px) - max(0px, 1rem - 16px)));
+}
 @media (max-height: 480px) {
   #session-volume-chart { block-size: clamp(28px, 8dvh, 58px); }
 }
