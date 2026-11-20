@@ -517,7 +517,9 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
 .session-volume-axis { flex-direction: column; text-align: end; inline-size: 7.8ch; }
 .session-volume-time { grid-column: 2; }
 #session-volume-chart {
-  display: block; inline-size: 100%; block-size: clamp(40px, 11dvh, 90px);
+  display: block; inline-size: 100%;
+  /* Give enlarged text room before reducing the available chart area. */
+  block-size: max(38px, calc(clamp(38px, 11dvh, 90px) - max(0px, 1.5rem - 24px)));
   color: var(--site-blue); border: 1px solid #696969; border-radius: .25rem;
 }
 #session-volume-chart path { fill: none; vector-effect: non-scaling-stroke; stroke-width: 1.75; stroke-linecap: round; }
