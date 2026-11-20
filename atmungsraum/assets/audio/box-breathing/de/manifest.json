@@ -39,7 +39,7 @@
       "text": "Je vier Sekunden: ein, halten, aus, halten.",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "6008310b23ad8692fef3a4d2e125a09abc578120575597c79d8605e0776f7075",
+      "sha256": "af6526aa067986ad245892e81cbc9d8660fb0d0c6ec9e1c9d0fe7d76e5c42dd4",
       "processing": {
         "source_mp3_sha256": "c88ecb43d2e9c4f4536bcda934ccf39b18a6c7c1426dc4dfa1aad976ab7e490f",
         "source_duration_seconds": 4.458231292517007,
@@ -59,7 +59,7 @@
       "text": "Durch die Nase einatmen.",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "0ea9ded3391672489a0f4c78f3f0e24fe22c4e24a991c57d2c10bbbea033c764",
+      "sha256": "d9de5643bbb28198fc91dfdf80b8e1f2530128cc697fdb05f6bfb1cbd2c7bd40",
       "processing": {
         "source_mp3_sha256": "df26d58be7be25a372af7f5b1330e6eb7f5b01c6b9cbfac54dc9677dc0e80524",
         "source_duration_seconds": 1.811156462585034,
@@ -79,7 +79,7 @@
       "text": "Atem halten.",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "5a9a7d0d94d487e5d035521aaf0ed496ea8b2b4342d799d2447f52adae6fbb12",
+      "sha256": "409eb3e6df3bf96177580f79690b6530d2679b6b34eba622c312312a25023b87",
       "processing": {
         "source_mp3_sha256": "1155dbe53e8e710af7c5215bd05ecdef4c86088f62e4a7a80e4fa6f48797847c",
         "source_duration_seconds": 1.207437641723356,
@@ -99,7 +99,7 @@
       "text": "Durch den Mund ausatmen.",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "24bba7c63ce43e765f1e3e823063855e4769c33bfb5d2c805972eb8703509cc8",
+      "sha256": "ebda74520f19873baf75eb62ba0d562770a578d8aa9ae873314cb578c7d9deba",
       "processing": {
         "source_mp3_sha256": "57dec3fb757e70810b4b66d77eec935c72e333ca2da9cabea7d6770bc8140e52",
         "source_duration_seconds": 1.8575963718820863,
@@ -119,7 +119,7 @@
       "text": "Atem halten.",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "5a9a7d0d94d487e5d035521aaf0ed496ea8b2b4342d799d2447f52adae6fbb12",
+      "sha256": "409eb3e6df3bf96177580f79690b6530d2679b6b34eba622c312312a25023b87",
       "processing": {
         "source_mp3_sha256": "1155dbe53e8e710af7c5215bd05ecdef4c86088f62e4a7a80e4fa6f48797847c",
         "source_duration_seconds": 1.207437641723356,
@@ -140,7 +140,7 @@
       "text": "Atme jetzt wieder ganz natürlich.",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "e4d71b22f107c4bddfaee651ac616ab1d76a2c65fe48a5ac391d29b7ed9f20d5",
+      "sha256": "9408e71bd140e34a082ed74af39863b1d52227cc955f7a1a6ca24b31ca206b7d",
       "processing": {
         "source_mp3_sha256": "1335c26fb960e2f2b785aee91a14064039b995d3717e5615a79573058789d1bf",
         "source_duration_seconds": 2.3219954648526078,

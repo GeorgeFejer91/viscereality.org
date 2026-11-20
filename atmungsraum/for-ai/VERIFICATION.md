@@ -1,5 +1,34 @@
 # Verification
 
+## Speech loudness mastering — 2026-11-20
+
+Verified the original and revised bytes for 67 distinct speech recordings
+and their 103 tracked paths. FFmpeg's gated integrated loudness (dual-mono
+measurement for mono cues) spans −24.67 to −14.36 LUFS before and −21.17 to
+−20.76 LUFS after. The highest revised true peak is −2.79 dBTP. Every file
+keeps its decoded sample rate, channels and frame count. WAVs retain 16-bit
+PCM, and MP3s were encoded at LAME quality 0 with gapless sample counts
+checked. In both breath overlays, subtracting the dry speech from the mix
+yields the exact same PCM residual before and after. The Freie Erkundung
+music tail measures −30.59 LUFS in both versions. Silence, instrumental
+files and transcripts retain their original bytes.
+
+The scenario generator and CSV checks pass for all six plans, 53 numbered
+cues and 890 events. The 20 sample asset identities pass. The full Node run
+passes 352 tests with 19 native-fixture skips, including ordinary and authored
+Quest audio staging. The original published asset baseline is
+`74bd788fd9e2023b9172262acfa38ad1868daa61` (Pages run `44695786057`).
+The bench headset and Pixel have no ADB connection from this host. ADB's
+mDNS service discovery returned no targets. Installed APK playback and
+physical acceptance remain pending.
+
+The reconciled `20261120-speech-leveling` entry retains the published Volume
+and round-audio PWA changes. Its browser audio loader revalidates WAVs when
+reading a revised manifest. A stale-cache regression failed before the fix
+and passed after it. The combined Node suite passes 363 with 19 native-fixture
+skips. The scenario and context checks pass, and Chrome plays all 20 local
+voice samples one at a time.
+
 ## Autonomous device validation
 
 This is the standing verification procedure for every applicable app, APK,

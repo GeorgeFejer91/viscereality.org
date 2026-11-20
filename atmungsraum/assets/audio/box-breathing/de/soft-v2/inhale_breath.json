@@ -6,7 +6,7 @@
   "text": "Einatmen, zwei, drei, vier",
   "frames": 176400,
   "bytes": 352844,
-  "sha256": "203fecc48da9d940f9c492255067e01f620de5a1d1399e70816fdf05641188e3",
+  "sha256": "eb488b3f1dd3606eae23b4420f8d4158add72babf95bc7045cd961b6fe2ce94a",
   "processing": {
     "voice_block": "inhale",
     "breath_peak_dbfs": -20,
@@ -16,6 +16,6 @@
     "source_duration_seconds": 3.502018140589569,
     "breath_tempo_factor": 0.8755045351473922,
     "target_duration_seconds": 4,
-    "voice_sha256": "8a8cd1ee73e5f5938526ed9a931b9f22108bd2b52478f535bcfc45dc133a09bf"
+    "voice_sha256": "1c65f1d4cbafd08005e81e9fbcdf5a1933492e1be47708326b28bd411e919f68"
   }
 }

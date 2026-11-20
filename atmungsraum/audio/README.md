@@ -8,6 +8,18 @@ TXT/JSON/CSV. Other slots in the numbered packs retain their silent placeholders
 JSON determines timing and order.
 CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`.
 
+## Speech loudness
+
+The tracked spoken recordings use a −21 LUFS gated integrated loudness
+target so that a future speech-volume control can apply one gain to all cues.
+Measure mono clips as dual mono for stereo playback. Apply fixed gain and
+check peak headroom and decoded frame counts. In the inhale and exhale mixes,
+apply the dry cue's gain to the speech layer and retain the breath layer at
+its authored level. For Freie Erkundung, measure the first 960,768 frames and
+return to unity gain at the existing music boundary. Preserve transcripts and
+regenerate the scenario and Quest hash bindings after editing the audio.
+See [verification](../for-ai/VERIFICATION.md#speech-loudness-mastering--2026-11-20).
+
 ## Session timing
 
 **Main round (2026-11-06):** Haupt-Runde goes directly to one exactly 15-minute

@@ -1,5 +1,14 @@
 # Project
 
+### Speech loudness mastering — 2026-11-20
+
+- [x] Level all 103 tracked spoken WAV/MP3 files (67 distinct recordings) to
+  −21 LUFS within 0.3 LU and rebind the browser and Quest audio assets. See
+  [verification](VERIFICATION.md#speech-loudness-mastering--2026-11-20).
+- [ ] Verify Pages and the live audio bytes for the reconciled release.
+- [ ] Package the leveled cues in the next qualified Developer APK, then
+  confirm spoken playback on the lab Quest with the installed Pixel controller.
+
 ### Active: two consecutive attended runs — 2026-11-20
 
 - [x] Developer 37 completed a 900-second main with guidance bias at zero.

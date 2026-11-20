@@ -1,8 +1,8 @@
 # German main study recordings
 
 [manifest.json](manifest.json) lists the names, original attachments, durations,
-SHA-256 hashes, transcripts and playback roles. Each MP3 is the original
-recording under a descriptive name, with a same-name TXT. The 25 attachments
+SHA-256 hashes, transcripts and playback roles. Each spoken MP3 uses the
+original take, level-matched to −21 LUFS, with a same-name TXT. The 25 attachments
 contain 24 distinct files: the 14:20:45 ElevenLabs export is identical to
 `Ein2.mp3` and is listed as a second source for `einatmen-02.mp3`.
 
@@ -57,14 +57,13 @@ decoded PCM matches the entire 919-second review render, including the outro.
 The authored build also includes the
 first calibration instruction and the full Freie Erkundung recording from the
 playground. Freie Erkundung has 960,768 instruction frames and 18,755,025 music
-frames at 44.1 kHz. The Quest reader passes the original stereo MP3 to Android
+frames at 44.1 kHz. The Quest reader passes the level-matched stereo MP3 to Android
 with its instruction boundary and catalog hash verified. The authored
 Haupt-Runde saves after the outro ends. The canonical shared-loop package
 uses its 900-second main interval.
 
-Source recordings are unchanged from the [calibration instruction](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/9ed333e)
-and [Freie Erkundung](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/234ebd0ac154b8a5c16e7cbae6814534904b723d)
-playground commits.
+The spoken takes come from the playground commits. [Calibration instruction](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/9ed333e) ·
+[Freie Erkundung](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/234ebd0ac154b8a5c16e7cbae6814534904b723d)
 
 Music: [“Wisps of Whorls”](https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1200082)
 by Kevin MacLeod (incompetech.com), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

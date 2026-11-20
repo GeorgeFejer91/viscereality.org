@@ -6,7 +6,7 @@
   "text": "Ausatmen, zwei, drei, vier",
   "frames": 176400,
   "bytes": 352844,
-  "sha256": "9667387cb026264c8a2b041fa6de11cf25ef6304c1fa4b07ef86f688cd33a720",
+  "sha256": "c8c1dcb0a5c86cf529878c6690f3f5971c1d081e761e905b3311476632838593",
   "processing": {
     "voice_block": "exhale",
     "breath_peak_dbfs": -20,
@@ -16,6 +16,6 @@
     "source_duration_seconds": 4.411292517006803,
     "breath_tempo_factor": 1.1028231292517008,
     "target_duration_seconds": 4,
-    "voice_sha256": "a0928afc435abf65771ad24984f5567154b50c1a1ad363c1bc7886bfc3e690d7"
+    "voice_sha256": "4bf786a865d82b3eab3594f685c92a6196226a86b74ce5ba0eafa4a7d4d535cb"
   }
 }

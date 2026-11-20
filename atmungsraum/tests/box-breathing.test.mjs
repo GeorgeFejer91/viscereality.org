@@ -182,7 +182,11 @@ test('Engine verifies assets, rejects retrigger, aborts interrupted clocks, and 
 
 test('Pause/resume keeps the audio plan and clock anchor, and cancelled resume stays stopped', async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (url) => new Response(await readFile(url));
+  globalThis.fetch = async (url, options) => new Response(
+    url.pathname.endsWith('.wav') && options?.cache !== 'no-cache'
+      ? Buffer.alloc(10)
+      : await readFile(url),
+  );
   const context = new Context();
   const engine = new BoxBreathingEngine({ audioContext: context, manifestUrl: new URL('manifest.json', assetDir) });
   try {

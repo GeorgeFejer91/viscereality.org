@@ -20,7 +20,7 @@
         "calm_match_rank": 6
       },
       "duration_seconds": 2.88,
-      "sha256": "28147dd435db5c6fc0668a33fab4b80872f3b0fb5eb69f997e19aaa0c21ad3ff",
+      "sha256": "128d3bfa5934a1f0d1a31966dec5be341e53d6c71e616a37aa26871c933cc6d6",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -47,7 +47,7 @@
         "calm_match_rank": 2
       },
       "duration_seconds": 2.81,
-      "sha256": "26a178c30c3f836b7385ebed01fcf5e2347bde2ee6c41e7fda9030f487e43512",
+      "sha256": "991068a94a41b65511e46e9580104ae172e52eb4a99ab1d931a2ad2b7075bd02",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -74,7 +74,7 @@
         "calm_match_rank": 8
       },
       "duration_seconds": 2.91,
-      "sha256": "b5db1ebceb4ef483638ab7a07f81bd2bbbeee0a0d790e6bfe01e6cf451b8c342",
+      "sha256": "9c0916a051a2ba32a6610027ed1aeeae512f71b7b9f473ae5fe8db715b43f316",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -101,7 +101,7 @@
         "calm_match_rank": 7
       },
       "duration_seconds": 2.72,
-      "sha256": "22eb28d8f9ed22fc85877538c6a1d5293691f3d3d5c89a90e7e8d7ca9c6b7b30",
+      "sha256": "4749d30a3533abe94937d0da7ed0ad2d77cd2bb5e792705eb4c374c4161c1a78",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -128,7 +128,7 @@
         "calm_match_rank": 5
       },
       "duration_seconds": 2.96,
-      "sha256": "529e6489299093a26dd91d9c36813d985fa11d23a9fe0d5b3792daa514381297",
+      "sha256": "bf2ee671c33615be9c0a0955ea9a721c7445c3936afc9dab42b4dcffe932c2e1",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -155,7 +155,7 @@
         "calm_match_rank": 4
       },
       "duration_seconds": 2.97,
-      "sha256": "cfb80e1b6e010f641215105176c64e4dddf301f62a902bec7e00838a71850fa0",
+      "sha256": "f20d085dd38a5dc4772c5d6c5a795f800f5aaa99683bc48b3c9041abd3523f5b",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -182,7 +182,7 @@
         "calm_match_rank": 1
       },
       "duration_seconds": 2.8,
-      "sha256": "7492b622b0a66c04878109a7b3ce4f2c3426a00e314292c2b219aeaec6839465",
+      "sha256": "abdb891363d2792f68c97f9b2e1ee66583c3e07cdfbfaf1a1bb4b4a1976f540d",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -209,7 +209,7 @@
         "calm_match_rank": 10
       },
       "duration_seconds": 3.08,
-      "sha256": "d684e66f8a04544a37f33d16186e983ecf17a876b2923f13a3acd42ad87442fe",
+      "sha256": "824fa83e5f29d43bad582d5f9aa0aee461d3fe91dca04928af7d7bfce01abe70",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -236,7 +236,7 @@
         "calm_match_rank": 3
       },
       "duration_seconds": 3.0,
-      "sha256": "ebf560c72473631f3f191784c41ccbbc7ef756e287f3ff3d75e4b10934629feb",
+      "sha256": "84e085f8ba3a13d50f82646d98289dab71d92d085c5be7b8dce60782b055fb55",
       "words": {
         "native_whisper_percent": 100,
         "verified": {
@@ -263,7 +263,7 @@
         "calm_match_rank": 9
       },
       "duration_seconds": 2.64,
-      "sha256": "6d2e6299d911fcf4106efbd2d348d61dd1a062d5f05c43b6245a59dbf0a27ccd",
+      "sha256": "9c1015c63270b926d0a7ffcc0900c1de4182d8330c368682b3ccb18363756c2d",
       "words": {
         "native_whisper_percent": 25,
         "verified": {
@@ -287,7 +287,7 @@
         "naturalness": 1.0
       },
       "duration_seconds": 1.75,
-      "sha256": "bb4e9fec01de15da6303a7e96677907bfce73bcbb6e9574c08f8918158a2b4c8",
+      "sha256": "be8113249268ffee62b7826f2005d509010b70c86575d4fbf14faff03dc8511f",
       "words": {
         "native_whisper_percent": 25,
         "verified": {
@@ -311,7 +311,7 @@
         "naturalness": 0.9682666666666667
       },
       "duration_seconds": 1.88,
-      "sha256": "38bafb6178cba5ec88bfddef69632b117bb9b9604155568cf4eba107b3db7718",
+      "sha256": "316892881b6c60ecce51f566e84fbb3cac6e5f4c4a883149121cc783b7f5a291",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -338,7 +338,7 @@
         "naturalness": 0.9666666666666667
       },
       "duration_seconds": 1.88,
-      "sha256": "81c03ddb0213f6671e34bb7b92e2c98a281ff80e85107485252254ed0a18868a",
+      "sha256": "1c340fa471eab21d059a2512e4631c3ef6e95b239758156c3c041c42927fa3ab",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -365,7 +365,7 @@
         "naturalness": 0.95
       },
       "duration_seconds": 1.92,
-      "sha256": "7dcc07b6f7c281f2f21a816dab05187fb5ea859f37f3b1498f674f0a23b21a0d",
+      "sha256": "011b2d7f75778792f1362d7bf5010d2f32cd23ad882db89f5b9fd9c9ecabaee3",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -392,7 +392,7 @@
         "naturalness": 0.9333333333333333
       },
       "duration_seconds": 1.88,
-      "sha256": "631ae33bdd4f419423442aa81c152fc1d2e81dd7151be0efcecad5c11dc69eb1",
+      "sha256": "3a96d2fd954e5c7ba79366f4af64fde1e0880fd87c55978863ee9e1b30be726c",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -419,7 +419,7 @@
         "naturalness": 0.9
       },
       "duration_seconds": 1.8,
-      "sha256": "ebe739503795d1440d64fc4cf3cf04bd8a759c919d7884cb6bceb6dfcc2c7608",
+      "sha256": "17f4d36dc3c38d0d90198bb876f546189e60801f0ba2407ab7c80abcd8982015",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -446,7 +446,7 @@
         "naturalness": 0.85
       },
       "duration_seconds": 1.72,
-      "sha256": "5e26b8fe32a56e71a436c3e821b1004cfff22cfa7b231cab0703744d3e3c0ee1",
+      "sha256": "9d3cef481873ce61e0004496d76ee0324abf170c4745073a10124d26913311b1",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -473,7 +473,7 @@
         "naturalness": 0.8333333333333334
       },
       "duration_seconds": 1.92,
-      "sha256": "9291a59f67b940fc232242586330b3d31626e849e3387f5c473f4a0c67c6520d",
+      "sha256": "2dc4d2f5d9a3540531a93e34a508b8062496b4103f78b3fa5972174af98f797c",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -500,7 +500,7 @@
         "naturalness": 0.8031666666666667
       },
       "duration_seconds": 1.92,
-      "sha256": "67b428eb7fbe9131f7eda3793e9555d741abc32a4b3a0407c97c3b23d5fd21c6",
+      "sha256": "5aec2a68f93efdeb245b3314293f611804cb5dfdca1ef324c07675f34d3fde45",
       "words": {
         "native_whisper_percent": null,
         "verified": {
@@ -527,7 +527,7 @@
         "naturalness": 0.75
       },
       "duration_seconds": 1.81,
-      "sha256": "d3290790030890f30c42984761214ee03c414cf509a1b9897a685dae55ad2067",
+      "sha256": "efe398da87106ab2c4e73774efcbb38b40e490a85ba111d802ce518c838c1a7c",
       "words": {
         "native_whisper_percent": null,
         "verified": {
