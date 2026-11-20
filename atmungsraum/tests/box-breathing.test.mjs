@@ -98,15 +98,24 @@ test('Actual PCM blocks match their manifest, contain speech, and have quiet joi
     let peak = 0;
     for (let i = 44; i < bytes.length; i += 2) peak = Math.max(peak, Math.abs(bytes.readInt16LE(i)));
     assert.ok(id === 'calibration' ? peak === 0 : peak > 100 && peak < 32767, id);
-    if (['hold_in', 'hold_out'].includes(id)) {
-      assert.equal(block.text, 'Und halten.');
-      assert.deepEqual(block.processing.word_onsets_frames, [0]);
-      // The rest of a hold is quiet, rather than a spoken count sequence.
-      assert.ok(bytes.subarray(44 + 2 * 44100 * 2).every(byte => byte === 0));
+    if (['inhale', 'hold_in', 'exhale', 'hold_out'].includes(id)) {
+      const { segments, inter_segment_silence_frames: gaps, trailing_silence_frames: tail } = block.processing;
+      const last = segments.at(-1).end_frame;
+      assert.equal(last + tail, block.frames);
+      assert.ok(bytes.subarray(44 + last * 2).every(byte => byte === 0));
+      for (let index = 0; index < gaps.length; index++) {
+        const from = segments[index].end_frame;
+        const to = segments[index + 1].start_frame;
+        assert.equal(to - from, gaps[0]);
+        assert.ok(bytes.subarray(44 + from * 2, 44 + to * 2).every(byte => byte === 0));
+      }
+      assert.deepEqual(gaps, id === 'inhale' ? [6615, 6615, 6615] : id === 'exhale' ? [3308, 3308, 3308] : []);
     }
   }
-  assert.equal(manifest.blocks.inhale.text, 'Einatmen. Zwei. Drei. Vier.');
-  assert.equal(manifest.blocks.exhale.text, 'Ausatmen. Zwei. Drei. Vier.');
+  assert.equal(manifest.blocks.inhale.text, 'Einatmen, zwei, drei, vier');
+  assert.equal(manifest.blocks.exhale.text, 'Ausatmen, zwei, drei, vier');
+  assert.equal(manifest.blocks.hold_in.text, 'und halten');
+  assert.equal(manifest.blocks.hold_out.sha256, manifest.blocks.hold_in.sha256);
   const calibration = manifest.blocks.calibration;
   const cue = await readFile(new URL(calibration.file, assetDir));
   const { range_start_frame: start, range_duration_frames: duration } = calibration.processing;

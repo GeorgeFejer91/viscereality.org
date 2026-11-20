@@ -2449,9 +2449,26 @@ Local Zen meditation audition (2026-11-20). The two German cues in
 frames at 48 kHz. Whisper confirmed the words in both exports. The three
 inhale gaps measure 150 ms each, and the connected hold has 2.612 seconds
 of trailing silence. The timing and exact text sit beside each local WAV.
-The next step is listening review before any runtime selection.
+The user selected this voice for the canonical cycle, including the new
+four-second Ausatmen cue with three 75 ms master gaps. The shared Quest
+loop, all six numbered packs and authored Quest programmes now use this
+recording set. Both holds use identical PCM. The phase edits preserve speech
+speed and the existing 16-second cycle, with the runtime files converted to
+the established 44.1 kHz source clock. The numbered packs and authored
+programmes retain their breath layers. The previous phase takes remain
+available for historical review.
 
-- [x] Verify the 900-second silent Haupt-Runde cue timeline. Its
+- [x] Verify the source and three local masters with Whisper and check
+  exact frame counts and silence spans.
+- [x] Rebind the six timeline JSON/CSV pairs and verify all 53 numbered cues.
+  The host suite passed 352 cases, with 19 environment-dependent cases
+  skipped. Both Quest audio profiles staged successfully. The authored
+  main FLAC matches the 900-second PCM render and retains its separate outro.
+- [ ] Build and qualify the signed Quest release on the paired Quest and Pixel.
+  ADB listed no attached devices, and the local RustDesk MCP endpoint was
+  unavailable. Resume with the signed build and a complete cycle on hardware.
+
+- [x] Verify the 900-second numbered Haupt-Runde cue timeline. Its
   [numbered library](../assets/audio/scenarios/haupt-15/0000_timeline.csv)
   covers the 81-second opening, 50 four-phase cycles and 19-second closing.
   The active native loop owns Quest playback.
@@ -2504,8 +2521,9 @@ its paired APK. The signed local authored APK, code 52, contains the main FLAC,
 Probe instruction and timed cues, exploration MP3, calibration prelude and
 separate background music. Its APK SHA-256 matches the
 [signed profile matrix](../quest/apks/README.md#background-music-signed-profile-matrix--2026-11-19).
-All 20 focused audio tests pass. The six numbered source timelines still
-contain 53 silent cue WAVs. Audition the recorded programmes in the
+At that deployment, all 20 focused audio tests passed. The six numbered
+source timelines contained 53 silent cue WAVs before the Zen cue update.
+Audition the recorded programmes in the
 [playground](https://georgefejer91.github.io/atmungsraum-ui/?view=scenarios).
 The remaining acceptance check is an attended signed authored run on Quest
 and Pixel with audible playback, correct timing and matching exports.

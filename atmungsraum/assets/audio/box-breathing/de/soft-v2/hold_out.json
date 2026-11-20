@@ -1,0 +1,40 @@
+{
+  "id": "hold_out",
+  "sample_rate": 44100,
+  "duration_seconds": 4,
+  "file": "hold_out.wav",
+  "text": "und halten",
+  "frames": 176400,
+  "bytes": 352844,
+  "sha256": "9d9b94628cdb4cc04de5412fd6c141beaabf758cb5ee7a6077648d6cc59de073",
+  "processing": {
+    "source": "ElevenLabs Zen – Meditation German",
+    "source_sha256": "2ffd7dbb4653cb4508616aa9b70f22769ebdfc90ae21a26c36562e02cbb92399",
+    "master_wav_sha256": "aa39a243935460f75387215abfb90ac0ac557e5cf4ae42003486d176bd430a3d",
+    "speech_time_stretch": false,
+    "alignment": "Whisper small German word timestamp estimates, refined against the decoded waveform for editing",
+    "source_whisper_words": [
+      {
+        "word": " und",
+        "start": 4.36,
+        "end": 5.46,
+        "probability": 0.6248970627784729
+      },
+      {
+        "word": " halten.",
+        "start": 5.46,
+        "end": 5.98,
+        "probability": 0.9908329844474792
+      }
+    ],
+    "segments": [
+      {
+        "text": "und halten",
+        "start_frame": 441,
+        "end_frame": 61211
+      }
+    ],
+    "inter_segment_silence_frames": [],
+    "trailing_silence_frames": 115189
+  }
+}

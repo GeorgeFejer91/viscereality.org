@@ -1,7 +1,6 @@
-"""Build numbered, independent silent cue assets for each saved UI scenario.
+"""Build numbered scenario cue assets from the canonical cycle and silent slots.
 
-TXT files are draft scripts. No speech is synthesized and existing recordings
-are preserved. Run with --check to verify generated files without writing.
+No speech is synthesized. Run with --check to verify files without writing.
 """
 import argparse
 import csv
@@ -12,6 +11,7 @@ import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PHASES = {'inhale', 'hold_in', 'exhale', 'hold_out'}
 
 
 def encoded(value):
@@ -38,13 +38,15 @@ def main():
     totals = []
     pcm_cache = {}
 
-    def put(path, data, audio=False):
-        if path.exists() and path.read_bytes() == data:
-            return
+    def put(path, data, audio=False, replace_silence=None):
+        if path.exists():
+            current = path.read_bytes()
+            if current == data:
+                return
+            if audio and not args.check and current != replace_silence:
+                raise ValueError(f'Existing WAV differs; preserving it: {path.relative_to(ROOT)}')
         if args.check:
             raise ValueError(f'Missing/stale generated file: {path.relative_to(ROOT)}')
-        if audio and path.exists():
-            raise ValueError(f'Existing WAV differs; preserving it: {path.relative_to(ROOT)}')
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
 
@@ -85,18 +87,30 @@ def main():
                 block = library['blocks'].get(event['asset'], {})
                 source_txt = library_dir / Path(block['file']).with_suffix('.txt') if block else None
                 own_txt = folder / f'{stem}.txt'
-                if own_txt.exists():
+                recorded = event['id'] in PHASES
+                silent = silence(event['duration_frames'], rate)
+                if recorded:
+                    data = (library_dir / block['file']).read_bytes()
+                    if (len(data) != len(silent) or hashlib.sha256(data).hexdigest() != block['sha256']
+                            or not any(data[44:])):
+                        raise ValueError(f'Invalid canonical phase WAV: {block["file"]}')
+                    script = source_txt.read_text(encoding='utf-8').rstrip('\n')
+                    if script != block['text']:
+                        raise ValueError(f'Canonical phase transcript mismatch: {source_txt}')
+                elif own_txt.exists():
                     script = own_txt.read_text(encoding='utf-8').rstrip('\n')
                 elif source_txt and source_txt.exists():
                     script = source_txt.read_text(encoding='utf-8').rstrip('\n')
                 else:
                     script = block.get('text', '')
-                data = silence(event['duration_frames'], rate)
+                if not recorded:
+                    data = silent
                 meta = {'id': event['asset'] or 'recovery', 'file': stem + '.wav',
                     'frames': event['duration_frames'], 'bytes': len(data),
                     'sha256': hashlib.sha256(data).hexdigest(), 'text': script,
-                    'spoken_text': '', 'placeholder': True, 'audio_status': 'silent-placeholder',
-                    'script_status': 'awaiting-wording-approval' if script else 'no-speech',
+                    'spoken_text': script if recorded else '', 'placeholder': not recorded,
+                    'audio_status': 'recorded' if recorded else 'silent-placeholder',
+                    'script_status': 'approved' if recorded else 'awaiting-wording-approval' if script else 'no-speech',
                     'sample_rate': rate, 'scenario_id': scenario, 'cue_order': cue_order,
                     'phase_id': event['id'], 'first_offset_frames': event['offset_frames'],
                     'first_start_seconds': event['offset_frames'] / rate,
@@ -104,7 +118,7 @@ def main():
                     'transcript_file': stem + '.txt', 'occurrence_offsets_frames': []}
                 if 'measurement' in block:
                     meta['measurement'] = block['measurement']
-                put(folder / meta['file'], data, audio=True)
+                put(folder / meta['file'], data, audio=True, replace_silence=silent if recorded else None)
                 put(own_txt, (script + ('\n' if script else '')).encode('utf-8'))
                 unique[key] = meta
                 if event['asset'] is not None:
@@ -130,7 +144,7 @@ def main():
         plan['audio_assets'] = registry
         put(path, encoded(plan))
         manifest = {'scenario_id': scenario, 'sample_rate': rate, 'duration_seconds': frame / rate,
-            'placeholder': True, 'source_scenario_sha256': hashlib.sha256(encoded(plan)).hexdigest(),
+            'placeholder': all(meta['placeholder'] for meta in unique.values()), 'source_scenario_sha256': hashlib.sha256(encoded(plan)).hexdigest(),
             'assets': list(unique.values()), 'events': timeline}
         put(folder / '0000_manifest.json', encoded(manifest))
         put(folder / '0000_assets.csv', csv_bytes(
@@ -145,18 +159,17 @@ def main():
         put(folder / '0000_playlist.m3u8', ('\n'.join(playlist) + '\n').encode('utf-8'))
         put(folder / '0000_README.txt', (
             f'{scenario}: {frame / rate:g} seconds; {len(unique)} unique cues.\n\n'
-            'All WAVs are intentional silent placeholders for UI testing.\n'
-            'TXT files contain draft intended wording, not speech in these silent WAVs.\n'
-            'Final narration requires explicit wording approval before synthesis.\n'
+            'Cyclic WAVs contain the approved Zen breathing cues. Other WAVs are silent placeholders.\n'
+            'Each TXT contains the recorded words or the draft script identified in its JSON.\n'
             'Sort Name ascending: four-digit cue numbers follow first appearance.\n'
             'The filename timestamp is the first onset; repeated uses are in the timeline CSV.\n'
             'Open 0000_playlist.m3u8 for the complete ordered scenario.\n'
             'Each WAV has a same-basename CSV, TXT and JSON; every scenario owns independent files.\n'
-            'The per-cue CSV lists every playback occurrence, exact frames, times and draft script.\n'
+            'The per-cue CSV lists every playback occurrence, exact frames, times and cue text.\n'
         ).encode('utf-8'))
         totals.append([scenario, frame / rate, len(unique), len(timeline)])
     put(output / '0000_INDEX.csv', csv_bytes(['scenario', 'duration_seconds', 'unique_cues', 'events'], totals))
-    print(json.dumps({'scenarios': len(totals), 'unique_placeholder_wavs': sum(row[2] for row in totals),
+    print(json.dumps({'scenarios': len(totals), 'unique_cue_wavs': sum(row[2] for row in totals),
         'playback_events': sum(row[3] for row in totals), 'check_only': args.check}))
 
 

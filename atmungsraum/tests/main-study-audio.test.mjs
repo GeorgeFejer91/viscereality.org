@@ -15,7 +15,7 @@ test('accounts for every attachment and keeps distinct takes in their phase pool
   assert.equal(inventory.assets.find(asset => asset.id === 'wisps-of-whorls').text, '');
 });
 
-test('matches the controls and rotates the cue pools within the 5 + 10 minute programme', async () => {
+test('matches the controls and reuses the three canonical cues in the 5 + 10 minute programme', async () => {
   const inventory = await loadStudyInventory();
   const plan = planMainStudy(inventory);
   assert.equal(plan.total_frames, 900 * 44100);
@@ -28,22 +28,15 @@ test('matches the controls and rotates the cue pools within the 5 + 10 minute pr
   assert.deepEqual(plan.events.slice(-2).map(event => event.id), ['inhale', 'exhale']);
   assert.deepEqual(plan.events.slice(0, 3).map(event => event.asset), inventory.opening);
   let next = 0;
-  const used = { inhale: new Set(), exhale: new Set(), hold: new Set() };
-  const previous = new Map();
+  const cueIds = { inhale: 'zen-inhale', hold_in: 'zen-hold', exhale: 'zen-exhale', hold_out: 'zen-hold' };
   for (const event of plan.events) {
     assert.equal(event.offset_frames, next);
     next += event.duration_frames;
     if (event.cycle === null) continue;
-    const pool = event.id.startsWith('hold_') ? 'hold' : event.id;
     assert.equal(event.duration_frames, 4 * 44100);
-    assert.ok(inventory.pools[pool].includes(event.asset));
-    used[pool].add(event.asset);
-    assert.notEqual(event.asset, previous.get(event.id), 'repeated take for ' + event.id);
-    if (event.id === 'hold_out') assert.notEqual(event.asset, previous.get('hold_in'));
-    previous.set(event.id, event.asset);
+    assert.equal(event.asset, cueIds[event.id]);
   }
   assert.equal(next, plan.total_frames);
-  for (const [pool, ids] of Object.entries(inventory.pools)) assert.deepEqual(used[pool], new Set(ids));
   assert.deepEqual(planMainStudy(inventory), plan);
 });
 
@@ -51,6 +44,13 @@ test('stages the probe instruction separately from exactly five minutes of breat
   const root = fileURLToPath(new URL('../', import.meta.url));
   const original = async id => JSON.parse(await readFile(new URL('../audio/scenarios/' + id + '.json', import.meta.url)));
   const study = await buildMainStudyScenario(root, await original('haupt-15'));
+  const shared = new URL('../assets/audio/box-breathing/de/soft-v2/', import.meta.url);
+  const canonical = { 'zen-inhale': 'inhale_breath.wav', 'zen-hold': 'hold_in.wav', 'zen-exhale': 'exhale_breath.wav' };
+  for (const [id, file] of Object.entries(canonical)) {
+    const asset = study.plan.audio_assets[id];
+    assert.deepEqual(study.files.get('assets/audio/scenarios/haupt-15/' + asset.file),
+      await readFile(new URL(file, shared)));
+  }
   const { plan, files } = await buildProbeStudyScenario(root, await original('probe-5'), study);
   assert.equal(plan.total_frames, 300 * 44100);
   assert.equal(plan.pre_session_audio.duration_frames, 2002176);

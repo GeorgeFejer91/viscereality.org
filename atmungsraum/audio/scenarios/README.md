@@ -2,7 +2,7 @@
 
 The [German main study recordings](../../assets/audio/main-study/de/README.md)
 include the two matched controls, the approved instruction, 18 phase takes
-and the outro. Use the main-study staging option to build the candidate
+and the outro. The phase takes document the earlier audition. Use the main-study staging option to build the candidate
 authored `haupt-15` plan. Its first five minutes contain both controls and
 the instruction, followed by ten minutes of guided breathing. The outro
 is staged separately from the 900-second programme. Meta Developer 33 uses
@@ -16,13 +16,11 @@ a numbered WAV, CSV, JSON and TXT with the same basename. Numbers follow first o
 recovery; repeated cycles reuse the same cue. Each folder also has an asset CSV,
 complete timeline CSV, manifest and M3U8 playlist. The original shared
 [`manifest.json`](../../assets/audio/box-breathing/de/soft-v2/manifest.json) pins
-the protocol's frame lengths; its retained recordings are not loaded by the UI.
-
-All current scenario WAVs are **silent placeholders** requested for UI testing.
-TXT and metadata `text` contain draft intended words, pending approval;
-`spoken_text` is empty and `audio_status` is `silent-placeholder`. They do not
-claim speech is present in the silent files. CSV includes both audio/script
-status columns. Final speech must wait for explicit wording approval.
+the protocol's frame lengths and the canonical cyclic recordings. Numbered
+cyclic WAVs are copies of those recordings or their existing breath overlays.
+Their TXT and `spoken_text` fields contain the recorded words. Non-cyclic
+numbered WAVs retain their silent placeholders and draft script status.
+CSV includes both audio and script status.
 Each per-cue CSV lists all its occurrences in playback order, with global event
 numbers, exact frames/start/end times, cycle/block numbers, draft words and
 audio/script status. For example, `0004_01m21s_inhale.wav`, `.csv`, `.txt` and
@@ -33,8 +31,8 @@ including repeated cues. The menu folders are `haupt-15`, `probe-anleitung`,
 Run `python -m unittest discover -s tests -p test_scenario_assets.py` to check
 all numbered CSV/TXT pairs against the authored scenarios.
 Run `python tools/build-scenario-placeholders.py --check` to verify the package;
-omit `--check` to generate missing placeholders. Existing different WAVs are
-preserved with an error, so this helper cannot overwrite later real recordings.
+omit `--check` to regenerate the packs from the bound library. The helper can
+promote a phase from its exact silent placeholder and preserves differing recordings.
 Hash-bound JSON and generated CSV use LF line endings, pinned in `.gitattributes`
 so Windows checkouts and GitHub Pages validate the same bytes.
 Existing v1/MP3 sets and the separate voice-audition page are retained references,

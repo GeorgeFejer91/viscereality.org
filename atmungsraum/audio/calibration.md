@@ -46,15 +46,14 @@ exactly 900 seconds with these shared classes:
 | Instruction 1 | `instruction_1.wav` | 00:00–00:26 | 26 s |
 | Calibration | `calibration.wav` (silent measurement window) | 00:26–00:41 | 15 s |
 | Instruction 2 | existing `instruction.wav` | 00:41–01:21 | 40 s |
-| Inhale, pause, exhale, pause | existing four 4-second phase files | 01:21–14:41 | 50 × 16 s = 800 s |
+| Inhale, pause, exhale, pause | four canonical 4-second phase slots | 01:21–14:41 | 50 × 16 s = 800 s |
 | Outro | `outro.wav` | 14:41–15:00 | 19 s |
 
 Instruction 1 is the German narration above. Instruction 2 is the existing
 German welcome/box-breathing explanation in the manifest. Outro contains seven
 seconds of quiet settling followed by the unchanged 12-second ending recording.
 The main cycles are continuous; they use the existing every-third-cycle breath
-variants without extra rest cues. Practice behavior and original nine WAVs are
-unchanged. `main_asset_classes` in the manifest and `main-asset-classes.csv` name
+variants without extra rest cues. The cyclic recordings use the Zen meditation voice. `main_asset_classes` in the manifest and `main-asset-classes.csv` name
 all eight classes and their variants; adjacent JSON sidecars retain transcripts,
 frame counts and hashes. Scenario CSV has exact offsets and `transcript_de`.
 No complete per-scenario audio file is required.

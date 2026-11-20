@@ -68,9 +68,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--key-file', type=Path, required=True)
     parser.add_argument('--sounds-dir', type=Path, required=True)
+    parser.add_argument('--output-dir', type=Path, default=ROOT / 'reference-audio/soft-box-v2/legacy-render')
     args = parser.parse_args()
     raw = ROOT / 'reference-audio/soft-box-v2'
-    out = ROOT / 'assets/audio/box-breathing/de/soft-v2'
+    out = args.output_dir.resolve()
+    runtime = (ROOT / 'assets/audio/box-breathing/de/soft-v2').resolve()
+    if out == runtime:
+        raise ValueError('Use an audition directory for the legacy ElevenLabs generator.')
     raw.mkdir(parents=True, exist_ok=True); out.mkdir(parents=True, exist_ok=True)
     key = args.key_file.read_text(encoding='utf-8-sig').strip().strip('"').strip("'")
     manifest = {'id': 'box-breathing-4-4-4-4-de-v2', 'version': 2, 'language': 'de',

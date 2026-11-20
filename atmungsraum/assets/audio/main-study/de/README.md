@@ -21,10 +21,9 @@ contain 24 distinct files: the 14:20:45 ElevenLabs export is identical to
 Speech was transcribed locally with Whisper and normalized for German spelling,
 punctuation and written-out counts. [Wispr Flow](https://wisprflow.ai/notetaker/how-to-transcribe-in-person-meetings)
 does not accept prerecorded MP3s. The combined count-and-hold originals retain
-their full spoken TXT. The manifest records where to end each phase excerpt
-before the attached hold and the words retained in the runtime cue. Each
-excerpt fits its four-second slot using tail trim, pitch-preserving tempo
-adjustment when needed, and silence. Holds use the two standalone takes.
+their full spoken TXT. The manifest preserves the earlier phase-pool edit
+boundaries. The authored programme now uses the canonical Zen cyclic recordings
+from the [shared manifest](../../box-breathing/de/soft-v2/manifest.json).
 
 ## Review and staging
 
@@ -41,8 +40,9 @@ and return attention. The next sections resume at 0:28, 0:57, and 1:33 in
 both controls. A final quiet period follows each closing prompt. The two
 controls and the 45.322449-second instruction fill exactly five minutes.
 
-The guided section runs from 5:00 to 15:00. It rotates the 18 voice takes,
-with the recorded breath sound underneath inhale and exhale. It ends with a
+The guided section runs from 5:00 to 15:00. It repeats the canonical Zen
+inhale, hold, exhale and hold, with the recorded breath sound underneath
+inhale and exhale. It ends with a
 four-second inhale and four-second exhale after 37 four-phase cycles. The
 full review then plays the 19-second recorded outro. The music comes in at
 the first guided inhale and fades out by 15:00.

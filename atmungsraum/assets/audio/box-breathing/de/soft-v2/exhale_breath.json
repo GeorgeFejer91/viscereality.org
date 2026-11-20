@@ -1,0 +1,21 @@
+{
+  "id": "exhale_breath",
+  "sample_rate": 44100,
+  "duration_seconds": 4,
+  "file": "exhale_breath.wav",
+  "text": "Ausatmen, zwei, drei, vier",
+  "frames": 176400,
+  "bytes": 352844,
+  "sha256": "9667387cb026264c8a2b041fa6de11cf25ef6304c1fa4b07ef86f688cd33a720",
+  "processing": {
+    "voice_block": "exhale",
+    "breath_peak_dbfs": -20,
+    "source_file": "Exhale.wav",
+    "source": "User-supplied Proton Drive recording",
+    "source_sha256": "079235531a867dd0a434b81c8054998656dab52c891842f455f496305422ac4d",
+    "source_duration_seconds": 4.411292517006803,
+    "breath_tempo_factor": 1.1028231292517008,
+    "target_duration_seconds": 4,
+    "voice_sha256": "a0928afc435abf65771ad24984f5567154b50c1a1ad363c1bc7886bfc3e690d7"
+  }
+}

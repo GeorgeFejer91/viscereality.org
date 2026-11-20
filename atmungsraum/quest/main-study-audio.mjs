@@ -21,7 +21,10 @@ const LISTENING_BREAKS = [
   { after: [25580, 25320], resumeAt: 57000 }, // Notice the inhale and exhale.
   { after: [44950, 49850], resumeAt: 93000 }, // Return attention to breathing.
 ];
-const PHASES = [['inhale', 'inhale'], ['hold_in', 'hold'], ['exhale', 'exhale'], ['hold_out', 'hold']];
+const PHASES = [
+  ['inhale', 'zen-inhale'], ['hold_in', 'zen-hold'], ['exhale', 'zen-exhale'], ['hold_out', 'zen-hold'],
+];
+const CANONICAL_CUES = { 'zen-inhale': 'inhale_breath', 'zen-hold': 'hold_in', 'zen-exhale': 'exhale_breath' };
 const INSTRUCTIONS = ['instruction_1', 'instruction_2', 'instruction_3'];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const invalid = detail => { throw new Error('Main study audio: ' + detail); };
@@ -101,11 +104,7 @@ export function planMainStudy(inventory) {
   add(instruction.role, instruction.id, instruction.frames_44100);
 
   const cycles = Math.floor(GUIDED_FRAMES / (PHASES.length * PHASE_FRAMES));
-  const addPhase = ([phase, pool], cycle) => {
-    const ids = inventory.pools[pool];
-    const take = cycle + (phase === 'hold_out' ? 1 : 0);
-    add(phase, ids[take % ids.length], PHASE_FRAMES, cycle + 1);
-  };
+  const addPhase = ([phase, asset], cycle) => add(phase, asset, PHASE_FRAMES, cycle + 1);
   for (let cycle = 0; cycle < cycles; cycle++) {
     for (const phase of PHASES) addPhase(phase, cycle);
   }
@@ -160,26 +159,6 @@ function wavePcm(wave, frames) {
   return wave.subarray(44);
 }
 
-async function loadBreathLayer(sourceRoot, phase) {
-  const read = async name => wavePcm(await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, name + '.wav')), PHASE_FRAMES);
-  const [dry, mixed] = await Promise.all([read(phase), read(phase + '_breath')]);
-  return { dry, mixed };
-}
-
-function mixPhase(voice, layer) {
-  let peak = 0;
-  for (let i = 0; i < voice.length; i += 2) peak = Math.max(peak, Math.abs(voice.readInt16LE(i)));
-  if (!peak) invalid('silent voice phase');
-  const voicePeak = 32768 * 10 ** (-8 / 20);
-  for (let i = 0; i < voice.length; i += 2) {
-    const breath = layer ? layer.mixed.readInt16LE(i) - layer.dry.readInt16LE(i) : 0;
-    const sample = Math.round(voice.readInt16LE(i) * voicePeak / peak + breath);
-    if (Math.abs(sample) > 32767) invalid('phase mix clips');
-    voice.writeInt16LE(sample, i);
-  }
-  return voice;
-}
-
 function encodeWav(pcm) {
   const header = Buffer.alloc(44);
   header.write('RIFF', 0);
@@ -211,31 +190,31 @@ export async function buildMainStudyScenario(sourceRoot, original) {
   const registry = {};
   const files = new Map();
   const prefix = 'assets/audio/scenarios/haupt-15';
-  const layers = {
-    inhale: await loadBreathLayer(sourceRoot, 'inhale'),
-    exhale: await loadBreathLayer(sourceRoot, 'exhale'),
-  };
+  const library = JSON.parse(await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, 'manifest.json'), 'utf8'));
   for (const [index, event] of timeline.events.entries()) {
     if (event.asset === null || Object.hasOwn(registry, event.asset)) continue;
-    const source = assets.get(event.asset);
-    const cutoff = source.phase_source_end_seconds;
-    const tempo = cutoff ? Math.max(1, cutoff / 3.92) : 1;
-    const filters = cutoff
-      ? `atrim=end=${cutoff},atempo=${tempo},afade=t=in:d=0.008,afade=t=out:st=3.92:d=0.065,apad`
-      : source.role === 'hold' ? 'afade=t=in:d=0.008,apad' : '';
-    const args = filters ? ['-af', filters, '-t', '4'] : [];
-    let pcm = await decodePcm(join(sourceRoot, STUDY_DIRECTORY, source.file), args);
-    if (index < 2) {
-      if (pcm.length !== source.frames_44100 * 2) invalid('unexpected control length: ' + source.id);
-      pcm = extendControl(pcm, index, event.duration_frames);
+    const canonicalId = CANONICAL_CUES[event.asset];
+    const cue = canonicalId ? library.blocks[canonicalId] : assets.get(event.asset);
+    let wave;
+    if (canonicalId) {
+      wave = await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, cue.file));
+      wavePcm(wave, event.duration_frames);
+      if (wave.length !== cue.bytes || sha256(wave) !== cue.sha256) {
+        invalid('canonical phase integrity mismatch: ' + canonicalId);
+      }
+    } else {
+      let pcm = await decodePcm(join(sourceRoot, STUDY_DIRECTORY, cue.file));
+      if (index < 2) {
+        if (pcm.length !== cue.frames_44100 * 2) invalid('unexpected control length: ' + cue.id);
+        pcm = extendControl(pcm, index, event.duration_frames);
+      }
+      if (pcm.length !== event.duration_frames * 2 || !pcm.some(byte => byte !== 0)) invalid('unexpected PCM: ' + cue.id);
+      wave = encodeWav(pcm);
     }
-    if (event.cycle !== null) pcm = mixPhase(pcm, layers[source.role]);
-    if (pcm.length !== event.duration_frames * 2 || !pcm.some(byte => byte !== 0)) invalid('unexpected PCM: ' + source.id);
-    const wave = encodeWav(pcm);
     const file = stagedCueFilename(index, event);
-    registry[source.id] = {
-      id: source.id, file, frames: event.duration_frames, bytes: wave.length, sha256: sha256(wave),
-      placeholder: false, text: source.phase_text ?? source.text, source_sha256: source.sha256,
+    registry[event.asset] = {
+      id: event.asset, file, frames: event.duration_frames, bytes: wave.length, sha256: sha256(wave),
+      placeholder: false, text: cue.text, source_sha256: cue.sha256,
     };
     files.set(posix.join(prefix, file), wave);
   }
