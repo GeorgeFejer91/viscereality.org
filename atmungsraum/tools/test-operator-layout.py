@@ -265,6 +265,52 @@ def optional_participant_navigation(review):
     page.context.close()
 
 
+def completion_status_gap_keeps_recordings_visible(review):
+    settings = {'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000, 'clock': 898760}
+    page = review.page(initial(c, settings), suffix='#session')
+    try:
+        expect(page.locator('#running-screen')).to_be_visible()
+        before = mutations(page)
+        page.evaluate("Object.assign(reviewQuest, {statusDrop:true, joinDelay:18000})")
+        page.clock.run_for(3600)
+        expect(page.locator('#recordings-screen')).to_be_visible(timeout=1200)
+        expect(page.locator('#quest')).to_be_hidden()
+        expect(page.locator('#quest-status')).to_contain_text('Aufnahmestatus')
+        expect(page.locator('#quest-export-status')).to_be_hidden()
+        expect(page.locator('#recordings-open')).to_be_disabled()
+        page.locator('#recordings-open').dispatch_event('click')
+        assert page.evaluate("location.hash") == '#session'
+        expect(page.locator('#operator-next-session')).to_be_disabled()
+
+        # The phone may display a closeout view but only native IDLE confirms
+        # the recording is over. The original command journal stays untouched.
+        page.evaluate("Object.assign(reviewQuest, {phase:'IDLE', clock:0, statusDrop:false, joinDelay:0})")
+        page.clock.run_for(20000)
+        expect(page.locator('#recordings-screen')).to_be_visible()
+        assert page.evaluate("location.hash") == '#recordings'
+        assert mutations(page) == before
+    finally:
+        page.context.close()
+
+
+def closeout_recovery_expires_without_changing_ordinary_connection_loss(review):
+    for elapsed in (37400, 898760):
+        settings = {'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000, 'clock': elapsed}
+        page = review.page(initial(c, settings), suffix='#session')
+        try:
+            expect(page.locator('#running-screen')).to_be_visible()
+            page.evaluate("Object.assign(reviewQuest, {statusDrop:true, joinDelay:60000})")
+            page.clock.run_for(3600)
+            if elapsed == 898760:
+                expect(page.locator('#recordings-screen')).to_be_visible()
+                expect(page.locator('#operator-next-session')).to_be_disabled()
+                page.clock.run_for(29000)
+            expect(page.locator('#quest')).to_be_visible()
+            expect(page.locator('#recordings-screen')).to_be_hidden()
+        finally:
+            page.context.close()
+
+
 def completed_session_history(review):
     page = review.page(initial(c, {'scenarios': ['haupt-15'], 'startDelayMs': 2400}))
     c.enter_participant(page)
@@ -473,6 +519,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         authored_round_layout(review)
         guided_probe_instruction(review)
         optional_participant_navigation(review)
+        completion_status_gap_keeps_recordings_visible(review)
+        closeout_recovery_expires_without_changing_ordinary_connection_loss(review)
         completed_session_history(review)
         stopped_preview_history(review)
         active_calibration_protects_participant(review)

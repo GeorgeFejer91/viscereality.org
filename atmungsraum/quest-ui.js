@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=12';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=13';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=21';
 import { pairPhone } from './quest-pairing.js?v=9';
@@ -28,6 +28,8 @@ const text = (element, value) => { if (element.textContent !== value) element.te
 const needsDialogFocus = dialog => !document.activeElement || document.activeElement === document.body
   || dialog.contains(document.activeElement);
 const operatorCondition = 'condition-a';
+const closeoutObservationWindowMs = 5000;
+const closeoutReconnectGraceMs = 30000;
 const runTime = ms => {
   const seconds = Math.floor(ms / 1000);
   return [Math.floor(seconds / 60), seconds % 60].map(part => String(part).padStart(2, '0')).join(':');
@@ -422,6 +424,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let localView = restoreOperatorView(location.hash, history.state);
   let displayedStep = '';
   let wasActive = false;
+  let closeout, closeoutTimer;
   const questionnaireForm = byId('questionnaire-form');
   const answerStatus = byId('questionnaire-status');
   const answerSubmit = byId('questionnaire-submit');
@@ -529,8 +532,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (!byId('daten').hidden) byId('daten').hidden = true;
     const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
       participantRequired: context.requiresParticipant, active: nativeActive, questionnaire: showQuestionnaire });
-    text(statusText, step === 'recordings' && context.statusMessage === lookingForSavedQuest
-      ? 'Quest wird gesucht …' : context.statusMessage);
+    const closeoutMessage = step === 'recordings' && context.closeoutRecovering
+      ? 'Aufnahmestatus wird nach der Wiederverbindung geprüft.' : null;
+    text(statusText, closeoutMessage ?? (step === 'recordings' && context.statusMessage === lookingForSavedQuest
+      ? 'Quest wird gesucht …' : context.statusMessage));
     if (step === 'update' && localView.step !== 'update') {
       // Once an exception needs attention, retain its page until Next. A
       // terminal update poll must not pull focus out of an open diagnostic.
@@ -631,7 +636,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     // An overriding native operation cannot be escaped through utility links.
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
       control.disabled = step === 'questionnaire'
-        || ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings'
+        || (['running', 'recovery'].includes(step) || context.closeoutRecovering) && control.dataset.operatorGo !== 'settings'
         || control === reviewMovement && context.previewAvailable === false;
     }
     byId('operator-update-next').disabled = nativeActive || context.updateRequired || context.waitingForControl || !context.status;
@@ -640,7 +645,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (name === step && !button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
       else if (name !== step) button.removeAttribute('aria-current');
     }
-    utilities.recordings.disabled = step === 'questionnaire' || nativeActive || Boolean(context.recovery && !context.offlineArchives);
+    utilities.recordings.disabled = step === 'questionnaire' || nativeActive || context.closeoutRecovering
+      || Boolean(context.recovery && !context.offlineArchives);
     const polarAlreadyReady = step === 'connect' && byId('check-polar').dataset.check === 'ok';
     polarStatus.hidden = polarAlreadyReady;
     if (polarAlreadyReady) polarConnect.hidden = true;
@@ -1036,6 +1042,26 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     download.hidden = !archiveScope || !download.hasAttribute('href');
     const recoveryRequired = Boolean(recovery || breath.recovery || unknown || pending
       || status?.pending || nativeRecovering || breath.unknown);
+    if (status) {
+      clearTimeout(closeoutTimer);
+      const nearingEnd = status.p === 'RUNNING' && duration !== null
+        && status.ms >= duration - closeoutObservationWindowMs;
+      const closing = nearingEnd || ['FINALIZING', 'SAVING'].includes(status.p);
+      closeout = closing && source && sameInstallation(savedPair, source) ? { owner: source } : undefined;
+    }
+    // Keep closeout local to the paired Quest and bounded. This is a waiting
+    // view only. A fresh native status still decides whether the writer closed.
+    let closeoutRecovering = false;
+    if (!status && closeout && source && savedPair?.enrollment && autoConnect && !recoveryRequired
+      && sameQuest(closeout.owner, source) && sameInstallation(savedPair, source)) {
+      const now = performance.now();
+      if (closeout.lostAt === undefined) {
+        closeout.lostAt = now;
+        closeoutTimer = setTimeout(() => paint(), closeoutReconnectGraceMs);
+      }
+      closeoutRecovering = now - closeout.lostAt < closeoutReconnectGraceMs;
+    }
+    if (closeoutRecovering) exportStatus.hidden = true;
     // Keep a visible preview during a pause in the same preparation. A
     // reconnect or return to parked preparation requires choosing a method.
     const previewAvailable = Boolean(userAction || breath.pending || breath.setup?.playing !== false
@@ -1047,7 +1073,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const recordingsReady = !gateway?.recordings || (reconciledRecordings?.gateway === gateway
       && reconciledRecordings.generation === status?.g);
     const calibrating = ['waiting', 'collecting'].includes(breath.setup?.calibration);
-    paintOperatorLayout({ status, statusMessage, active, waitingForControl, participantComplete,
+    paintOperatorLayout({ status, statusMessage, active, waitingForControl, participantComplete, closeoutRecovering,
       updateBlocked: Boolean(recovery && !pendingProbeStart || unknown || nativeRecovering || controllerLease.pending),
       offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
       requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired,
@@ -2130,6 +2156,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   retry.addEventListener('click', () => { nextSync = 0; void tick(); });
   archivePicker.addEventListener('change', selectArchive);
   function detach() {
+    clearTimeout(closeoutTimer);
+    closeout = undefined;
     breathing.cancel();
     clearArchives();
     void drive.setOwner(null);

@@ -122,8 +122,14 @@ headset and phone.
   PWA fix uses a fresh, monotonic, signed Polar connection generation to reset
   that watermark. Mounted regression tests, 352 Node tests (19 skipped) and
   462 rendered phone states passed. The attended phone used
-  `20261120-saved-headsets`. The local `20261120-ecg-reconnect` candidate still
-  needs publication and physical Pixel verification.
+  `20261120-saved-headsets`. The `20261120-session-closeout` candidate
+  still needs publication and physical Pixel verification.
+- [x] Reproduce the completion-time connection page with a status gap after
+  a signed running observation at 898.760 seconds. During a closeout gap on
+  the same paired Quest, keep the recordings screen and mark the save
+  unconfirmed for up to 30 seconds. Confirm idle and reconcile the archive
+  before enabling Next Session. Mounted tests also cover an ordinary mid-run
+  connection loss and return to Connect on a prolonged closeout outage.
 - [x] Verify the phone's pause message explains an invalidated fit even if
   ECG and motion are back and the pause latch has cleared. The message keeps
   Finish available and leaves Continue subject to native readiness.
