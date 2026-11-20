@@ -103,10 +103,27 @@ headset and phone.
   existing cases ignored. Signed package closure, 16 KiB alignment and exact
   installed bytes passed. The paired Pixel confirmed an idle Quest with zero
   bias and fresh ECG and motion. The watchdog reported its display awake.
-- [ ] Verify full-duration continuity and recovery after actual range loss on
-  Developer 37. Capture the sanitized transition marker to distinguish a
-  same-strap clock reanchor from an actual composition or sensor retirement.
-  Then complete a full main and start the next participant in the same app.
+- [x] Verify Developer 37 through actual Polar range loss and a full
+  900-second recording at zero guidance bias. Unusable data paused the main
+  at 51.435 seconds with the writer open. After confirmed Bluetooth loss,
+  the same strap returned on a new connection, the fit stayed ready and
+  manual Continue advanced the original run. Two later quality pauses also
+  resumed that run. Signed completion incremented the full-run count and
+  closed the writer. The live paired phone briefly showed its connection page
+  for approximately 15 seconds at completion, then recovered its pairing and
+  showed the saved archive.
+- [ ] Start the next participant from the saved recordings page in the same
+  Developer 37 process and confirm a new generation with advancing main time.
+  The operator requested a break at the saved-recording screen. The Quest
+  app and its keep-awake watchdog were left running.
+- [x] Reproduce the separate phone ECG preview failure after confirmed Polar
+  reconnection. The new valid ECG packet used a reset Polar clock, and the
+  mounted display rejected it against the old timestamp watermark. The local
+  PWA fix uses a fresh, monotonic, signed Polar connection generation to reset
+  that watermark. Mounted regression tests, 352 Node tests (19 skipped) and
+  462 rendered phone states passed. The attended phone used
+  `20261120-saved-headsets`. The local `20261120-ecg-reconnect` candidate still
+  needs publication and physical Pixel verification.
 - [x] Verify the phone's pause message explains an invalidated fit even if
   ECG and motion are back and the pause latch has cleared. The message keeps
   Finish available and leaves Continue subject to native readiness.
