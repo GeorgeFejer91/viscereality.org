@@ -311,6 +311,30 @@ def closeout_recovery_expires_without_changing_ordinary_connection_loss(review):
             page.context.close()
 
 
+def calibration_panel_order_survives_method_reentry(review):
+    page = review.page(initial(c))
+    try:
+        c.enter_participant(page)
+        page.locator('#preview-calibrate').click()
+        page.wait_for_function("reviewQuest.setup.calibration === 'collecting'")
+        expect(page.locator('#calibration-screen')).to_be_visible()
+
+        def panel_order():
+            return page.locator('#calibration-screen .operator-body').evaluate(
+                "body => [...body.children].map(child => child.id).filter(id => "
+                "['operator-common','operator-live','operator-input-status'].includes(id))")
+
+        original = panel_order()
+        assert original == ['operator-common', 'operator-live', 'operator-input-status'], original
+        page.locator('#calibration-change-input').click()
+        expect(page.locator('#input-screen')).to_be_visible()
+        page.evaluate("location.hash = '#calibration'")
+        expect(page.locator('#calibration-screen')).to_be_visible()
+        assert panel_order() == original, panel_order()
+    finally:
+        page.context.close()
+
+
 def completed_session_history(review):
     page = review.page(initial(c, {'scenarios': ['haupt-15'], 'startDelayMs': 2400}))
     c.enter_participant(page)
@@ -521,6 +545,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         optional_participant_navigation(review)
         completion_status_gap_keeps_recordings_visible(review)
         closeout_recovery_expires_without_changing_ordinary_connection_loss(review)
+        calibration_panel_order_survives_method_reentry(review)
         completed_session_history(review)
         stopped_preview_history(review)
         active_calibration_protects_participant(review)

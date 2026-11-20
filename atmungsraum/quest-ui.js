@@ -571,7 +571,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     // Only transitions move shared nodes; polling never detaches a focused editor.
     if (step !== displayedStep) {
       if (['input', 'calibration', 'tracking'].includes(step)) move('operator-input-status', body);
-      if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
+      if (['calibration', 'tracking'].includes(step)) {
+        const method = byId('operator-input-status');
+        const live = byId('operator-live');
+        // Either panel may already belong to this view after a retry.
+        // Anchor their order explicitly instead of relying on which one moved.
+        if (live.nextElementSibling !== method) method.before(live);
+      }
       if (step === 'settings') connectionView.after(byId('operator-common'));
       else if (!['questionnaire', 'update-help'].includes(step)) {
         move('operator-common', body);

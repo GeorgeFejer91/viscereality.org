@@ -122,7 +122,7 @@ headset and phone.
   PWA fix uses a fresh, monotonic, signed Polar connection generation to reset
   that watermark. Mounted regression tests, 352 Node tests (19 skipped) and
   462 rendered phone states passed. The attended phone used
-  `20261120-saved-headsets`. The `20261120-session-closeout` candidate
+  `20261120-saved-headsets`. The `20261120-calibration-order` candidate
   still needs publication and physical Pixel verification.
 - [x] Reproduce the completion-time connection page with a status gap after
   a signed running observation at 898.760 seconds. During a closeout gap on
@@ -130,6 +130,17 @@ headset and phone.
   unconfirmed for up to 30 seconds. Confirm idle and reconcile the archive
   before enabling Next Session. Mounted tests also cover an ordinary mid-run
   connection loss and return to Connect on a prolonged closeout outage.
+- [x] Reproduce the calibration panel order changing when visiting the method
+  screen and returning. Place the shared live panel before the method panel
+  when entering calibration or tracking. The mounted re-entry regression
+  verifies the same order without layout writes on routine polls.
+- [ ] Complete the attended Developer 38 run. The exact signed APK is installed
+  and paired. In the first calibration attempts, Android reported playing
+  while its playback head remained at zero and provided no timestamp. The
+  same symptom persisted through track replacement and an idle app restart.
+  ECG and motion were fresh and the 74 packaged audio entries matched
+  Developer 37. No main recording started. Isolate output-route recovery and
+  confirm that the native playback head advances before repeating calibration.
 - [x] Verify the phone's pause message explains an invalidated fit even if
   ECG and motion are back and the pause latch has cleared. The message keeps
   Finish available and leaves Continue subject to native readiness.
