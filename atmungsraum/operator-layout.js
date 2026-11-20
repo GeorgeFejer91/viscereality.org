@@ -38,7 +38,10 @@ export function resolveOperatorView(step, context) {
   if (step === 'questionnaire') step = 'recordings';
   // Settings retains shared recovery and session controls in its own view.
   if (step === 'settings' || step === 'update-help') return step;
-  if (!context.connected) return step === 'recordings' && (!context.recovery || context.offlineArchives) ? 'recordings' : 'connect';
+  if (!context.connected) {
+    if (context.closeoutRecovering) return 'recordings';
+    return step === 'recordings' && (!context.recovery || context.offlineArchives) ? 'recordings' : 'connect';
+  }
   if (step === 'update' && !(context.updateBlocked ?? context.recovery) && !context.waitingForControl) return 'update';
   if (context.active) return 'running';
   if (context.instructionPending) return 'calibration';

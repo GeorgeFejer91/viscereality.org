@@ -22,7 +22,7 @@ DEFAULT_APK = apk_fixture()
 GATEWAY = """
 // Keep the actual pure access contract; replace transport, never its UI gates.
 import { canControlQuest } from './quest-gateway.js?review-contract=1';
-export { backgroundMusicStatus, canControlQuest, companionAccessDenied, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
+export { audioMixStatus, backgroundMusicStatus, canControlQuest, companionAccessDenied, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
 // Every cache-versioned import shares one fixture, just as it reaches one Quest.
 export const owner = window.reviewOwner ??= {
   serial: 'DEMO-QUEST', device: 'd'.repeat(32), epoch: '7', native_epoch: '8',
@@ -95,12 +95,13 @@ function snapshot() {
     ...(settings.metaUpdate ? {meta_update_control:1} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     ...(settings.music ? {background_music:{...settings.music}} : {}),
+    ...(settings.roundAudio ? {audio_mix:{...settings.roundAudio}} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: settings.participantArm !== false, f: fresh }, a: settings.tracks ?? ['track-ready', 'track-ready'],
-    o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5,
+    o: { v: 1, s: 'observed', e: owner.native_epoch, a: settings.statusAge ?? 5,
       i: settings.freezeObservation && lastWitness ? lastWitness : (lastWitness = String(witness++)), g: generation, r: 0 },
     scenarios: Object.hasOwn(settings, 'scenarios') ? settings.scenarios ?? undefined : scenarios,
-    y: polar === 'unsupported' ? undefined : {
+    y: polar === 'unsupported' || settings.omitPolarSetup ? undefined : {
       s: 'a'.repeat(32), g: Number(owner.native_epoch), r: 1, p: polar !== 'permission', b: polar !== 'bluetooth',
       c: connected, a: settings.acc ?? polar === 'ready', e: settings.ecg ?? polar === 'ready', sc: polar === 'scan',
       ...(settings.location === undefined ? {} : { l: settings.location }),
@@ -131,7 +132,7 @@ function ecgPacket() {
         const beat = 310 * Math.exp(-((cycle - 36) ** 2) / 2)
           - 120 * Math.exp(-((cycle - 40) ** 2) / 3)
           + 40 * Math.exp(-((cycle - 52) ** 2) / 36);
-        return [String(1000000000 + Math.floor(index * 1000000000 / 130)),
+        return [String(1000000000 + (settings.ecgClockOffsetNs ?? 0) + Math.floor(index * 1000000000 / 130)),
           Math.round(beat + 12 * Math.sin(index / 11))];
       })
   };
@@ -149,7 +150,7 @@ async function observedStatus() {
     return current;
   } finally { window.reviewStatusInFlight--; }
 }
-function command({ id, op, condition, d, scenario }) {
+function command({ id, op, condition, d, scenario, preparation_id }) {
   settings.commands ??= [];
   settings.commands.push(op);
   const states = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 'RUNNING', 'save-next': 'IDLE' };
@@ -157,6 +158,7 @@ function command({ id, op, condition, d, scenario }) {
     settings.generation++;
     settings.condition = condition;
     settings.armedScenario = scenario;
+    settings.armedPreparationId = preparation_id;
     settings.host = 'vr-session';
   }
   const guidedStart = op === 'start' && settings.armedScenario === 'probe-5' && settings.probeInstructionMs;
@@ -226,7 +228,7 @@ function breathSetup(command) {
     return rejected;
   }
   if (v !== 1 || !/^[a-f0-9]{16}$/.test(id) || g !== setup.g || r !== setup.r
-    || !['start', 'calibrate', 'controller', 'polar-fixed', 'polar-adaptive'].includes(op)) {
+    || !['start', 'calibrate', 'polar-volume', 'controller', 'polar-fixed', 'polar-adaptive'].includes(op)) {
     return receipts[id] = { v: 1, id, state: 'rejected' };
   }
   if (settings.audioRecovery) {
@@ -235,7 +237,8 @@ function breathSetup(command) {
     return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'audio-recovery-pending',recovery_generation:null};
   }
   if (settings.deferSetup) return receipts[id] = {v:1,id,state:'pending'};
-  if (settings.calibrationInstruction && op === 'calibrate' && setup.attempt === 0) {
+  const guided = op === 'calibrate' || op === 'polar-volume';
+  if (settings.calibrationInstruction && guided && setup.attempt === 0) {
     setup.instruction_id = id;
     settings.pending = true;
     return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'calibration-instruction-pending'};
@@ -243,10 +246,11 @@ function breathSetup(command) {
   setup.r++;
   const parked = setup.stage === 'idle' && !setup.playing;
   if (op === 'start') Object.assign(setup, { stage: 'testing', playing: true, audio_state:'playing', parked:false });
-  if (op === 'calibrate') Object.assign(setup, {
+  if (guided) Object.assign(setup, {
     stage: parked ? 'calibrating' : 'waiting', input: 'automatic', ready: false, attempt: setup.attempt + 1,
     playing:true,audio_state:'playing',parked:false,
-    calibration: parked ? 'collecting' : 'waiting', failure: '', target_frames: 1411200, completed_frames: 0
+    calibration: parked ? 'collecting' : 'waiting', calibration_input: op === 'polar-volume' ? 'polar-volume' : 'polar-tilt',
+    failure: '', target_frames: 1411200, completed_frames: 0
   });
   if (op === 'controller') Object.assign(setup, {
     stage: 'testing', input: 'controller-state', ready: true, calibration: 'idle', playing:true,audio_state:'playing',parked:false,
@@ -336,6 +340,15 @@ export async function joinQuest({ endpoint, enrollment }) {
         : settings.receiptState ? {v:1,id,state:settings.receiptState}
           : receipts[id] ?? {v:1,id,state:'outcome_unknown'};
     }),
+    audioMix: settings.roundAudio ? controlled(async value => {
+      (window.reviewRoundAudioCommands ??= []).push(structuredClone(value));
+      if (window.reviewHoldRoundAudio) {
+        await new Promise(resolve => { window.reviewReleaseRoundAudio = resolve; });
+      }
+      Object.assign(settings.roundAudio, value);
+      settings.roundAudio.revision++;
+      return { ...settings.roundAudio };
+    }) : null,
     backgroundMusic: settings.music ? controlled(async value => {
       (window.reviewMusicCommands ??= []).push(structuredClone(value));
       const { playing, volume } = value;
@@ -373,7 +386,15 @@ export async function joinQuest({ endpoint, enrollment }) {
       : receipts[id] ?? { v: 1, id, state: 'outcome_unknown' }, close() {},
     recordings: async (query) => window.reviewRecordings
       ? window.reviewRecordings(query, owner) : { v: 1, state: 'ready', entries: [], next_before: null },
-    ecg: async () => ecgPacket()
+    ecg: async signal => {
+      const packet = ecgPacket();
+      if (window.reviewHoldEcg) {
+        window.reviewHeldEcgSignal = signal;
+        // Deliberately deliver the old packet even when the caller aborts.
+        await new Promise(resolve => { window.reviewReleaseEcg = resolve; });
+      }
+      return packet;
+    }
   };
 }
 """
@@ -1809,6 +1830,60 @@ def capture_ecg_continuity(review):
     page.context.close()
 
 
+def capture_ecg_source_replacement(review):
+    paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    page = review.page(paired + """window.reviewInitialQuest={
+      phase:'RUNNING',host:'vr-session',generation:12,polar:'ready',omitPolarSetup:true,
+      connectionGeneration:5,ecgClockOffsetNs:25000000000000,
+      access:{v:1,role:'active',active_phone:'Fixture',revision:1}
+    };""")
+    trace = page.locator("#quest-ecg-trace")
+    page.wait_for_function("Boolean(window.reviewQuest)")
+    page.clock.run_for(2400)
+    assert (trace.get_attribute("d") or "").startswith("M")
+    old_sample = page.evaluate("reviewLastEcg.samples.at(-1)[0]")
+
+    def refresh(values):
+        page.evaluate("values=>Object.assign(reviewQuest,values)", values)
+        calls = page.evaluate("reviewEcgCalls")
+        page.clock.run_for(1100)
+        assert page.evaluate("reviewEcgCalls") > calls
+
+    refresh({"ecgEmpty": True})
+    expect(trace).to_have_attribute("d", "")
+    refresh({"ecgEmpty": False, "ecgClockOffsetNs": 0})
+    assert int(page.evaluate("reviewLastEcg.samples.at(-1)[0]")) < int(old_sample)
+    expect(trace).to_have_attribute("d", "")
+    refresh({"healthSupported": False, "connectionGeneration": 6})
+    expect(trace).to_have_attribute("d", "")
+    refresh({"healthSupported": True, "connectionGeneration": 4})
+    expect(trace).to_have_attribute("d", "")
+    refresh({"connectionGeneration": 6, "statusAge": 5100})
+    expect(trace).to_have_attribute("d", "")
+
+    page.evaluate("""() => {
+      reviewQuest.ecgClockOffsetNs=25000000000000;
+      window.reviewHoldEcg=true;
+      dispatchEvent(new Event('online'));
+    }""")
+    page.wait_for_function("typeof window.reviewReleaseEcg === 'function'")
+    page.evaluate("""() => {
+      Object.assign(reviewQuest,{statusAge:5,ecgClockOffsetNs:0});
+      window.reviewHoldEcg=false;
+      dispatchEvent(new Event('online'));
+    }""")
+    page.wait_for_function("window.reviewHeldEcgSignal?.aborted === true")
+    page.evaluate("window.reviewReleaseEcg()")
+    refresh({})
+    assert int(page.evaluate("reviewLastEcg.samples.at(-1)[0]")) < int(old_sample)
+    expect(trace).not_to_have_attribute("d", "")
+    assert page.evaluate("({generation:reviewQuest.generation, commands:reviewQuest.commands??[]})") == {
+        "generation": 12, "commands": []
+    }
+    review.regressions.append({"kind": "live-ecg-source-replacement", "old_request_aborted": True, "commands": []})
+    page.context.close()
+
+
 def capture_parked_calibration(review):
     initial = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));" + """
       window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};"""
@@ -2072,6 +2147,7 @@ def main():
         if args.scope in ("all", "live"):
             capture_live_display(review)
             capture_ecg_continuity(review)
+            capture_ecg_source_replacement(review)
         if args.scope in ("all", "parked"):
             capture_parked_calibration(review)
         if args.scope in ("all", "automatic"):

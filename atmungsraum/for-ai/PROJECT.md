@@ -5,10 +5,90 @@
 - [x] Level all 103 tracked spoken WAV/MP3 files (67 distinct recordings) to
   −21 LUFS within 0.3 LU and rebind the browser and Quest audio assets. See
   [verification](VERIFICATION.md#speech-loudness-mastering--2026-11-20).
-- [ ] Verify the exact Pages deployment and live audio. Package the leveled
-  cues in the next qualified Developer APK, then confirm spoken playback
-  on the lab Quest using the installed Pixel controller. The current controller
-  release is `20261120-saved-headsets` and Meta policy advertises Developer 33.
+- [ ] Verify Pages and the live audio bytes for the reconciled release.
+- [ ] Package the leveled cues in the next qualified Developer APK, then
+  confirm spoken playback on the lab Quest with the installed Pixel controller.
+
+### Active: two consecutive attended runs — 2026-11-20
+
+- [x] Developer 37 completed a 900-second main with guidance bias at zero.
+  Unusable data paused at 51.435 seconds. After confirmed Bluetooth loss,
+  the same strap returned on a new connection, calibration remained ready,
+  and manual Continue advanced the original writer. The phone briefly showed
+  its connect page at completion, recovered the existing pairing in about
+  15 seconds and showed the saved recording.
+- [x] Prepare the [signed Developer 38 candidate](../quest/apks/README.md#developer-38-two-session-candidate--2026-11-20).
+  The source overlay includes the second-session and retained-fit changes,
+  the updated zero-bias Personal Tilt classifier and legacy Volume output
+  smoothing. The tuner compared the previous 20.78 seconds per 32-second
+  holdout with 21.93 seconds for the next candidate at zero bias. Cued
+  agreement is a replay measure and wearable acceptance is pending.
+- [x] Publish the phone ECG recovery, closeout and calibration guidance,
+  Polar Volume picker and rolling sphere-volume chart. The combined
+  `20261120-volume-round-audio` build retains round-audio controls, passes
+  465 rendered states, and is live at merge `26c2b099318053b4f19fc20eb6c2f6cc3e390f44`.
+  Twelve live files match the verified tree, the removed particles module
+  returns 404, and the paired Pixel loads the new entry with Volume enabled.
+  [PR 172](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
+  · [Pages run 44712538548](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44712538548)
+- [x] Install the signed Developer 38 r2 over idle Developer 37 and verify
+  installed bytes, saved Pixel pairing, keep-awake and zero guidance bias.
+  The shared calibration AudioTrack reported playing at frame zero even
+  after an app-only restart. A headset reboot restored advancement on the
+  same output route. Restore Wi-Fi ADB and verify keep-awake after reboot.
+- [x] Complete the first 900-second main in the post-reboot process. At
+  822.700 seconds, loss of Polar range paused writer generation 1. The
+  strap resumed both streams on return, the Personal Tilt fit stayed ready,
+  and the phone Continue advanced the original writer. On the installed
+  `20261120-saved-headsets` release, the ECG graph stayed waiting after
+  signed ECG had resumed. The same phone showed Connect for about
+  15 seconds at completion, then reconciled the saved recording.
+- [x] Reconcile the first archive and its test questionnaire. Next Session
+  opened a blank participant form, and a second zero-bias Personal Tilt
+  attempt fit 797 of 800 bins in the same Quest process.
+- [ ] Fix and retest automatic completion audio cleanup. The second Arm
+  reached generation 2 with an active writer, ready storage and current
+  sensor and calibration audio evidence. It remained in ARMING with zero
+  main time. The shared-scheduler auto-save path bypasses the Java stop
+  used by explicit terminal commands, leaving the previous condition audio
+  generation in the way of the next Arm. Android later killed the stuck
+  process for excessive Binder traffic after repeated status callbacks
+  filled the toast queue. Developer 39 stops the completed condition
+  player and uses panel text during retries. Require both 900-second saves
+  and advancing second main time without a process restart.
+- [x] Add the native [Quest calibration attempt recordings](plans/2026-11-20-calibration-attempt-recording.md)
+  and selected method/attempt metadata to Developer 39. Each admitted retry
+  has its own app-private raw capture. Preserve native timestamps and
+  the official main sample window.
+- [x] Prepare signed Developer 39 with calibrated Polar Volume and signed
+  renderer/guide telemetry for the rolling phone chart. The alternate
+  fixed and adaptive preset State choices are superseded on this build.
+  In the 13-recording cross-cycle replay, 600 ms smoothing on the
+  personal fit reduced held-out radius error to 0.064 m, versus 0.094 m
+  unsmoothed. The headset uses both cycles to fit. Physical comparison
+  remains pending.
+- [x] Publish Developer 39 to the existing private Meta Developer channel
+  in parallel with the lab rerun, as requested. The dashboard shows
+  `0.2.38-dev` / 39, Quest 2 and build `1472719655927046` active.
+  The basic malware and detailed security checks passed.
+- [ ] Finish the paired Volume test. Developer 39 returned signed
+  `calibration-recording-unavailable` for Volume before any cue played,
+  while both Polar streams were fresh. The native log identifies the
+  recording attempt file lock. Rust 1.96 returns an unsupported error
+  for `File::try_lock` on Android. Controller State reaches its preview
+  because it does not open a guided Polar capture. Developer 40 uses the
+  Android nonblocking exclusive lock for admission and recovery. A
+  device storage probe confirmed one owner and release on close. The
+  signed replacement and the two-session hardware run are pending.
+- [x] Compare adaptive axes, state/volume fusion and renderer radius on
+  the 13 available guided browser recordings. Six recordings were held out.
+  On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,
+  Adaptive Tilt's was 17.78, and blending in 25% volume slope gave 21.82.
+  The 150 ms Volume replay had 0.166 m mean absolute radius error against
+  the intended 1–2 m trace, versus 0.195 m with integrated State. Keep
+  real posture changes as the next physical comparison for personalized
+  axis recovery. The observed recordings vary in orientation by at most
+  1.47 degrees; the larger posture changes in the tuner were simulated.
 
 ### Active: main Start rejection and retained calibration — 2026-11-19
 
@@ -113,10 +193,60 @@ headset and phone.
   existing cases ignored. Signed package closure, 16 KiB alignment and exact
   installed bytes passed. The paired Pixel confirmed an idle Quest with zero
   bias and fresh ECG and motion. The watchdog reported its display awake.
-- [ ] Verify full-duration continuity and recovery after actual range loss on
-  Developer 37. Capture the sanitized transition marker to distinguish a
-  same-strap clock reanchor from an actual composition or sensor retirement.
-  Then complete a full main and start the next participant in the same app.
+- [x] Verify Developer 37 through actual Polar range loss and a full
+  900-second recording at zero guidance bias. Unusable data paused the main
+  at 51.435 seconds with the writer open. After confirmed Bluetooth loss,
+  the same strap returned on a new connection, the fit stayed ready and
+  manual Continue advanced the original run. Two later quality pauses also
+  resumed that run. Signed completion incremented the full-run count and
+  closed the writer. The live paired phone briefly showed its connection page
+  for approximately 15 seconds at completion, then recovered its pairing and
+  showed the saved archive.
+- [ ] Start the next participant from the saved recordings page in the same
+  Developer 37 process and confirm a new generation with advancing main time.
+  The operator requested a break at the saved-recording screen. The Quest
+  app and its keep-awake watchdog were left running.
+- [x] Reproduce the separate phone ECG preview failure after confirmed Polar
+  reconnection. The new valid ECG packet used a reset Polar clock, and the
+  mounted display rejected it against the old timestamp watermark. The local
+  PWA fix uses a fresh, monotonic, signed Polar connection generation to reset
+  that watermark. Mounted regression tests, 352 Node tests (19 skipped) and
+  462 rendered phone states passed. The attended phone used
+  `20261120-saved-headsets`. The combined `20261120-volume-round-audio`
+  candidate retains George's round-audio controls and still needs
+  publication and physical Pixel verification.
+- [x] Reproduce the completion-time connection page with a status gap after
+  a signed running observation at 898.760 seconds. During a closeout gap on
+  the same paired Quest, keep the recordings screen and mark the save
+  unconfirmed for up to 30 seconds. Confirm idle and reconcile the archive
+  before enabling Next Session. Mounted tests also cover an ordinary mid-run
+  connection loss and return to Connect on a prolonged closeout outage.
+- [x] Reproduce the calibration panel order changing when visiting the method
+  screen and returning. Place the shared live panel before the method panel
+  when entering calibration or tracking. The mounted re-entry regression
+  verifies the same order without layout writes on routine polls.
+- [x] Show headset restart guidance on the phone when a signed calibration
+  failure reports a stalled audio clock and fresh diagnostics show the current
+  output trying to play at frame zero without a timestamp. Device reboot
+  restored audio advancement and calibration on the attended Quest 2.
+- [x] Replace the running-session sphere preview with a rolling 16-second
+  chart of intended and applied sphere volume in cubic metres. Pair signed
+  renderer radius and audio-cue observations on their native clocks. Keep
+  actual history through Pause and break the trace across stale data or
+  reconnection. Legacy builds report actual volume when their renderer
+  evidence is current.
+- [x] On Quest builds that advertise calibrated Volume, offer it alongside
+  Personal Tilt State and Controller State. Volume uses the same guided
+  two-cycle fit. The phone passes an opaque preparation ID for supported
+  calibration attempts, retries and the matching Arm. A new participant
+  gets a fresh ID. Mounted fixtures verify the selection and association.
+- [ ] Complete the attended Developer 38 run. The exact signed APK is installed
+  and paired. In the first calibration attempts, Android reported playing
+  while its playback head remained at zero and provided no timestamp. The
+  same symptom persisted through track replacement and an idle app restart.
+  ECG and motion were fresh and the 74 packaged audio entries matched
+  Developer 37. No main recording started. Isolate output-route recovery and
+  confirm that the native playback head advances before repeating calibration.
 - [x] Verify the phone's pause message explains an invalidated fit even if
   ECG and motion are back and the pause latch has cleared. The message keeps
   Finish available and leaves Continue subject to native readiness.
@@ -232,6 +362,41 @@ rejects missing ECG packet prefixes/interior indices (20 tests pass and the old
 partial fails as expected), while allowing the first Start-clipped packet. This
 cannot prove an entirely absent packet or the final buffered sensor tail after
 producer cutoff. Hardware capture and sample-exact end coverage remain open.
+
+### Canonical round audio and remembered mix — 2026-11-20
+
+- [x] Use the supplied backgroundmusic.mp3 as a separately controlled loop
+  from round start through natural or early end, with pause and resume.
+  Freie Erkundung keeps its authored track and switches gain at its
+  verified speech-to-music boundary. The Haupt-Runde render contains the
+  instructions and cues as a separate layer, including its outro.
+- [x] Put Hintergrundmusik and Sprachanleitung sliders at the bottom of
+  Einstellungen. The Quest saves both levels across launches. Reset restores
+  30% music and 90% instructions. The controller uses authenticated readback
+  and retains edits across delayed replies only while it holds the same lease.
+- [x] Verify the audio layer and package resolution, Android 36 Java
+  compilation, host audio gates, and the focused phone layout at 320 px,
+  landscape and 200% text. The browser playground is live in atmungsraum-ui
+  at 4ed96a8 and passed Chrome playback, persistence and reset checks.
+- [x] Publish the production controller and native overlay at a9b01e5.
+  [Pages run 44708716401](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44708716401)
+  deployed the exact commit. Nine live files match Git. The exact-commit
+  smartphone gate passed 465 states.
+- [x] Build and verify local rehearsal code 55. Its v3 bench signature,
+  ARM64 OpenXR, bundled MP3 bytes and full audio/session closure passed.
+  See the [APK evidence](../quest/apks/README.md#round-audio-rehearsal-candidate-55--2026-11-20).
+  The 919-second default digital mix measured -24.0 LUFS and -4.8 dBTP.
+- [ ] Qualify a signed APK on the Quest 2 with the installed phone controller.
+  Test the instruction-to-music handoff in Freie Erkundung, interruption and
+  natural end, then listen at a fixed Quest system volume. Devices were absent
+  from the local transport at preflight.
+
+The MP3 measured -18.1 LUFS integrated. The default gain places that layer at
+about -28.6 LUFS. The playground narration files measure -19.7 to -20.9 LUFS
+before gain. Meta recommends -16 LUFS for the overall digital Quest mix.
+Its guidance provides no conversion from the Quest 2 volume index to dB SPL
+at the listener. The default is a starting mix for the supplied recordings.
+[Meta loudness guidance](https://developers.meta.com/vr/documentation/native/audio-loudness-meter-using/)
 
 ### Active: Quest background music across releases — 2026-11-19
 
@@ -5267,6 +5432,19 @@ USB debugging was subsequently authorized. A serial-scoped ADB shell verified
 the Pixel 10 running Android 16. None of its three installed Chrome WebAPKs
 declared the canonical Atmungsraum URL. Next: open the live URL in Android
 Chrome, install, and verify standalone relaunch from the Android launcher.
+
+## Background music library upload — 2026-11-20
+
+- [x] Add the supplied [MP3](../assets/audio/background/backgroundmusic.mp3)
+  with an empty spoken-word TXT. Full decode passed. The original 50,155,244 bytes
+  match SHA-256 `53bf70a3e1362721a5657eeaf8b8b94348f27c78818430840a6e98b0395b04c4`.
+  The browser and Quest continue to select their configured tracks.
+- [x] Publish the asset on main at 82893d0. [Pages run 44701402444](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44701402444)
+  succeeded. The full public MP3 matched the source SHA-256, a byte range
+  returned HTTP 206, the public TXT was empty, and the app entry returned HTTP
+  200. The context check and exact-commit smartphone gate passed (462 states).
+- [ ] Confirm the installed PWA on the lab Pixel when it is available. The
+  phone was unavailable through the local device connections during publication.
 
 ## Browser session background music — 2026-11-08
 

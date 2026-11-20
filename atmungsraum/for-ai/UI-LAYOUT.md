@@ -109,12 +109,16 @@ Quest elapsed clock. Render determinate progress
 only if the authenticated Quest snapshot reports a positive duration or
 confirms the shared-loop main-only build's fixed 900-second protocol and start
 frame. Other snapshots without a duration show elapsed time alone.
-The running view draws a simple particle sphere from the authenticated
-Quest renderer's applied radius, using the same source-time buffer and
-500 ms freshness window as tracking. Pause holds the visible radius.
-Missing or stale observations clear the running preview. Reduced motion
-leaves the numeric radius visible. The preview does not issue commands
-or drive the session clock.
+The running view plots the last 16 seconds of intended and applied sphere
+volume in cubic metres. Applied volume comes from the authenticated renderer
+radius and timestamp. Intended volume uses the signed radius bounds and the
+authoritative audio observation's own timestamp. Only the applied curve is
+available on builds that lack the new cue witness. Expired data leave gaps
+and clear current numeric values. Pause freezes the plot, resuming starts
+a new segment, and changing session or renderer settings clears history.
+Reduced motion keeps the plot and updates it only on new observations.
+The plot neither issues commands nor drives the session clock. Calibration
+and Tracking retain their existing circles.
 
 The user confirmed that the 10- and 15-minute practice rounds, the 20-minute
 box-breathing scenario, and the condition selector are intentionally absent

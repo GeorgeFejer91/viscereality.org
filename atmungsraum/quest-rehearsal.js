@@ -269,7 +269,7 @@ export class QuestRehearsal {
     return this.refreshing;
   }
 
-  async dispatch(gateway, op, status, signal, target = '', participantId = '', scenario = '') {
+  async dispatch(gateway, op, status, signal, target = '', participantId = '', scenario = '', preparationId) {
     signal?.throwIfAborted();
     const id = operationId();
     const pending = { id, op, owner: gateway.owner, generation: status.g };
@@ -294,7 +294,8 @@ export class QuestRehearsal {
       receipt = await gateway.recenter(command, signal);
     } else if (op === 'arm' && status.participant_arm === 1) {
       const selected = scenario ? { scenario } : {};
-      receipt = await gateway.participantArm({ ...command, ...selected, g: status.g, participant_id: participantId }, signal);
+      const preparation = status.setup?.calibration_capture === 1 && preparationId ? { preparation_id: preparationId } : {};
+      receipt = await gateway.participantArm({ ...command, ...selected, ...preparation, g: status.g, participant_id: participantId }, signal);
     } else if (op === 'arm' && scenario) {
       receipt = await gateway.scenarioArm({ ...command, g: status.g, scenario }, signal);
     } else {
@@ -303,8 +304,8 @@ export class QuestRehearsal {
     return this.observe(gateway, receipt);
   }
 
-  async dispatchAndConfirm(gateway, op, signal, timeout, target, participantId, scenario) {
-    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, target, participantId, scenario);
+  async dispatchAndConfirm(gateway, op, signal, timeout, target, participantId, scenario, preparationId) {
+    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, target, participantId, scenario, preparationId);
     const deadline = performance.now() + timeout;
     while (!confirmed && this.pending && !this.state.unknown && this.gateway === gateway
       && !signal?.aborted && performance.now() < deadline) {
@@ -347,7 +348,7 @@ export class QuestRehearsal {
     if (setup?.c && !setup.a) await this.dispatchAndConfirm(gateway, 'start-acc', signal, 32000, setup.x);
   }
 
-  async run(action, signal, condition = conditions[0], participantId = '', scenario = '', { confirmSave = false } = {}) {
+  async run(action, signal, condition = conditions[0], participantId = '', scenario = '', { confirmSave = false, preparationId } = {}) {
     const gateway = this.gateway;
     const clicked = this.state.status;
     const requested = action === 'recenter' && gateway?.recenter && canRecenter(clicked)
@@ -392,7 +393,7 @@ export class QuestRehearsal {
       if (scenario && (!gateway.scenarioArm || !rehearsalScenarios(status).includes(scenario))) return;
       // Only a confirmed Arm in the same foreground action may immediately lead to Start.
       // Polling and reconnect only read the original receipt.
-      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition, participantId, scenario)
+      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition, participantId, scenario, preparationId)
         && rehearsalActions(this.state.status).play === 'start') {
         await this.dispatch(gateway, 'start', this.state.status, signal);
       }

@@ -190,7 +190,7 @@ export class BoxBreathingEngine {
         const directory = new URL(protocol.audio_assets_base_directory, new URL(`${id}.json`, SCENARIO_DIRECTORY));
         const assets = await Promise.all(Object.entries(protocol.audio_assets).map(async ([assetId, block]) => {
           if (!decoded.has(block.sha256)) decoded.set(block.sha256, (async () => {
-            const audio = await fetch(new URL(block.file, directory));
+            const audio = await fetch(new URL(block.file, directory), { cache: 'no-cache' });
             if (!audio.ok) throw new Error(`Audio HTTP ${audio.status}: ${id}/${assetId}.`);
             const data = await audio.arrayBuffer();
             if (data.byteLength !== block.bytes || await sha256(data) !== block.sha256) {

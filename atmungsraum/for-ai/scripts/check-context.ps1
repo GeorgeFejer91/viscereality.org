@@ -4,7 +4,7 @@ param([string]$ProjectRoot = (Join-Path $PSScriptRoot '../..'), [switch]$Require
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $required = @('index.html', 'app.js', 'quest-ui.js', 'operator-layout.js', 'quest-rehearsal.js', 'quest-data.js', 'quest-drive.js',
-    'breathing-setup.js', 'quest-pairing.js', 'live-breath-display.js', 'live-ecg-display.js', 'style.css', 'package.json',
+    'breathing-setup.js', 'quest-pairing.js', 'live-breath-display.js', 'live-ecg-display.js', 'live-sphere-volume.js', 'style.css', 'package.json',
     'manifest.webmanifest', 'pwa-install.js', 'assets/icons/app-192.png', 'assets/icons/app-512.png',
     'assets/icons/app-maskable-512.png', 'assets/icons/apple-touch-icon.png',
     'data-files.js', 'quest-recording-store.js', 'data-logging.js',

@@ -22,4 +22,5 @@ quest/webrtc/* text eol=lf
 quest-webrtc-channel.js text eol=lf
 # A unified patch's blank context line is a required single space.
 quest/native-source.patch -whitespace
+quest/round-audio-mix.patch -whitespace
 for-ai/hooks/pre-push text eol=lf

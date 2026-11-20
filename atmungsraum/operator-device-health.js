@@ -81,7 +81,10 @@ export class OperatorDeviceHealth {
       polar: health?.link ? fieldFresh(health.battery.age_ms, batteryFor) ? valueText(health.battery.percent) : 'unbekannt'
         : health ? 'nicht verbunden' : 'unbekannt',
     };
-    this.view = { polar, battery, expiresIn: remaining.length ? Math.max(1, Math.min(...remaining)) : null };
+    const polarConnectionGeneration = health && health.connection_generation !== '0'
+      ? health.connection_generation : null;
+    this.view = { polar, battery, polarConnectionGeneration,
+      expiresIn: remaining.length ? Math.max(1, Math.min(...remaining)) : null };
     return this.view;
   }
 }

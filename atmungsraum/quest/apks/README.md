@@ -1,5 +1,116 @@
 # Atmungsraum Quest 2 APKs
 
+## Developer 40 calibration storage repair
+
+Apply [calibration-storage-lock.patch](../calibration-storage-lock.patch) to
+Developer 39 native source `3af8a77f429703550b1025fe87d59bd0094faaaa`.
+It reconstructs source `70c85fbb1c519b95ca2677c72989288e91f7a826`, tree
+`65c63764f7aee0bc7124eb5fa287de0eca2a2fea`. Patch SHA-256
+`3871bbb2afda44ec68ad36904f5290151cee2aa4af1f8e744c3edc6ec995e1fc`.
+Use the canonical Developer assembly and audio inputs at website source
+`503316c0b3497278a0876dcb00e0d7dc84125de4` for this lock-only repair.
+
+The Android build uses a nonblocking exclusive `flock` on the existing
+attempt file so a live writer and recovery cannot own it at the same time.
+Seven host capture tests passed and a Quest platform probe confirmed
+lock contention and release on close. Signed APK and attended acceptance
+are pending.
+
+## Developer 39 calibrated Volume candidate — 2026-11-20
+
+Canonical Developer package `org.viscereality.atmungsraum.developer`,
+version `0.2.38-dev`, code 39, 73,678,911 bytes. APK SHA-256
+`b18f54008000f1faba074b802374c331add9b5c601f644a6a031407e37e20811`.
+The v3 signer SHA-256 is
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+
+Apply [calibrated-volume-and-capture.patch](../calibrated-volume-and-capture.patch)
+to Developer 38 source `5d053dba13b17f37924aba3b0c41d5b04b5348e1`. It
+reconstructs tree `26abd1f02ec7e1cf90c0df0571ad427650f6b6c5` from native
+source `3af8a77f429703550b1025fe87d59bd0094faaaa`. The patch is 179,484
+bytes, SHA-256 `1a033b385118f85cbb958360c73e8ff3daf215dedb0f23002a79115e81d063b8`.
+The canonical build uses the Developer signer, SDK207, the retained
+private visual profile, and the approved Zen loop from website main
+`857b61f`. It passed signed 900-second session closure, ARM64, APK v3
+and 16 KiB alignment.
+
+The attended test exposed a recording admission rejection before guided
+Polar calibration. Rust 1.96 returns an unsupported error for
+`File::try_lock` on Android. Controller State still reaches preview.
+
+The new audio handoff stops the completed session's condition player
+before the next Arm prepares its track. Status polling keeps its
+preparation message in the panel. Polar Volume and Personal Tilt State
+share the guided two-cycle calibration. Personal Volume applies a 600 ms
+source-time output filter. Each admitted attempt stores app-private raw
+Polar ECG and motion, clock evidence and a result. The native recording
+binds the selected fit to an attempt when the phone supplies the matching
+preparation ID and the Quest verifies it. The paired phone update plots
+intended and actual sphere volume using signed renderer and cue evidence.
+
+The lab Quest 2 accepted the exact signed bytes through File Manager.
+It cold-launched through the standard Android launcher and remained
+awake. The combined native suite passed 946 tests with six isolated
+fixtures kept separate. Meta Developer channel `1529361979246951` shows
+Quest 2 build `1472719655927046` active as version `0.2.38-dev` / 39.
+The basic malware and detailed security checks passed. The paired Volume
+rerun is waiting for the phone release.
+
+## Developer 38 two-session candidate — 2026-11-20
+
+Canonical local Developer package `org.viscereality.atmungsraum.developer`,
+version `0.2.37-dev`, code 38, 73,617,469 bytes. APK SHA-256
+`a6ed80c7b1c48e05aaa89fcc32658113f8d9a2f219a5b8fb89dc422da3cc3bda`.
+The retained v3 signer SHA-256 is
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+
+Apply [two-session-polar.patch](../two-session-polar.patch) to the documented
+Developer 35 source `d114c54027995cff5095763ed11fc464cef959fb`.
+It reconstructs native commit `5d053dba13b17f37924aba3b0c41d5b04b5348e1`,
+tree `706f41dd2ef7c610d9626950a8f35d9b3e7c7181`. The patch is 108,143
+bytes, SHA-256 `6143b75afc652c55cc200db1c60f0e9105d29e1ee32c367123c85921a1bf9a8a`.
+Use the canonical assembly with the retained private experiment assets,
+Developer signer and SDK207. Actual signed 900-second session closure,
+ARM64 identity, v3 signature, 16 KiB alignment and exact patch tree
+reconstruction passed. The serialized native suite passed 935 tests with
+six isolated fixtures ignored.
+
+The overlay includes the next-session coordinator, retained fit across a
+verified same-strap reconnect, and zero-bias state tuning. The personal
+classifier enters a direction at 0.14 calibrated spans/s and uses a quarter
+of motion outside the display limits for slope, with the extra interval
+bounded to one calibrated span per side. The 300 ms derivative filter,
+0.055 spans/s exit threshold and visible 0–1 tilt remain. The existing Polar
+ACC Volume route gains a 150 ms output filter. Its history resets on stale input or
+a source or mapping transition and leaves the input to phase and
+the fit unchanged. The tuner separately evaluates first-cycle endpoint adjustment.
+
+The signed candidate was installed locally. After a headset reboot, an
+attended session paused on a real Polar range disconnect, resumed with
+the same fit and saved after 900 seconds. The next participant reached
+ARMING with a second writer, where lingering condition-audio ownership
+blocked the main timer. The [phone fixes](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
+have separate publication and physical acceptance. Developer 38 is a local
+test build.
+
+## Round audio rehearsal candidate 55 — 2026-11-20
+
+Package org.viscereality.atmungsraum.rehearsal, version
+0.2.54-round-audio / 55, 166,393,993 bytes. APK SHA-256
+d47d54d9db5aa80894942c9fe606d3f1f35277f76d8677ad9dbf40ed0ea0fe8c.
+The local bench v3 certificate is
+da5553bd6b95e1b6fc2d8e15173b7100c332148ba087b39222cbecec45bf0568.
+The distribution profile uses the retained signer for release updates.
+
+The [round audio overlay](../round-audio-mix.patch) on the cumulative
+native baseline and [full-round recording overlay](../round-polar-recording.patch)
+produces native source tree bb776c9c790217ad01045527a3f1cbec850707e4.
+Build with BundledAssets and MainStudyAudio. The signed package verifies
+ARM64 OpenXR, the exact canonical MP3 and the session/audio catalog closure.
+The full Haupt-Runde digital mix at 90% speech and 30% music measures
+-24.0 LUFS with a -4.8 dBTP true peak. The local lab transport enumerated no
+headset or phone. Installation, listening and Meta release remain pending.
+
 ## Authored full-round recording candidate 54 — 2026-11-20
 
 Package `org.viscereality.atmungsraum.rehearsal`, version

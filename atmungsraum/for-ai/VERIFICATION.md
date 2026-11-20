@@ -22,6 +22,13 @@ The bench headset and Pixel have no ADB connection from this host. ADB's
 mDNS service discovery returned no targets. Installed APK playback and
 physical acceptance remain pending.
 
+The reconciled `20261120-speech-leveling` entry retains the published Volume
+and round-audio PWA changes. Its browser audio loader revalidates WAVs when
+reading a revised manifest. A stale-cache regression failed before the fix
+and passed after it. The combined Node suite passes 363 with 19 native-fixture
+skips. The scenario and context checks pass, and Chrome plays all 20 local
+voice samples one at a time.
+
 ## Autonomous device validation
 
 This is the standing verification procedure for every applicable app, APK,
