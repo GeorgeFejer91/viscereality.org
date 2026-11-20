@@ -144,10 +144,10 @@ async function assertControllerOnly(run) {
 }
 
 async function assertBackgroundMusic(run) {
-  const musicPath = join(run.specPath, '..', 'atmungsraum-music', 'ji3ji3.mp3');
+  const musicPath = join(run.specPath, '..', 'atmungsraum-music', 'backgroundmusic.mp3');
   assert.equal(run.lock.build_inputs.assets.filter(path => path.endsWith('/atmungsraum-music')).length, 1);
   const bundled = await readFile(musicPath);
-  const supplied = await readFile(new URL('../assets/audio/background/ji3ji3.mp3', import.meta.url));
+  const supplied = await readFile(new URL('../assets/audio/background/backgroundmusic.mp3', import.meta.url));
   assert.equal(sha256(bundled), sha256(supplied));
 }
 
@@ -217,7 +217,7 @@ test('rehearsal can opt into the same closed startup and phone pairing as develo
     await assertBackgroundMusic(run);
   });
 
-test('authored-audio APK includes the separate phone-controlled music asset', {
+test('authored-audio APK includes the canonical loop as a separate asset', {
   skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to a patched native checkout.',
 }, async () => {
   const runName = `asm-music-study-${randomUUID().slice(0, 10)}`;

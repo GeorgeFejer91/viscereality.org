@@ -31,6 +31,13 @@ export function canControlQuest(status) {
   catch { return false; }
 }
 
+const validGain = value => Number.isInteger(value) && value >= 0 && value <= 100;
+export function audioMixStatus(value) {
+  return value?.v === 1 && Object.keys(value).sort().join(',') === 'instructions,music,revision,v'
+    && validGain(value.music) && validGain(value.instructions)
+    && Number.isSafeInteger(value.revision) && value.revision >= 0 ? value : null;
+}
+
 export function backgroundMusicStatus(value) {
   return value?.v === 1 && ['off', 'starting', 'playing', 'failed'].includes(value.state)
     && Number.isInteger(value.volume) && value.volume >= 0 && value.volume <= 100
@@ -389,6 +396,17 @@ export async function joinQuest({ endpoint, serial, device, identity_kind, build
           return controlled('breath-setup', { v: 1, id, op: 'receipt' }, requestSignal);
         } : null,
       recenter: enrollment ? (command, requestSignal) => controlled('recenter', command, requestSignal) : null,
+      audioMix: enrollment && audioMixStatus(initial.audio_mix) ? async (request, requestSignal) => {
+        if (request?.v !== 1 || Object.keys(request).sort().join(',') !== 'instructions,music,v'
+          || !validGain(request.music) || !validGain(request.instructions)) {
+          throw Error('Ungültige Lautstärken.');
+        }
+        const applied = audioMixStatus(await controlled('audio-mix', request, requestSignal));
+        if (!applied || applied.music !== request.music || applied.instructions !== request.instructions) {
+          throw Error('Die Quest hat die Lautstärken nicht bestätigt.');
+        }
+        return applied;
+      } : null,
       backgroundMusic: enrollment && backgroundMusicStatus(initial.background_music) ? async (request, requestSignal) => {
         if (request?.v !== 1 || Object.keys(request).length !== 2
           || !(typeof request.playing === 'boolean' || Number.isInteger(request.volume) && request.volume >= 0 && request.volume <= 100)) {

@@ -13,10 +13,10 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261120-calibrated-volume">
+  <link rel="stylesheet" href="./style.css?v=20261120-volume-round-audio">
   <link rel="stylesheet" href="./questionnaire.css?v=1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261120-calibrated-volume"></script>
+  <script type="module" src="./app.js?v=20261120-volume-round-audio"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -670,6 +670,20 @@
           </dialog>
         </details>
         <button id="quest-disconnect" hidden type="button"><span data-measure>Verbindung trennen</span></button>
+        <div id="quest-audio-mix" hidden>
+          <div class="round-audio-level">
+            <label for="round-music-volume"><span data-measure>Hintergrundmusik</span></label>
+            <output for="round-music-volume" aria-hidden="true" data-measure>30 %</output>
+            <input id="round-music-volume" name="music" type="range" min="0" max="100" value="30" disabled>
+          </div>
+          <div class="round-audio-level">
+            <label for="round-instruction-volume"><span data-measure>Sprachanleitung</span></label>
+            <output for="round-instruction-volume" aria-hidden="true" data-measure>90 %</output>
+            <input id="round-instruction-volume" name="instructions" type="range" min="0" max="100" value="90" disabled>
+          </div>
+          <button type="button" disabled><span data-measure>Zurücksetzen</span></button>
+          <p role="status" data-measure hidden></p>
+        </div>
       </div>
       <footer class="actions operator-actions">
         <button data-operator-return type="button"><span data-measure>Zurück</span></button>

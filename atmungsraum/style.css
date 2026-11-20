@@ -427,6 +427,42 @@ html[data-mode="quest"] .setup-actions #corner-actions { position: static; displ
 :is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) .actions { width: 100%; }
 :is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) button { width: 100%; }
 #toolbar-dialog .screen-body { display: grid; gap: var(--gap); }
+#quest-audio-mix {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(3px, min(1vw, 1dvh), 8px);
+  width: min(100%, 28rem);
+  justify-self: center;
+  min-inline-size: 0;
+}
+.round-audio-level {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 8px;
+  min-inline-size: 0;
+}
+.round-audio-level input {
+  grid-column: 1 / -1;
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: 0;
+  accent-color: var(--site-blue);
+}
+.round-audio-level output { text-align: end; }
+#settings-screen:has(#quest-audio-mix:not([hidden])) #quest-disconnect {
+  justify-self: stretch;
+  inline-size: 100%;
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  #quest-audio-mix {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(140px, .65fr);
+    align-items: end;
+    width: 100%;
+  }
+  #quest-audio-mix > p { grid-column: 1 / -1; }
+}
 #music-volume-control {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

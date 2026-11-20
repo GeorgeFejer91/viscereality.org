@@ -173,6 +173,47 @@ def capture_music_keyboard_burst(review):
         page.context.close()
 
 
+def capture_round_audio_mix(review):
+    for tag, viewport, font in (
+        ("320", {"width": 320, "height": 640}, "100%"),
+        ("landscape", {"width": 844, "height": 390}, "100%"),
+        ("enlarged", {"width": 390, "height": 844}, "200%"),
+    ):
+        mix = {"v": 1, "music": 30, "instructions": 90, "revision": 1}
+        page = review.page(initial(c, {"roundAudio": mix}), viewport=viewport)
+        try:
+            page.evaluate("size => document.documentElement.style.fontSize = size", font)
+            page.clock.run_for(4000)
+            expect(page.locator("#check-control")).to_have_attribute("data-check", "ok")
+            go(page, "settings")
+            music = page.get_by_role("slider", name="Hintergrundmusik")
+            speech = page.get_by_role("slider", name="Sprachanleitung")
+            expect(music).to_have_value("30")
+            expect(speech).to_have_value("90")
+            expect(page.locator("#music-open")).to_be_hidden()
+            assert music.bounding_box()["height"] >= 44
+            assert speech.bounding_box()["height"] >= 44
+            page.evaluate("window.reviewHoldRoundAudio = true")
+            music.press("Home")
+            page.wait_for_function("Boolean(window.reviewReleaseRoundAudio)")
+            speech.press("End")
+            expect(music).to_have_value("0")
+            expect(speech).to_have_value("100")
+            page.evaluate("window.reviewHoldRoundAudio = false; window.reviewReleaseRoundAudio()")
+            page.wait_for_function("window.reviewRoundAudioCommands.length === 2")
+            page.get_by_role("button", name="Zurücksetzen").click()
+            expect(music).to_have_attribute("aria-valuetext", "30 %")
+            expect(speech).to_have_attribute("aria-valuetext", "90 %")
+            assert page.evaluate("window.reviewRoundAudioCommands") == [
+                {"v": 1, "music": 0, "instructions": 90},
+                {"v": 1, "music": 0, "instructions": 100},
+                {"v": 1, "music": 30, "instructions": 90},
+            ]
+            review.shot(page, f"round-audio-{tag}", "Round audio controls", page.locator("#settings-screen"), "Settings")
+        finally:
+            page.context.close()
+
+
 def capture_recordings(review, tag, viewport, font):
     page = review.page(initial(c), viewport=viewport)
     page.evaluate("size => document.documentElement.style.fontSize = size", font)
@@ -1045,6 +1086,7 @@ def verify():
             capture_disconnected_recordings(review, font)
             capture_disconnected_recordings(review, font, cached=True)
         capture_music_keyboard_burst(review)
+        capture_round_audio_mix(review)
         capture_error_recording_update_save(review)
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
