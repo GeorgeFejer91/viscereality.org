@@ -5,9 +5,27 @@
 - [x] Level all 103 tracked spoken WAV/MP3 files (67 distinct recordings) to
   −21 LUFS within 0.3 LU and rebind the browser and Quest audio assets. See
   [verification](VERIFICATION.md#speech-loudness-mastering--2026-11-20).
-- [ ] Verify Pages and the live audio bytes for the reconciled release.
+- [x] Verify the reconciled release at commit `23c5c807`, including the
+  Developer 41 policy. All 170 checked public files match Git, including all
+  103 WAV/MP3 paths. Public Chrome playback passes for all 20 voice samples.
+  [Pages run 44719488035](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44719488035)
 - [ ] Package the leveled cues in the next qualified Developer APK, then
   confirm spoken playback on the lab Quest with the installed Pixel controller.
+
+### Lab device synchronization — 2026-11-20
+
+- [x] Install and cold-launch the requested Developer 38 APK. Its installed
+  SHA-256 matches the signed release record. Meta subsequently installed
+  Developer 41. Reopen its standard launcher and verify the installed hash
+  against the Developer 41 record.
+- [x] Connect the Pixel 10 standalone `20261120-volume-round-audio` PWA to
+  Developer 41. After returning to the WebAPK, the saved connection acquired
+  active control, displayed live Polar H10 ECG, and enabled Weiter. A frame
+  from the authenticated RustDesk session confirms the state. No new
+  enrollment was needed. The lab watchdog confirmed the Quest display on.
+- [ ] Confirm `20261120-speech-leveling` on the Pixel when the current
+  operator finishes and the app returns to idle. The paired controller
+  remained open for the operator.
 
 ### Active: two consecutive attended runs — 2026-11-20
 
