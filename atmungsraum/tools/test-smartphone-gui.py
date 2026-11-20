@@ -921,7 +921,10 @@ def check_participant_notice_height(review):
         change_notice("offline")
         expect(page.locator("#operator-meta-detail")).to_contain_text("Internetverbindung")
         restored = common.bounding_box()["height"]
-        assert abs(restored - short) <= 2, (short, restored)
+        # The initial short notice can still settle after a viewport resize.
+        # Require the returned notice to release the height reserved for longer text.
+        assert restored <= short + 2, (short, restored)
+        assert common.evaluate("node => node.style.minBlockSize") == ""
         expect(surname).to_be_focused()
         expect(surname).to_have_value("Tes")
         assert surname.evaluate("node => [node.selectionStart, node.selectionEnd]") == [1, 2]
