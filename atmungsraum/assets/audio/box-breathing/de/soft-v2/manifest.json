@@ -40,7 +40,7 @@
       "text": "Einatmen, zwei, drei, vier",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "8a8cd1ee73e5f5938526ed9a931b9f22108bd2b52478f535bcfc45dc133a09bf",
+      "sha256": "1c65f1d4cbafd08005e81e9fbcdf5a1933492e1be47708326b28bd411e919f68",
       "processing": {
         "source": "ElevenLabs Zen – Meditation German",
         "source_sha256": "2ffd7dbb4653cb4508616aa9b70f22769ebdfc90ae21a26c36562e02cbb92399",
@@ -108,7 +108,7 @@
       "text": "und halten",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "9d9b94628cdb4cc04de5412fd6c141beaabf758cb5ee7a6077648d6cc59de073",
+      "sha256": "0b43314cf66dfc9d8b954f2ab0ec6a05d9489d307c028570b1fdc92744dacda9",
       "processing": {
         "source": "ElevenLabs Zen – Meditation German",
         "source_sha256": "2ffd7dbb4653cb4508616aa9b70f22769ebdfc90ae21a26c36562e02cbb92399",
@@ -145,7 +145,7 @@
       "text": "Ausatmen, zwei, drei, vier",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "a0928afc435abf65771ad24984f5567154b50c1a1ad363c1bc7886bfc3e690d7",
+      "sha256": "4bf786a865d82b3eab3594f685c92a6196226a86b74ce5ba0eafa4a7d4d535cb",
       "processing": {
         "source": "ElevenLabs Zen – Meditation German",
         "source_sha256": "99d340dd99bcc1a01441d3593728aea516a9ccb0fac7e1602251771c8587a833",
@@ -213,7 +213,7 @@
       "text": "und halten",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "9d9b94628cdb4cc04de5412fd6c141beaabf758cb5ee7a6077648d6cc59de073",
+      "sha256": "0b43314cf66dfc9d8b954f2ab0ec6a05d9489d307c028570b1fdc92744dacda9",
       "processing": {
         "source": "ElevenLabs Zen – Meditation German",
         "source_sha256": "2ffd7dbb4653cb4508616aa9b70f22769ebdfc90ae21a26c36562e02cbb92399",
@@ -250,10 +250,10 @@
       "text": "Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam.",
       "frames": 1764000,
       "bytes": 3528044,
-      "sha256": "e8420f23c6537a7c0e7484e9602f501fa065d27617ba3bb8224c0af71abba21e",
+      "sha256": "d8eb88b9e79ee15cd3a4c2ad09dda7163ca74f2183e6663314f6c7b5d30f9f8c",
       "processing": {
         "speech_frames": 1710001,
-        "sample_peak_dbfs": -8
+        "sample_peak_dbfs": -6.83
       }
     },
     "ending": {
@@ -261,10 +261,10 @@
       "text": "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",
       "frames": 529200,
       "bytes": 1058444,
-      "sha256": "1922cee5cd6e8c7ac26e9768d05d590aa50bde29ae0fe34adba0a2759032e87d",
+      "sha256": "3d0346fdee251265d435d17daeeed212a488cf0222b5f1ca8261caa6a07edff1",
       "processing": {
         "speech_frames": 481912,
-        "sample_peak_dbfs": -8
+        "sample_peak_dbfs": -7.66
       }
     },
     "rest": {
@@ -272,7 +272,7 @@
       "text": "Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.",
       "frames": 882000,
       "bytes": 1764044,
-      "sha256": "2dea8d7b03df86d041661e855beda5fcede7257f3727d0ea9819b95a3c16e344",
+      "sha256": "1c82cded78faeef0b9a205fa39fbecf51fc0c920579ccf2beaaca7f43f81a6ac",
       "processing": {
         "resume_onset_frame": 705600
       }
@@ -282,7 +282,7 @@
       "text": "Einatmen, zwei, drei, vier",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "203fecc48da9d940f9c492255067e01f620de5a1d1399e70816fdf05641188e3",
+      "sha256": "eb488b3f1dd3606eae23b4420f8d4158add72babf95bc7045cd961b6fe2ce94a",
       "processing": {
         "voice_block": "inhale",
         "breath_peak_dbfs": -20,
@@ -292,7 +292,7 @@
         "source_duration_seconds": 3.502018140589569,
         "breath_tempo_factor": 0.8755045351473922,
         "target_duration_seconds": 4,
-        "voice_sha256": "8a8cd1ee73e5f5938526ed9a931b9f22108bd2b52478f535bcfc45dc133a09bf"
+        "voice_sha256": "1c65f1d4cbafd08005e81e9fbcdf5a1933492e1be47708326b28bd411e919f68"
       }
     },
     "exhale_breath": {
@@ -300,7 +300,7 @@
       "text": "Ausatmen, zwei, drei, vier",
       "frames": 176400,
       "bytes": 352844,
-      "sha256": "9667387cb026264c8a2b041fa6de11cf25ef6304c1fa4b07ef86f688cd33a720",
+      "sha256": "c8c1dcb0a5c86cf529878c6690f3f5971c1d081e761e905b3311476632838593",
       "processing": {
         "voice_block": "exhale",
         "breath_peak_dbfs": -20,
@@ -310,7 +310,7 @@
         "source_duration_seconds": 4.411292517006803,
         "breath_tempo_factor": 1.1028231292517008,
         "target_duration_seconds": 4,
-        "voice_sha256": "a0928afc435abf65771ad24984f5567154b50c1a1ad363c1bc7886bfc3e690d7"
+        "voice_sha256": "4bf786a865d82b3eab3594f685c92a6196226a86b74ce5ba0eafa4a7d4d535cb"
       }
     },
     "calibration": {
@@ -337,12 +337,12 @@
       "text": "Bevor wir beginnen, machen wir eine kurze Atemkalibrierung. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt.",
       "frames": 1146600,
       "bytes": 2293244,
-      "sha256": "ce79be01ea8ed2cfcf64c9062d78e337dc76429acf2e58e5ed3aca50e9fd35b2",
+      "sha256": "b0a72305f7f64831f7448471523dac9676eb073feca899553005161834e39149",
       "provider": "Secret Tunnel native OmniVoice",
       "voice": "Atmungsraum - Existing Instructor",
       "model_id": "k2-fsa/OmniVoice",
       "processing": {
-        "sample_peak_dbfs": -8,
+        "sample_peak_dbfs": -8.34,
         "speech_time_stretch": false,
         "source_segments": [
           {
@@ -435,11 +435,11 @@
       "text": "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",
       "frames": 837900,
       "bytes": 1675844,
-      "sha256": "76145123e9a6605a47a426883404c350f86e8110f41bac226154a0417ad8c6e1",
+      "sha256": "d414d469f300264de487384430df17fb7a74cd135fb0e21cf53de4bfe1030049",
       "processing": {
         "speech_start_frame": 308700,
         "source_asset": "ending",
-        "source_sha256": "1922cee5cd6e8c7ac26e9768d05d590aa50bde29ae0fe34adba0a2759032e87d",
+        "source_sha256": "3d0346fdee251265d435d17daeeed212a488cf0222b5f1ca8261caa6a07edff1",
         "source_samples_unchanged": true
       }
     }

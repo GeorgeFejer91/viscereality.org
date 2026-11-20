@@ -6,16 +6,16 @@
     {
       "file": "inhale.mp3",
       "text": "Atme bitte jetzt ganz ein.",
-      "bytes": 15213,
-      "sha256": "690e1274ac2b197207e8ad78b0436b888d49b6d15089143788df450c20b9bba8",
+      "bytes": 18908,
+      "sha256": "8c40a596066e8fab86db5f2ffb72e3c291acda4db162f6aee58c437e2e52cd82",
       "verified_transcript": "Atme bitte jetzt ganz ein.",
       "duration_s": 1.92
     },
     {
       "file": "exhale.mp3",
       "text": "Atme bitte ganz aus.",
-      "bytes": 14541,
-      "sha256": "837af8a48bea74c9180f16617d80c83cbbd92bb8737ae17381906ed5e49f9c74",
+      "bytes": 17660,
+      "sha256": "c1aa90aa452262d60870afdb9b912c22b311f6a88717c40ce023bb33a02ac6cc",
       "verified_transcript": "Atme bitte ganz aus.",
       "duration_s": 1.76
     }

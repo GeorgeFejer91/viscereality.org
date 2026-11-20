@@ -4,12 +4,12 @@
   "text": "Bevor wir beginnen, machen wir eine kurze Atemkalibrierung. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt.",
   "frames": 1146600,
   "bytes": 2293244,
-  "sha256": "ce79be01ea8ed2cfcf64c9062d78e337dc76429acf2e58e5ed3aca50e9fd35b2",
+  "sha256": "b0a72305f7f64831f7448471523dac9676eb073feca899553005161834e39149",
   "provider": "Secret Tunnel native OmniVoice",
   "voice": "Atmungsraum - Existing Instructor",
   "model_id": "k2-fsa/OmniVoice",
   "processing": {
-    "sample_peak_dbfs": -8,
+    "sample_peak_dbfs": -8.34,
     "speech_time_stretch": false,
     "source_segments": [
       {

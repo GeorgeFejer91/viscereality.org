@@ -44,8 +44,8 @@
       "sources": [
         "Control1.mp3"
       ],
-      "bytes": 894233,
-      "sha256": "43cd0f4e35c6cc0dee14fbb7f12d1fe81b98f26717a67bee48a7b1d4091473c7",
+      "bytes": 791644,
+      "sha256": "922af6b59f3e8c9969f424d87ef26f8a3ab0d2224959a7bb29624f95d3121737",
       "duration_seconds": 54.831,
       "text": "Schließe deine Augen und richte deine Aufmerksamkeit auf deine Atmung. Versuche, dem leisen Geräusch deines Atems zu lauschen. Atme dabei ganz natürlich weiter, ohne etwas zu verändern. Während du so weiteratmest, höre einmal genauer hin. Wie klingt es, wenn du einatmest? Und wie, wenn du wieder ausatmest? Lass deine Augen geschlossen und lausche weiter deinem Atem. Vielleicht hörst du ihn manchmal deutlicher und manchmal kaum. Sollten deine Gedanken zwischendurch abschweifen, lass sie einfach weiterziehen und richte deine Aufmerksamkeit wieder auf das leise Geräusch deiner Atmung. Bleibe noch eine Weile mit geschlossenen Augen dabei. Hör einfach weiter zu, wie dein Atem ganz von selbst kommt und wieder geht.",
       "transcript_method": "Whisper small (de); punctuation and orthography normalized",
@@ -59,8 +59,8 @@
       "sources": [
         "control2.mp3"
       ],
-      "bytes": 1044280,
-      "sha256": "575ebb47c54cf514e81010f119294d92b2fd8793139995451512939a8118a3f6",
+      "bytes": 919325,
+      "sha256": "7da978163a418dc4eeea469e05195cf86fe6d9d256112269d3c353d28d06b308",
       "duration_seconds": 64.208938,
       "text": "Öffne nun langsam deine Augen und richte deinen Blick entspannt nach vorne. Versuche auch mit offenen Augen weiterhin dem leisen Klang deiner Atmung zu folgen. Während du deine Umgebung wahrnimmst, achte auf das sanfte Rauschen der Luft, die durch deine Nase ein und wieder ausströmt. Wie eine kleine Welle, die kommt und wieder geht. Lass deinen Blick ganz ruhig. Die Dinge um dich herum dürfen einfach da sein, ohne dass du dich näher mit ihnen beschäftigen musst. Folge dem leisen Klang deines Atems wie dem sanften Rauschen der Blätter im Wind. Falls deine Gedanken abschweifen, lass sie einfach weiterziehen. Wende dich wieder dem sanften Kommen und Gehen deiner Atemgeräusche zu. Halte deine Augen weiterhin geöffnet und lass deinen Blick entspannt nach vorne gerichtet. Die Geräusche deiner Umgebung dürfen in den Hintergrund treten. Bleibe noch eine Weile bei deiner Atmung und höre ihr zu.",
       "transcript_method": "Whisper small (de); punctuation and orthography normalized",
@@ -74,8 +74,8 @@
       "sources": [
         "BoxBreathingInstructions1.mp3"
       ],
-      "bytes": 679402,
-      "sha256": "30c709ad6e999b15c92c5d0f0c5425a83dd6b7ee4d19c8cbd5ee597a5c42aa0e",
+      "bytes": 585991,
+      "sha256": "214c54f02c3426e8e6c4cfb7d0e7431d9c5aae5123cd31a9db0a5fba5018483a",
       "duration_seconds": 41.404063,
       "text": "Kommen wir nun zur Atmungsübung. Stell dir einen Luftballon tief in deinem Bauch vor. Atme langsam und vollständig durch die Nase ein. Dabei füllt sich der Ballon, dein Bauch hebt sich und dein Brustkorb weitet sich. Halte den Atem kurz an. Atme dann langsam durch den Mund aus, so dass sich der Ballon wieder leert. Wir folgen einem gleichmäßigen Rhythmus. Vier Sekunden einatmen, vier Sekunden halten, vier Sekunden ausatmen und erneut vier Sekunden halten. Atme dabei ruhig und ohne Anstrengung. Wir beginnen.",
       "transcript_method": "Whisper small (de); punctuation and orthography normalized",
@@ -89,8 +89,8 @@
       "sources": [
         "Ein1.mp3"
       ],
-      "bytes": 135219,
-      "sha256": "52e5d3b149e5d983e58f0c6a1119506caf64a824d91ab643e7228211ad8847d7",
+      "bytes": 103403,
+      "sha256": "f26acc8f8093532606f61906871cd92bf246a7941545f5326049cd1d81c07bb4",
       "duration_seconds": 7.392625,
       "text": "Einatmen. Zwei. Drei. Vier. Und halten.",
       "transcript_method": "Whisper tiny/medium (de)",
@@ -106,8 +106,8 @@
         "Ein2.mp3",
         "ElevenLabs_2026-11-16T14_20_45_Zen - Meditation german_pvc_s50_sim76_v4.mp3"
       ],
-      "bytes": 126442,
-      "sha256": "2ffd7dbb4653cb4508616aa9b70f22769ebdfc90ae21a26c36562e02cbb92399",
+      "bytes": 97973,
+      "sha256": "d3d9763bd040c70690d09b978d11e9fb65560e1a49b74d2e18e16436d8851dd7",
       "duration_seconds": 6.844063,
       "text": "Einatmen. Zwei. Drei. Vier. Und halten.",
       "transcript_method": "Whisper tiny/medium (de)",
@@ -122,8 +122,8 @@
       "sources": [
         "Ein3.mp3"
       ],
-      "bytes": 136473,
-      "sha256": "90d2ad83e47fc67dbb06858b95b0f8c689017dfbcd20d119aa25714bd9a01f4e",
+      "bytes": 105222,
+      "sha256": "05c01e58c5495da4ec2dad381f795dcd5fb398d07b5516f2d2c3556f10a24c45",
       "duration_seconds": 7.471,
       "text": "Einatmen. Zwei. Drei. Vier. Und halten.",
       "transcript_method": "Whisper tiny/medium (de)",
@@ -138,8 +138,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T13_36_34_Zen - Meditation german_pvc_s50_sim75_v4 (1).mp3"
       ],
-      "bytes": 84228,
-      "sha256": "0b9bd86cb3d4a5ffe90fbd9cb5d6b8a67ea5184af146d87ff723f5927f872cbd",
+      "bytes": 60953,
+      "sha256": "b219d744381291ce962cb8fbd37b0c6182367265677e0a84abfdc1ec45aec499",
       "duration_seconds": 4.205688,
       "text": "Einatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -154,8 +154,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T13_36_34_Zen - Meditation german_pvc_s50_sim75_v4.mp3"
       ],
-      "bytes": 82974,
-      "sha256": "014ec484e033810bbe39c03da307b0a6c8a84c48cdcee0718e92166da643710a",
+      "bytes": 58967,
+      "sha256": "b56153ead731087702e7d459227f8d668ca5a57a809e7405e5f2f1298b0df927",
       "duration_seconds": 4.127313,
       "text": "Einatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -170,8 +170,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T13_38_42_Zen - Meditation german_pvc_s50_sim75_v4.mp3"
       ],
-      "bytes": 84228,
-      "sha256": "563fbc42fa413457ec05debf5870c38d06fc116f67c5ed20e2afe8e4b81d29ba",
+      "bytes": 58155,
+      "sha256": "49e9584e9b6d3c31c3a59bc79777e8edb2fb5df47aa0bdda4d019439e8c18f08",
       "duration_seconds": 4.205688,
       "text": "Einatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -186,8 +186,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T13_48_11_Zen - Meditation german_pvc_s50_sim75_v4.mp3"
       ],
-      "bytes": 91751,
-      "sha256": "e8510659b5a66437c935cbd262695fd528a284d15e3a0ce6ab6f664e7d851841",
+      "bytes": 67126,
+      "sha256": "c9c1687e5d8d42fb1e2c7177c212b1125ea84252d809671a979767935150f487",
       "duration_seconds": 4.675875,
       "text": "Einatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -202,8 +202,8 @@
       "sources": [
         "Aus1.mp3"
       ],
-      "bytes": 131457,
-      "sha256": "79707e20c27082845df0dbef3fd0eac4728596ee407bd717d5ed8b0c0671a3e5",
+      "bytes": 101861,
+      "sha256": "70b30ff2082445c036e4c21fbdf59cd8b98dd4618912a4c8d4d65740e0a2dbeb",
       "duration_seconds": 7.1575,
       "text": "Ausatmen. Zwei. Drei. Vier. Und halten.",
       "transcript_method": "Whisper tiny/medium (de)",
@@ -218,8 +218,8 @@
       "sources": [
         "Aus2.mp3"
       ],
-      "bytes": 126442,
-      "sha256": "a334c07bca3af9e1b1c0276dc3cfc1b740d3315392a25e265058d2625dfd017a",
+      "bytes": 98311,
+      "sha256": "64c9d2b40d5802c92d033cdde04801e99c5a5ece4e2a884ed3dc83273a805dc9",
       "duration_seconds": 6.844063,
       "text": "Ausatmen. Zwei. Drei. Vier. Und halten.",
       "transcript_method": "Whisper tiny/medium (de)",
@@ -234,8 +234,8 @@
       "sources": [
         "Aus3.mp3"
       ],
-      "bytes": 122680,
-      "sha256": "ba6b3a73aa75353736d9f6093fed96f50960ac06bff938c5ab86e5255ead775f",
+      "bytes": 93956,
+      "sha256": "da129aa935cfb1bfcb46cb7bfed23bca11c4d0edf80a52f8f93356a78930e99b",
       "duration_seconds": 6.608938,
       "text": "Ausatmen. Zwei. Drei. Vier. Und halten.",
       "transcript_method": "Whisper tiny/medium (de)",
@@ -250,8 +250,8 @@
       "sources": [
         "Aus4.mp3"
       ],
-      "bytes": 130203,
-      "sha256": "d85d4ce36d475af3ff77373d88d76f5b725c098f6a6ce2aa7eb373631d28c12f",
+      "bytes": 101862,
+      "sha256": "c8c8cb8e43ea695482c01e4042ea9082f5469b14778a3e2b0a9bd7ee1aae7dc4",
       "duration_seconds": 7.079125,
       "text": "Ausatmen. Zwei. Drei. Vier. Und halten.",
       "transcript_method": "Whisper tiny/medium (de)",
@@ -266,8 +266,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T14_04_06_Zen - Meditation german_pvc_s50_sim75_v4.mp3"
       ],
-      "bytes": 93005,
-      "sha256": "b496dcd07a35d8bd45f72aafb1d006d79bcba56bd65d66e6d88e6fc8f78f05a0",
+      "bytes": 70260,
+      "sha256": "1b56a6c14d0ac98683da4a3a426e663a02212ee1990fc14403b37e6ee221e9db",
       "duration_seconds": 4.75425,
       "text": "Ausatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -282,8 +282,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T14_04_26_Zen - Meditation german_pvc_s50_sim75_v4.mp3"
       ],
-      "bytes": 90497,
-      "sha256": "4b37747ce4f87ed912b448a580fc62e2549b9a8b398015b4818378747d33c742",
+      "bytes": 66452,
+      "sha256": "1bef15bacc188cff4541eece46f6c3bf0ea2fcb4e46bbec65c1cf61244087ca2",
       "duration_seconds": 4.5975,
       "text": "Ausatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -298,8 +298,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T14_04_42_Zen - Meditation german_pvc_s50_sim75_v4.mp3"
       ],
-      "bytes": 90497,
-      "sha256": "95b00bdc1373d2af62c7abc7cb62e15f4e9af0e20f734764e9321a892afd3a57",
+      "bytes": 67078,
+      "sha256": "44e72a887bb0e2262e3cd04c042ad7bb1c39aee00fd929f45e895d2ded5e50f4",
       "duration_seconds": 4.5975,
       "text": "Ausatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -314,8 +314,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T14_07_00_Zen - Meditation german_pvc_s50_sim75_v4 (1).mp3"
       ],
-      "bytes": 91751,
-      "sha256": "99d340dd99bcc1a01441d3593728aea516a9ccb0fac7e1602251771c8587a833",
+      "bytes": 68540,
+      "sha256": "88113d777f433edc160aba86427797999ac4bfe8558a58e23bc2e44bcd25fa87",
       "duration_seconds": 4.675875,
       "text": "Ausatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -330,8 +330,8 @@
       "sources": [
         "ElevenLabs_2026-11-16T14_07_00_Zen - Meditation german_pvc_s50_sim75_v4.mp3"
       ],
-      "bytes": 91751,
-      "sha256": "42a7825fa973af8e935fc953868cd29b323f5b81235c084b2a93636f1045f266",
+      "bytes": 67967,
+      "sha256": "ca839db4cdb03a16050fe607ff1de70259a1dadf4fa58b449428a465ad7c3b78",
       "duration_seconds": 4.675875,
       "text": "Ausatmen. Zwei. Drei. Vier.",
       "transcript_method": "Whisper tiny (de); cue spelling and counts normalized",
@@ -346,8 +346,8 @@
       "sources": [
         "halten.mp3"
       ],
-      "bytes": 52045,
-      "sha256": "e46936d97ea92b58c4afcec4b4897322c9bfe496841db07652804871ff098acd",
+      "bytes": 28899,
+      "sha256": "b7e8ef4fa1ec3231e62757c5cff7d37d127f96f55af297dae6a78d226e5dc180",
       "duration_seconds": 2.19425,
       "text": "Und halten.",
       "transcript_method": "Whisper base (de); cue spelling normalized",
@@ -361,8 +361,8 @@
       "sources": [
         "halten1.mp3"
       ],
-      "bytes": 49537,
-      "sha256": "466c5cf8a59d101c29c7d342b89c3e5eccf0a33a70dc2ec1875a526492d6b188",
+      "bytes": 26185,
+      "sha256": "8d2fc9aa93d59214c5be2b225844c51004b4ffef6ca448efd109cd9e0bedec0e",
       "duration_seconds": 2.0375,
       "text": "Und halten.",
       "transcript_method": "Whisper base (de); cue spelling normalized",
@@ -395,8 +395,8 @@
       "sources": [
         "ElevenLabs_2026-11-17T14_40_02_Zen - Meditation german_pvc_s50_sim76_v4.mp3"
       ],
-      "bytes": 742096,
-      "sha256": "f8ca3ff95a1a9097c5cdc3d6f89171e0495315863ba30e154db536e29825b2ca",
+      "bytes": 656479,
+      "sha256": "3efeb1e8ba5daf0c38886f2ca05097659ab48162ec4177ef7201dc7097bdfd5e",
       "duration_seconds": 45.32244897959184,
       "frames_44100": 1998720,
       "transcript_method": "Whisper medium (de); punctuation and orthography normalized"
@@ -409,8 +409,8 @@
       "sources": [
         "ElevenLabs_2026-11-17T15_53_39_Zen - Meditation german_pvc_s50_sim76_v4.mp3"
       ],
-      "bytes": 743350,
-      "sha256": "b022136da1053f8a8ed5ab8f02b4bd587e2fafa9700f24e078acaf1b84a0f122",
+      "bytes": 654731,
+      "sha256": "438a93af912fa1d9c6d204d78edf13b693621d2acf8bb1cd7139b8dc5483e152",
       "duration_seconds": 45.40081632653061,
       "text": "Wir wiederholen jetzt die Atemübung von vorhin, diesmal für fünf Minuten.\n\nZur Erinnerung: Vier Sekunden einatmen, vier Sekunden den Atem anhalten, vier\nSekunden ausatmen und erneut vier Sekunden pausieren.\n\nNimm eine bequeme, aufrechte Haltung ein und entspanne deine Schultern. Stell\ndir beim Einatmen vor, wie sich deine unteren Rippen sanft wie ein Regenschirm\nöffnen. Beim Ausatmen lässt du die Luft langsam ausströmen und deinen Brustkorb\nwieder entspannen. Halte den Atem während der Pausen ohne Anstrengung an.\n\nFalls sich der Rhythmus unangenehm anfühlt, kehre zu deiner natürlichen Atmung\nzurück.\n\nBereit?",
       "frames_44100": 2002176,

@@ -110,8 +110,8 @@ test('the authored Quest package binds the entire main mix including the outro, 
   assert.equal(plan.encoded_audio.duration_frames, exploration.total_frames);
   assert.equal(catalog.calibration_instruction.duration_frames, 1_952_640);
   for (const [clip, expected] of [
-    [plan.encoded_audio, '1f1e942ba5ec3c74eb680958047b90ba0e8385e3d4dc3eb641514c57b6f6ab2a'],
-    [catalog.calibration_instruction, '9d723c7fd5e397c087acf8be5e16c38b04344a7deed4c908057a645ac2e0c67a'],
+    [plan.encoded_audio, 'ec1f335dac687b91faf564426ef788ad536e656600aace2ae922aa10c3150137'],
+    [catalog.calibration_instruction, '79a0376f8d930c35a2882881dee33105aa9248429b978d7200628cf887396cab'],
   ]) {
     const bytes = await readFile(join(output, clip.path));
     assert.equal(bytes.length, clip.bytes);
