@@ -66,6 +66,17 @@ RustDesk frames can be scaled. For an idle standalone PWA, send
 `KEYCODE_HOME` and start its resolved MAIN/LAUNCHER component through ADB.
 Verify foreground, standalone mode, the loaded release and saved pairing.
 
+## Recover the Bluetooth prompt
+
+If Android shows the RustDesk floating window when the installed PWA opens
+the Bluetooth chooser, turn off RustDesk's **Floating window** setting and
+leave **RustDesk Input** bound. If the current share still shows the bubble,
+stop screen sharing and retry the chooser directly on the phone. On the lab
+Pixel 10 this opened the Chrome chooser and listed Quest 2. Bring Atmungsraum
+Developer to the foreground on the headset before selecting it and confirming
+the matching codes. Restart sharing with **Floating window** off when remote
+input is needed again.
+
 ## Use the lab credential file
 
 The handset owner picks the permanent password. Store the path to their existing

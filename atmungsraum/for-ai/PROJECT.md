@@ -2424,6 +2424,13 @@ retired with the move to Quest-only operation. Its CSVs remain available at
 - [x] Verify the installed app on the lab Pixel 10. On 2026-11-17 the WebAPK
   launched Chrome's standalone Atmungsraum document and loaded its app module
   with `20261117-meta-handoff`, matching the current public entry response.
+  Reopening the installed app after the next deployment loaded
+  `20261117-input-status`, which matched the then-current public release.
+- [x] Recover the Chrome Bluetooth chooser on the lab Pixel. The active
+  RustDesk screen share still showed a floating window after its setting was
+  disabled. Stopping that share and retrying in the installed PWA opened
+  the chooser and listed Quest 2. See the
+  [Bluetooth prompt procedure](RUSTDESK-PHONE-TESTING.md#recover-the-bluetooth-prompt).
 - [ ] Verify live pairing and Polar H10 through that installed PWA. The Pixel's
   lock screen covered the standalone document. The Quest resumed the separate
   rehearsal app while the Developer code22 activity was in the background.
