@@ -7,7 +7,7 @@ const owner = { device: 'a'.repeat(32), serial: 'TEST', epoch: '7', native_epoch
 const controller = 'b'.repeat(32), key = 'c'.repeat(64), build = 'd'.repeat(64);
 const mac = text => createHmac('sha256', key).update(text).digest('hex');
 
-async function peer({ version = 2, control = 1, waiting = false, preparation = undefined, music, musicReply } = {}) {
+async function peer({ version = 2, control = 1, waiting = false, preparation = undefined, music, musicReply, mix, mixReply } = {}) {
   const calls = [];
   const fetcher = async (_url, init) => {
     if (!init.body) return Response.json({ ...owner, v: 1, enabled: true, remote_available: true });
@@ -19,8 +19,13 @@ async function peer({ version = 2, control = 1, waiting = false, preparation = u
       o: { v: 1, s: 'observed', e: '8', a: 5, i: '1', g: 0, r: 0 }, meta_update_control: control,
       ...(preparation === undefined ? {} : { meta_update_preparation: preparation }),
       ...(music === undefined ? {} : { background_music: music }),
+      ...(mix === undefined ? {} : { audio_mix: mix }),
       meta_update: { v: version }, controller_access: { v: 1, role: waiting ? 'waiting' : 'active', active_phone: 'Test', revision: 2 } };
-    else if (action === 'background-music') {
+    else if (action === 'audio-mix') {
+      const body = JSON.parse(request.payload);
+      calls.push(body);
+      value = mixReply ?? { ...body, revision: mix.revision + 1 };
+    } else if (action === 'background-music') {
       const body = JSON.parse(request.payload);
       calls.push(body);
       value = musicReply ?? { ...music, ...(typeof body.playing === 'boolean'
@@ -99,4 +104,24 @@ test('older APKs, malformed music status and waiting phones cannot send music co
   await assert.rejects(gateway.backgroundMusic({ v: 1, playing: true }));
   assert.deepEqual(calls, []);
   gateway.close();
+});
+
+test('the round mix sends the two exact gains and accepts only matching Quest readback', async () => {
+  const mix = { v: 1, music: 30, instructions: 90, revision: 0 };
+  const value = { v: 1, music: 0, instructions: 72 };
+  const { gateway, calls } = await peer({ mix });
+  assert.deepEqual(await gateway.audioMix(value), { ...value, revision: 1 });
+  for (const bad of [{ ...value, music: -1 }, { ...value, instructions: 101 },
+    { ...value, instructions: '90' }, { ...value, playing: true }]) {
+    await assert.rejects(gateway.audioMix(bad));
+  }
+  assert.deepEqual(calls, [value]);
+  gateway.close();
+  const mismatch = await peer({ mix, mixReply: { ...mix, revision: 1 } });
+  await assert.rejects(mismatch.gateway.audioMix(value), /nicht bestätigt/);
+  mismatch.gateway.close();
+  const waiting = await peer({ mix, waiting: true });
+  await assert.rejects(waiting.gateway.audioMix(value));
+  assert.deepEqual(waiting.calls, []);
+  waiting.gateway.close();
 });

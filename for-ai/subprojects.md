@@ -12,13 +12,13 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
-- Quest background music (2026-11-19). The phone settings dialog sends
-  Play, Stop and 0–100% gain to the paired APK. The supplied track loops
-  on the Quest, starts off at 35%, and uses independent gain. Every current
-  build profile packages it and selects authenticated phone enrollment.
-  The phone reports the APK state and keeps the most recent slider edit
-  during a delayed reply under the same active controller lease.
-  See the [Quest setup](../atmungsraum/quest/README.md#optional-background-music).
+- Quest round background music (2026-11-20). The new APK source loops the
+  canonical backgroundmusic.mp3 alongside each round and stops it with the
+  round. Freie Erkundung keeps its own authored track. Einstellungen exposes
+  independent background and instruction gain. The Quest saves both values,
+  and reset restores 30% and 90%. See the
+  [Quest audio setup](../atmungsraum/quest/README.md#canonical-round-background-music).
+  The installed APK requires separate device qualification.
 
 - PWA startup updates (2026-11-16): each fresh launch checks the published web
   release before starting the controller, automatically switches if the release

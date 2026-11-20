@@ -175,11 +175,11 @@ $featureDir = Join-Path $runRoot 'features'
 Copy-Item -LiteralPath (Join-Path $QuestRepo 'fixtures/native-app-features') -Destination $featureDir -Recurse
 $assetInput = [IO.Path]::GetRelativePath($QuestRepo, $audio).Replace('\','/')
 $assetInputs = @($assetInput)
-$musicSource = Join-Path $PSScriptRoot '../assets/audio/background/ji3ji3.mp3'
-$gatewaySources = 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
-$musicGateway = Join-Path $QuestRepo "$gatewaySources/ExperimentSessionCommandGateway.java"
-if (!(Select-String -LiteralPath $musicGateway -SimpleMatch 'atmungsraum-music/ji3ji3.mp3' -Quiet)) {
-    throw 'Apply the Atmungsraum background-music native patch before assembly.'
+$musicSource = Join-Path $PSScriptRoot '../assets/audio/background/backgroundmusic.mp3'
+$audioSources = 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
+$musicBackend = Join-Path $QuestRepo "$audioSources/RoundAudioMix.java"
+if (!(Select-String -LiteralPath $musicBackend -SimpleMatch 'atmungsraum-music/backgroundmusic.mp3' -Quiet)) {
+    throw 'Apply the Atmungsraum round-audio-mix native patch before assembly.'
 }
 $musicAssets = Join-Path $runRoot 'atmungsraum-music'
 $null = New-Item -ItemType Directory -Path $musicAssets
@@ -518,7 +518,7 @@ if ($CanonicalRelease) {
 }
 $archive = [IO.Compression.ZipFile]::OpenRead($apk.FullName)
 try {
-    $track = $archive.GetEntry('assets/atmungsraum-music/ji3ji3.mp3')
+    $track = $archive.GetEntry('assets/atmungsraum-music/backgroundmusic.mp3')
     if (!$track -or $track.Length -ne $track.CompressedLength) {
         throw 'The signed APK must contain the uncompressed background track.'
     }

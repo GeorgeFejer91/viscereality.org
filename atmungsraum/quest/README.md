@@ -1,6 +1,23 @@
 # Build Atmungsraum for Quest 2
 
-## Optional background music
+## Canonical round background music
+
+Reconstruct the published cumulative native source, apply
+[round-polar-recording.patch](round-polar-recording.patch), then apply
+[round-audio-mix.patch](round-audio-mix.patch). Assemble with the selected app
+profile. The recipe packages the original
+[backgroundmusic.mp3](../assets/audio/background/backgroundmusic.mp3) and
+checks its bytes inside the signed APK. Use MainStudyAudio to retain the
+authored round instructions and Freie Erkundung track.
+
+The selected scenario audio owner starts the canonical loop with the round,
+pauses or resumes it with the round, and stops it on completion or early exit.
+Freie Erkundung uses its own audio. Einstellungen exposes Hintergrundmusik
+and Sprachanleitung on a connected phone that holds the controller lease.
+The Quest remembers both values. Zurücksetzen restores 30% music and 90%
+spoken instructions. The headset's system media volume remains independent.
+
+## Earlier optional background player
 
 Apply [background-music.patch](background-music.patch) after the Developer 32
 source overlays. Every Atmungsraum APK assembles with phone enrollment and

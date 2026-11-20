@@ -1,7 +1,8 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=12';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=21';
+  controllerAccessState, backgroundMusicStatus } from './quest-gateway.js?v=22';
+import { mountQuestAudioMix } from './quest-audio-mix.js?v=1';
 import { pairPhone } from './quest-pairing.js?v=9';
 import { canRecenter, polarSetup, polarReadiness, polarSessionPause, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=47';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=30';
@@ -228,6 +229,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const settingsEcg = byId('settings-ecg');
   const settingsConnection = byId('settings-connection');
   const settingsKiosk = byId('quest-settings');
+  const roundMix = mountQuestAudioMix();
   const musicDialog = byId('music-dialog');
   const musicOpen = byId('music-open');
   const musicPlay = byId('music-play');
@@ -927,6 +929,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       updateProgress.removeAttribute('value');
       updateProgress.removeAttribute('max');
     }
+    const roundMixAvailable = roundMix.update(rehearsal.gateway, status, control.active);
+    musicOpen.hidden = roundMixAvailable;
+    if (roundMixAvailable && musicDialog.open) musicDialog.close();
     paintMusic(rehearsal.gateway, status, control.active);
     settingsKiosk.hidden = !status;
     if (!status && settingsKiosk.open) settingsKiosk.open = false;
