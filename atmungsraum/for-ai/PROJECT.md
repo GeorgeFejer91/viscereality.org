@@ -5258,6 +5258,14 @@ the Pixel 10 running Android 16. None of its three installed Chrome WebAPKs
 declared the canonical Atmungsraum URL. Next: open the live URL in Android
 Chrome, install, and verify standalone relaunch from the Android launcher.
 
+## Background music library upload — 2026-11-20
+
+- [x] Add the supplied [MP3](../assets/audio/background/backgroundmusic.mp3)
+  with an empty spoken-word TXT. Full decode passed. The original 50,155,244 bytes
+  match SHA-256 `53bf70a3e1362721a5657eeaf8b8b94348f27c78818430840a6e98b0395b04c4`.
+  The browser and Quest continue to select their configured tracks.
+- [ ] Verify the exact Pages deployment and compare the public MP3 to the source.
+
 ## Browser session background music — 2026-11-08
 
 - [x] Package a browser-ready copy of the supplied `ji3ji3` track with an empty
