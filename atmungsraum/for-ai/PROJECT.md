@@ -56,13 +56,16 @@
   personal fit reduced held-out radius error to 0.064 m, versus 0.094 m
   unsmoothed. The headset uses both cycles to fit. Physical comparison
   remains pending.
-- [ ] Verify Developer 39 and its paired phone release on the lab devices,
-  then publish the qualified APK to the existing private Meta Developer
-  channel. Dashboard currently shows code 33 for Quest 2. Verify the
-  exact active build before updating the website release hint. Developer
-  39 is installed locally with exact checksum and a cold launch. The
-  Pixel was disconnected after the first attended run and still needs to
-  reconnect for the paired test.
+- [x] Publish Developer 39 to the existing private Meta Developer channel
+  in parallel with the lab rerun, as requested. The dashboard shows
+  `0.2.38-dev` / 39, Quest 2 and build `1472719655927046` active.
+  The basic malware and detailed security checks passed.
+- [ ] Finish the paired Volume test. The exact Developer 39 APK is installed
+  and launched. Cold start recovered the interrupted second Developer 38
+  writer. The Pixel reaches method selection with the saved pairing and
+  fresh Polar streams. Its public `20261120-saved-headsets` PWA expects
+  the previous preset method list and prompts for an APK update. Release
+  the new phone picker before selecting Volume on the physical Pixel.
 - [x] Compare adaptive axes, state/volume fusion and renderer radius on
   the 13 available guided browser recordings. Six recordings were held out.
   On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,

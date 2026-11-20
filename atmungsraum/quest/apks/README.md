@@ -31,8 +31,10 @@ intended and actual sphere volume using signed renderer and cue evidence.
 The lab Quest 2 accepted the exact signed bytes through File Manager.
 It cold-launched through the standard Android launcher and remained
 awake. The combined native suite passed 946 tests with six isolated
-fixtures kept separate. The paired hardware rerun and Meta Developer
-distribution remain pending.
+fixtures kept separate. Meta Developer channel `1529361979246951` shows
+Quest 2 build `1472719655927046` active as version `0.2.38-dev` / 39.
+The basic malware and detailed security checks passed. The paired Volume
+rerun is waiting for the phone release.
 
 ## Developer 38 two-session candidate — 2026-11-20
 
