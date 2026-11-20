@@ -891,6 +891,73 @@ def capture_participant_keyboard(review):
         page.context.close()
 
 
+def check_pairing_switch_keeps_memberships(review):
+    first = "e" * 32
+    second = "d" * 32
+    page = review.page(c.NEW_PHONE + """
+      const original = {device:'e'.repeat(32),serial:'',identity_kind:'app-installation',
+        endpoint:'synthetic',enrollment:{controller:'4'.repeat(32),key:'5'.repeat(64)}};
+      window.reviewExpectedEnrollment = {
+        [original.device]: original.enrollment,
+        ['d'.repeat(32)]: {controller:'a'.repeat(32),key:'b'.repeat(64)},
+      };
+      if (!localStorage.getItem('atmungsraum-quest-pair')) {
+        localStorage.setItem('atmungsraum-quest-pair',JSON.stringify(original));
+      }
+      window.reviewJoin='fail';
+    """)
+    def selected():
+        return page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).device")
+    try:
+        page.clock.run_for(1200)
+        page.evaluate("window.reviewJoin=''")
+        page.locator('#quest-find').click()
+        expect(page.locator('#quest-pairing')).to_be_visible()
+        assert selected() == first
+        page.evaluate("window.reviewPairing.finish('approved')")
+        page.locator('#quest-pairing-confirm').click()
+        expect(page.locator('#check-bridge')).to_have_attribute('data-check','ok')
+        assert selected() == second
+
+        page.reload(wait_until='load')
+        page.wait_for_function("Boolean(window.reviewOwner)")
+        page.clock.run_for(1200)
+        page.evaluate("""device => {
+          window.reviewOwner.device=device;
+          window.reviewJoin='';
+        }""", first)
+        page.locator('#quest-find').click()
+        expect(page.locator('#check-bridge')).to_have_attribute('data-check','ok', timeout=1000)
+        expect(page.locator('#quest-pairing')).to_be_hidden()
+        assert selected() == first
+        assert page.evaluate("(window.reviewPairingCalls ?? []).length") == 0
+    finally:
+        page.context.close()
+
+
+def check_stale_reconnect_keeps_new_selection(review):
+    page = review.page(f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({c.PAIRED}));"
+                       "window.reviewHoldJoin=true;")
+    try:
+        page.wait_for_function("typeof window.reviewReleaseJoin === 'function'")
+        writer = page.context.new_page()
+        writer.goto(c.URL + 'pairing-storage-fixture', wait_until='load')
+        page.evaluate("""() => addEventListener('storage', event => {
+          if (event.key==='atmungsraum-quest-pair') window.reviewSawSwitch=true;
+        })""")
+        writer.evaluate("""pair => localStorage.setItem('atmungsraum-quest-pair',JSON.stringify(pair))""", {
+            "device": "e" * 32, "serial": "ALT-QUEST", "endpoint": "synthetic",
+            "enrollment": {"controller": "4" * 32, "key": "5" * 64},
+        })
+        page.wait_for_function("window.reviewSawSwitch === true")
+        page.evaluate("window.reviewReleaseJoin()")
+        page.clock.run_for(100)
+        assert writer.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).device") == "e" * 32
+        expect(page.locator('#check-bridge')).not_to_have_attribute('data-check','ok')
+    finally:
+        page.context.close()
+
+
 def check_participant_notice_height(review):
     apk = apk_fixture()
     notice = meta_update_fixture(apk, state="failed", reason="offline")
@@ -984,6 +1051,8 @@ def verify():
         capture_companion_permission(review)
         capture_focused_viewport_change(review)
         capture_participant_keyboard(review)
+        check_pairing_switch_keeps_memberships(review)
+        check_stale_reconnect_keeps_new_selection(review)
         check_participant_notice_height(review)
         failures.extend(review.errors)
         failures.extend(check_stretch(review.samples))

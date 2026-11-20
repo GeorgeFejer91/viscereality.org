@@ -289,7 +289,7 @@ export async function rediscoverQuest() {
     ? { state: 'ready', owner, endpoints: ['discovered'], ...(window.reviewPairingEnabled ? { pairing: 1 } : {}) }
     : window.reviewDiscoveryState ? { state: window.reviewDiscoveryState } : null;
 }
-export async function joinQuest({ endpoint }) {
+export async function joinQuest({ endpoint, enrollment }) {
   window.reviewDiscovery?.push(endpoint);
   if (endpoint === 'unreachable') throw Error('Simulated address change');
   if (settings.failJoinAfterPairing && window.reviewPairing?.state === 'approved' && !settings.pairJoinFailed) {
@@ -298,6 +298,10 @@ export async function joinQuest({ endpoint }) {
   }
   if (window.reviewJoin === 'wait') await new Promise(() => {});
   if (window.reviewJoin === 'fail') throw Error('Simulated connection failure');
+  if (window.reviewHoldJoin) await new Promise(resolve => { window.reviewReleaseJoin = resolve; });
+  const expectedEnrollment = window.reviewExpectedEnrollment?.[owner.device];
+  if (expectedEnrollment && (enrollment?.controller !== expectedEnrollment.controller
+    || enrollment?.key !== expectedEnrollment.key)) throw Error('Wrong saved membership for this headset');
   if (settings.joinDelay) await new Promise(resolve => setTimeout(resolve, settings.joinDelay));
   const controlled = run => value => {
     if (!canControlQuest(snapshot())) throw Error('Fixture controller is read-only while waiting');

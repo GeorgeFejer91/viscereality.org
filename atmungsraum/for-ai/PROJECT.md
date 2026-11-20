@@ -134,9 +134,19 @@ headset and phone.
   The installed Pixel PWA was 20261119-polar-pause in standalone mode. RustDesk
   captured it and a tap opened Einstellungen. Chrome discovered the Quest over
   Bluetooth. Both devices reached the signaling host over TCP, but the Pixel
-  could not reach the Developer 27 LAN gateway. Install the Meta Developer
-  update through the headset Library, then verify signed status, active control
-  and an original Recenter receipt through the installed PWA.
+  could not reach the Developer 27 LAN gateway. A read-only comparison over
+  USB confirmed that the Pixel retains an enrollment for a different Quest
+  installation. Keep that enrollment. Install the Meta Developer update
+  through the headset Library and select this Quest in the phone's Bluetooth
+  chooser. Compare the displayed pairing codes and confirm on both devices.
+  Then verify signed status, active control and an original Recenter receipt
+  through the installed PWA.
+- [x] Reproduce loss of the previous saved membership after selecting a second
+  headset. Preserve the previous membership before changing the selected one.
+  The mounted browser regression approves the second headset, reloads the PWA
+  and reconnects to the first headset with the original membership. A separate
+  two-tab regression verifies that an old automatic connection cannot overwrite
+  a newer headset selection.
 - [x] Publish MesmerPrism's PRs #170 and #171 and the reviewed follow-up in
   `514e8ff738f872d63f614cad5e1f8c41940fca31`. The exact pre-push gate passed
   462 rendered phone states. The Node run passed 352 tests and skipped 19

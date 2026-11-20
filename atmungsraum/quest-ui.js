@@ -34,6 +34,26 @@ const runTime = ms => {
 };
 const archiveDate = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' });
 const liveSync = new URLSearchParams(location.search).get('live-sync') !== 'off';
+const selectedPairKey = 'atmungsraum-quest-pair';
+const headsetPairKey = ({ device, identity_kind, serial }) =>
+  `${selectedPairKey}/${device}/${identity_kind ?? 'legacy'}/${serial}`;
+
+function sameInstallation(pair, owner) {
+  return Boolean(pair?.device) && pair.device === owner.device && pair.serial === owner.serial
+    && (pair.identity_kind ?? null) === (owner.identity_kind ?? null);
+}
+
+function storedPairValue(key) {
+  try { return localStorage.getItem(key); }
+  catch { return null; }
+}
+
+function parseStoredPair(value) {
+  try { return JSON.parse(value); }
+  catch { return null; }
+}
+
+const readStoredPair = key => parseStoredPair(storedPairValue(key));
 
 function idleForSync({ status, busy, pending, unknown }) {
   return status?.p === 'IDLE' && nativeSessionAllowed(status) && !status.rec && !status.pending && !busy && !pending && !unknown;
@@ -1502,14 +1522,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
 
   async function connectAutomatically() {
     if (autoConnectInFlight) return;
-    autoConnectInFlight = true;
     const previous = savedPair;
-    const canCommission = () => savedPair === previous && canConnectAutomatically() && (!previous?.enrollment
+    const storedSelection = storedPairValue(selectedPairKey);
+    // A tab can observe the persisted choice before its storage event arrives.
+    if (!pairWarning && JSON.stringify(parseStoredPair(storedSelection)) !== JSON.stringify(previous ?? null)) return;
+    autoConnectInFlight = true;
+    const stillSelected = () => savedPair === previous && storedPairValue(selectedPairKey) === storedSelection;
+    const canCommission = () => stillSelected() && canConnectAutomatically() && (!previous?.enrollment
       || !previous.identity_kind && !rehearsal.gateway && !rehearsal.pending && !breathing.pending
       && !kiosk.pending && !controllerLease.pending && !metaControl.pending && !savedUpdateIntent
       && !metaHandoff.view(previous) && (!archiveScope || archiveListLoaded && !questionnaire && !savingAnswers));
     try {
-      if (previous?.enrollment) await connect(previous);
+      if (previous?.enrollment) await connect(previous, false, stillSelected);
       else nextConnect = performance.now() + 8000;
       if (!canCommission() || connecting || performance.now() < nextCommissioningProbe) return;
       nextCommissioningProbe = performance.now() + 8000;
@@ -1611,7 +1635,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       let discovery;
       if (chooseDevice) {
         discovery = await readQuest(peer, signal, {});
-        if (discovery.owner.device !== settings.device) endpoint = undefined;
+        if (!sameInstallation(settings, discovery.owner)) {
+          const remembered = readStoredPair(headsetPairKey(discovery.owner));
+          settings = sameInstallation(remembered, discovery.owner) ? remembered : {};
+          endpoint = settings.endpoint;
+        }
       } else {
         // Read the saved headset's current address before trying the old one.
         // An unpaired automatic attempt requires an explicitly commissioned installation.
@@ -1853,7 +1881,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const serialized = JSON.stringify(settings);
     if (serialized !== JSON.stringify(savedPair) || pairWarning) {
       try {
-        localStorage.setItem('atmungsraum-quest-pair', serialized);
+        const previous = readStoredPair(selectedPairKey);
+        if (/^[a-f0-9]{32}$/.test(previous?.device ?? '') && previous.enrollment
+          && !sameInstallation(previous, settings) && !readStoredPair(headsetPairKey(previous))) {
+          localStorage.setItem(headsetPairKey(previous), JSON.stringify(previous));
+        }
+        if (/^[a-f0-9]{32}$/.test(settings.device ?? '') && settings.enrollment) {
+          localStorage.setItem(headsetPairKey(settings), serialized);
+        }
+        localStorage.setItem(selectedPairKey, serialized);
         pairWarning = '';
       }
       catch { pairWarning = 'Die Verbindung kann in diesem Browser nicht gespeichert werden.'; }
@@ -2155,9 +2191,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   });
   window.addEventListener('pageshow', () => { archivesSuspended = false; paint(); nextConnect = nextSavedProbe = 0; void tick(); });
   window.addEventListener('storage', event => {
-    if (event.key !== null && event.key !== 'atmungsraum-quest-pair') return;
-    try { savedPair = JSON.parse(localStorage.getItem('atmungsraum-quest-pair')); }
-    catch { savedPair = null; }
+    if (event.key !== null && event.key !== selectedPairKey) return;
+    savedPair = readStoredPair(selectedPairKey);
     paint();
   });
   window.addEventListener('online', () => { nextConnect = nextSavedProbe = nextLive = 0; drive.schedule(); void tick(); });

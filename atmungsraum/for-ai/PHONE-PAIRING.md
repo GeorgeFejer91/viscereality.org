@@ -13,9 +13,12 @@ through discovery, authentication, control and recording download.
 
 Fresh connections use the displayed digits and both confirmation buttons
 without manual entry or copying. Saved connections reconnect without
-confirmation. Devices use the same canonical APK. Platform Bluetooth/network permissions remain initial
-setup steps. A release signing key identifies the app across its supported
-devices. Each headset installation and authorized PWA membership retains
+confirmation. Choosing a different headset preserves the previous locally saved
+membership. Choosing that headset again reuses its membership when the
+discovered installation identity matches. Automatic reconnect uses the selected
+headset. Devices use the same canonical APK. Platform Bluetooth/network
+permissions remain initial setup steps. A release signing key identifies the
+app across its supported devices. Each headset installation and authorized PWA membership retains
 separate credentials, revocation and native ownership. Discovery or a
 connected transport alone cannot grant experiment control. Keep the native
 single-controller lease and receipt checks.
