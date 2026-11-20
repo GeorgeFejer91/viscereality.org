@@ -40,7 +40,7 @@ test('matches the controls and reuses the three canonical cues in the 5 + 10 min
   assert.deepEqual(planMainStudy(inventory), plan);
 });
 
-test('stages the probe instruction separately from exactly five minutes of breathwork', async () => {
+test('records the probe instruction and all five guided minutes on the same clock', async () => {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const original = async id => JSON.parse(await readFile(new URL('../audio/scenarios/' + id + '.json', import.meta.url)));
   const study = await buildMainStudyScenario(root, await original('haupt-15'));
@@ -52,12 +52,13 @@ test('stages the probe instruction separately from exactly five minutes of breat
       await readFile(new URL(file, shared)));
   }
   const { plan, files } = await buildProbeStudyScenario(root, await original('probe-5'), study);
-  assert.equal(plan.total_frames, 300 * 44100);
-  assert.equal(plan.pre_session_audio.duration_frames, 2002176);
-  assert.equal(files.get(plan.pre_session_audio.path).length, 44 + 2 * plan.pre_session_audio.duration_frames);
-  assert.match(plan.pre_session_audio.text, /für fünf Minuten/);
-  assert.equal(plan.events[0].id, 'inhale');
-  assert.equal(plan.events[0].offset_frames, 0);
+  assert.equal(plan.total_frames, 2_002_176 + 300 * 44100);
+  assert.equal(plan.pre_session_audio, undefined);
+  const [opening, firstInhale] = plan.events;
+  assert.deepEqual([opening.id, opening.offset_frames, opening.duration_frames], ['instruction', 0, 2_002_176]);
+  assert.match(plan.audio_assets[opening.asset].text, /für fünf Minuten/);
+  assert.equal(firstInhale.id, 'inhale');
+  assert.equal(firstInhale.offset_frames, opening.duration_frames);
   assert.deepEqual(plan.events.slice(-3).map(event => event.id), ['inhale', 'hold_in', 'exhale']);
   let next = 0;
   for (const event of plan.events) {

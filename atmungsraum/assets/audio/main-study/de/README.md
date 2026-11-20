@@ -47,20 +47,20 @@ four-second inhale and four-second exhale after 37 four-phase cycles. The
 full review then plays the 19-second recorded outro. The music comes in at
 the first guided inhale and fades out by 15:00.
 
-The Probe-Runde stages the supplied 45.401-second instruction as pre-session
-audio and then 300 seconds of guided breathing. It reuses the same phase
-takes and ends with a final inhale, hold and exhale after 18 full cycles.
-The instruction lives outside the five-minute Quest recording timeline.
+The Probe-Runde places the supplied 45.401-second instruction at the start
+of the Quest recording timeline, followed by 300 seconds of guided breathing.
+It reuses the same phase takes and ends with a final inhale, hold and exhale
+after 18 full cycles.
 
-The staged Quest programme uses a lossless mix of 39,690,000 frames. Its
-decoded PCM matches the first 900 seconds of the review render, and the
-catalog binds the original outro separately. The authored build also includes the
+The staged Quest programme uses a lossless mix of 40,527,900 frames. Its
+decoded PCM matches the entire 919-second review render, including the outro.
+The authored build also includes the
 first calibration instruction and the full Freie Erkundung recording from the
 playground. Freie Erkundung has 960,768 instruction frames and 18,755,025 music
 frames at 44.1 kHz. The Quest reader passes the original stereo MP3 to Android
 with its instruction boundary and catalog hash verified. The authored
-Haupt-Runde uses the timed source for recording and plays the outro after a
-complete save. Existing signed packages use the continuous shared loop.
+Haupt-Runde saves after the outro ends. The canonical shared-loop package
+uses its 900-second main interval.
 
 Source recordings are unchanged from the [calibration instruction](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/9ed333e)
 and [Freie Erkundung](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/234ebd0ac154b8a5c16e7cbae6814534904b723d)

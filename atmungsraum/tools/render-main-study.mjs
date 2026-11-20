@@ -14,4 +14,4 @@ const original = JSON.parse(await readFile(new URL('../audio/scenarios/haupt-15.
 const study = await buildMainStudyScenario(root, original);
 await renderMainStudyTrack(study, resolve(output));
 const { plan } = study;
-console.log(`${resolve(output)} — ${plan.total_frames / plan.sample_rate}s of timed programme, ${plan.cycles} complete cycles, ${plan.post_session_audio.duration_frames / plan.sample_rate}s of post-session audio`);
+console.log(`${resolve(output)} — ${plan.total_frames / plan.sample_rate}s including the outro, ${plan.cycles} complete cycles`);

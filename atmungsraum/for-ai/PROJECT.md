@@ -2533,6 +2533,35 @@ All 204 events matched the numbered pack's order, timing, cycle and WAV
 SHA-256. The eight redundant WAVs occupied 10,231,552 bytes. The numbered
 pack remains the reference for cue preparation and its draft scripts.
 
+### Full-round Polar recording — 2026-11-20
+
+- [x] Reproduce the authored path dropping raw Polar samples while the shared
+  preparation loop owns no main interval. Reproduce the missing Probe prelude
+  and Haupt outro in the staged recording timelines.
+- [x] Bind each complete authored round to the existing native recorder and
+  media clock. Preserve the shared-loop plan, participant IDs, CSV schema and
+  historical recovery. Add the Probe instruction and main outro to the
+  verified timed media and duration.
+- [x] Build and inspect [signed authored candidate 54](../quest/apks/README.md#authored-full-round-recording-candidate-54--2026-11-20)
+  with the retained signer and all 67 signed catalog files verified.
+- [ ] Qualify the exact signed authored candidate with the paired Pixel and
+  worn Polar H10. Run full Probe, Freie Erkundung and Haupt, plus an early
+  stop during the instruction and a pause/rejoin case. Check ECG, acceleration
+  and derived breathing in the native recording, exact instruction/outro
+  coverage, one terminal outcome, and matching phone and private Drive CSV.
+  ADB and wireless discovery on this host currently list no device. The
+  local RustDesk loopback endpoint refused the connection.
+
+The native overlay reconstructs tree `e95b3bfe6851ee50d2ac3d975c452ce85e434562`
+from the code 52 source. Verified 909 native tests with six existing isolated
+tests ignored and one Windows junction-cleanup case excluded after it failed
+during cleanup. The actual writer/CSV tests cover all three authored rounds,
+ECG, motion, derived breathing, preserved recovery metadata and a cutoff
+before a queued media-ended command reaches the worker. The gateway passes
+79 host checks, and the Java catalog passes both playback shapes and damaged
+media rejection. The Node suite passes 352 tests with 19 fixture skips. The
+shared-loop package and old recording data retain their existing contracts.
+
 ### Separation of preparation and main study — 2026-11-16
 
 - [x] Expose Anleitung, the five-minute Probe-Runde and the 15-minute

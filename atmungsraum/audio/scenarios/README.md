@@ -4,9 +4,9 @@ The [German main study recordings](../../assets/audio/main-study/de/README.md)
 include the two matched controls, the approved instruction, 18 phase takes
 and the outro. The phase takes document the earlier audition. Use the main-study staging option to build the candidate
 authored `haupt-15` plan. Its first five minutes contain both controls and
-the instruction, followed by ten minutes of guided breathing. The outro
-is staged separately from the 900-second programme. Meta Developer 33 uses
-the shared preparation and main loop.
+the instruction, followed by ten minutes of guided breathing. The authored
+Quest recording includes the ensuing 19-second outro. Meta Developer 33
+uses the shared preparation and main loop.
 
 ## Numbered scenario cue libraries
 
