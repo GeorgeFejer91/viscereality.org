@@ -110,10 +110,10 @@ only if the authenticated Quest snapshot reports a positive duration or
 confirms the shared-loop main-only build's fixed 900-second protocol and start
 frame. Other snapshots without a duration show elapsed time alone.
 The running view plots the last 16 seconds of intended and applied sphere
-volume in cubic metres. Applied volume comes from the authenticated renderer
-radius and timestamp. Intended volume uses the signed radius bounds and the
-authoritative audio observation's own timestamp. Only the applied curve is
-available on builds that lack the new cue witness. Expired data leave gaps
+radius on the same fixed 0–100% scale as the Tracking preview. The actual
+curve uses the renderer's signed radius progress and timestamp. The target
+uses the audio cue's signed radius progress and its own timestamp. Only the
+applied curve is available on builds that lack the cue witness. Expired data leave gaps
 and clear current numeric values. Pause freezes the plot, resuming starts
 a new segment, and changing session or renderer settings clears history.
 Reduced motion keeps the plot and updates it only on new observations.

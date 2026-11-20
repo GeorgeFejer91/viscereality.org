@@ -494,23 +494,23 @@ def session_volume(review):
     expect(graph).to_be_visible()
     expect(scene.locator('canvas')).to_have_count(0)
     expect(caption).to_have_text('Quest live')
-    expect(page.locator('#session-volume-ist-value')).to_have_text('14,1 m³')
-    expect(page.locator('#session-volume-soll-value')).to_have_text('8,2 m³')
-    expect(page.locator('#session-volume-min')).to_have_text('4,2 m³')
-    expect(page.locator('#session-volume-max')).to_have_text('33,5 m³')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('50 %')
+    expect(page.locator('#session-volume-soll-value')).to_have_text('25 %')
+    expect(page.locator('#session-volume-min')).to_have_text('0 %')
+    expect(page.locator('#session-volume-max')).to_have_text('100 %')
     page.clock.run_for(450)
     expect(actual).to_have_attribute('d', re.compile(r' L'))
     expect(intended).to_have_attribute('d', re.compile(r' L'))
 
     before = mutations(page)
-    page.evaluate('reviewQuest.setup.renderer.radius_m=1.75')
+    page.evaluate('Object.assign(reviewQuest.setup.renderer,{radius_m:1.75,progress01:.75})')
     page.clock.run_for(300)
-    expect(page.locator('#session-volume-ist-value')).to_have_text('22,4 m³')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('75 %')
 
     c.wait_state(page, phase='PAUSED')
     expect(caption).to_have_text('Pausiert.')
     paused = actual.get_attribute('d')
-    page.evaluate('reviewQuest.setup.renderer.radius_m=1.25')
+    page.evaluate('Object.assign(reviewQuest.setup.renderer,{radius_m:1.25,progress01:.25})')
     page.clock.run_for(400)
     assert actual.get_attribute('d') == paused
 
@@ -520,7 +520,7 @@ def session_volume(review):
     page.evaluate('reviewQuest.advanceRenderer=true')
     page.clock.run_for(400)
     expect(caption).to_have_text('Quest live')
-    expect(page.locator('#session-volume-ist-value')).to_have_text('8,2 m³')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('25 %')
     assert actual.get_attribute('d').count('M') >= 2
 
     page.evaluate('reviewQuest.setup.renderer.age_ns=250000000')
@@ -535,7 +535,7 @@ def session_volume(review):
     page.clock.run_for(300)
     expect(caption).to_have_text('Sollwert fehlt.')
     expect(page.locator('#session-volume-soll-value')).to_have_text('—')
-    expect(page.locator('#session-volume-ist-value')).to_have_text('8,2 m³')
+    expect(page.locator('#session-volume-ist-value')).to_have_text('25 %')
     assert mutations(page) == before
     c.wait_state(page, phase='SAVING')
     expect(scene).to_be_hidden()
@@ -574,7 +574,7 @@ def session_volume_layout(review):
             assert bounds['height'] <= height and bounds['pauseBottom'] <= height, (width, height, bounds)
         page.emulate_media(reduced_motion='reduce')
         expect(page.locator('#session-volume-chart')).to_be_visible()
-        expect(page.locator('#session-volume-ist-value')).to_have_text('14,1 m³')
+        expect(page.locator('#session-volume-ist-value')).to_have_text('50 %')
         page.context.close()
 
 

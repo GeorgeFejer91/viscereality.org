@@ -114,6 +114,25 @@
   was rejected after the run generation advanced. The writer stayed
   closed and the fit stayed ready. Capture the signed Arm receipt before
   classifying this failure.
+- [x] After reopening the idle Developer 41 app, repeat the two Volume
+  cycles at zero bias and start a real Haupt-Runde. Generation 1 and its
+  writer advanced with signed ECG and both branches of the live chart
+  populated. The earlier Start rejection remains unclassified.
+- [x] Publish the Developer 41 release notice and source in PR 174.
+  Merge `23c5c807ae6aaf0b4c28857fe87897e4951e1725` passed Pages
+  run `44719488035`. The live policy reports 41 latest and 27 minimum.
+- [x] Stop the attended test at the operator's request. The last signed
+  run paused at 167.715 seconds with its writer open and Volume fit ready.
+  Bluetooth stayed linked during the observed quality pause. The Pixel
+  detached before a save confirmation. The Quest went offline after an
+  Android power-off. There was no full completion or consecutive run.
+- [x] Implement and verify the live chart's fixed 0–100% radius scale. Use the same
+  authenticated renderer progress and whole-percent labels as Bewegung
+  prüfen. Use signed audio cue progress for Soll. Browser checks cover
+  the live chart, pause and resume, renderer replacement, and seven
+  responsive layouts. The exact runtime commit `91c290b` passed 465
+  smartphone states. Attended testing is on hold.
+  [Chart release PR 175](https://github.com/GeorgeFejer91/viscereality.org/pull/175)
 - [x] Compare adaptive axes, state/volume fusion and renderer radius on
   the 13 available guided browser recordings. Six recordings were held out.
   On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,
