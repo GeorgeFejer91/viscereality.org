@@ -5,17 +5,8 @@ include the two matched controls, the approved instruction, 18 phase takes
 and the outro. Use the main-study staging option to build the candidate
 authored `haupt-15` plan. Its first five minutes contain both controls and
 the instruction, followed by ten minutes of guided breathing. The outro
-is staged separately from the 900-second programme. The installed Quest
-release currently uses the shared preparation/main loop.
-
-## Haupt-Runde cue placeholders
-
-The [eight named cue placeholders](../../assets/audio/scenarios/haupt-15/cue-placeholders/)
-follow the 15-minute cue sequence. The two controls and instructions take
-81 seconds, the four-phase pattern repeats 50 times for 800 seconds,
-and `end.wav` takes 19 seconds. Each silent WAV has matching TXT, JSON and
-CSV sidecars. Its manifest and timeline are for cue preparation. Selected
-Quest playback is owned by [the native loop plan](../box-loop.json).
+is staged separately from the 900-second programme. Meta Developer 33 uses
+the shared preparation and main loop.
 
 ## Numbered scenario cue libraries
 
@@ -110,6 +101,6 @@ manifest hash, plus `audio_asset_mode: silent-placeholders` for the current set.
 `createProtocol()` remains an authoring/regression reference;
 runtime playback and verification exports read the saved JSON.
 
-The current integration is browser audio. Actual video/headset execution and
-physical audiovisual synchronization remain pending; scheduling receipts are
-not measured acoustic onsets.
+The standalone browser engine and offline diagnostics can exercise the saved
+cue timelines. The production phone controller delegates playback to the
+paired Quest. Physical playback of the authored package remains pending.

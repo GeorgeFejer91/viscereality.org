@@ -2451,12 +2451,11 @@ inhale gaps measure 150 ms each, and the connected hold has 2.612 seconds
 of trailing silence. The timing and exact text sit beside each local WAV.
 The next step is listening review before any runtime selection.
 
-- [x] Prepare two control WAVs, one instructions WAV, four reusable breathing
-  WAVs and `end.wav`. The [cue library](../assets/audio/scenarios/haupt-15/cue-placeholders/README.md)
-  owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
-  All eight files contain silence. Their timeline totals 900 seconds and
-  serves cue preparation. The active native loop owns Quest playback.
-- [x] Catalogue 24 attachments as 23 unique MP3/TXT pairs. The
+- [x] Verify the 900-second silent Haupt-Runde cue timeline. Its
+  [numbered library](../assets/audio/scenarios/haupt-15/0000_timeline.csv)
+  covers the 81-second opening, 50 four-phase cycles and 19-second closing.
+  The active native loop owns Quest playback.
+- [x] Catalogue 25 attachments as 24 unique MP3/TXT pairs. The
   [study library](../assets/audio/main-study/de/README.md) records transcripts,
   phase pools, quiet listening breaks and the review/staging commands.
 - [x] Stage the playground-approved programme. Both controls are exactly
@@ -2496,6 +2495,25 @@ the guided Probe-Runde and Freie Erkundung through the Quest's verified
 scenario list. The authored Haupt-Runde binds one lossless 900-second
 programme to the recording clock and plays the separate 19-second outro
 after saving a complete run. Device acceptance remains open.
+
+On 2026-11-20, the live phone controller and release policy matched Pages
+[run 44673083532](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44673083532)
+at `585732a`. Meta Developer 33 selects the shared four-phase preparation
+and 900-second main loop. The phone offers only the scenarios advertised by
+its paired APK. The signed local authored APK, code 52, contains the main FLAC,
+Probe instruction and timed cues, exploration MP3, calibration prelude and
+separate background music. Its APK SHA-256 matches the
+[signed profile matrix](../quest/apks/README.md#background-music-signed-profile-matrix--2026-11-19).
+All 20 focused audio tests pass. The six numbered source timelines still
+contain 53 silent cue WAVs. Audition the recorded programmes in the
+[playground](https://georgefejer91.github.io/atmungsraum-ui/?view=scenarios).
+The remaining acceptance check is an attended signed authored run on Quest
+and Pixel with audible playback, correct timing and matching exports.
+
+Retired the extra Haupt-Runde placeholder folder introduced by `b3a6a59`.
+All 204 events matched the numbered pack's order, timing, cycle and WAV
+SHA-256. The eight redundant WAVs occupied 10,231,552 bytes. The numbered
+pack remains the reference for cue preparation and its draft scripts.
 
 ### Separation of preparation and main study — 2026-11-16
 
