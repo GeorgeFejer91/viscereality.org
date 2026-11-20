@@ -1,0 +1,45 @@
+diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
+index 2b30bae8..34de879d 100644
+--- a/tools/Build-NativeRendererAndroid.ps1
++++ b/tools/Build-NativeRendererAndroid.ps1
+@@ -1325,6 +1325,15 @@ $sharedPanelFacade
+                 if (command.has("participant")) {
+                     org.json.JSONObject participant = new org.json.JSONObject(command.getJSONObject("participant").toString());
+                     participant.remove("participant_id");
++                    if (participant.has("preparation_id")) {
++                        Object metadata = participant.remove("preparation_id");
++                        if (!(metadata instanceof String)) throw new SecurityException("participant-preparation-id-invalid");
++                        java.util.UUID preparation = java.util.UUID.fromString((String)metadata);
++                        if (preparation.version() != 4 || preparation.variant() != 2
++                                || !preparation.toString().equals(metadata))
++                            throw new SecurityException("participant-preparation-id-invalid");
++                    }
++                    // Compare only the packaged plan. JNI receives the original participant metadata.
+                     String verifiedPlan = conditionAudioRecordingPlan(participant.getString("scenario_id"));
+                     if (!"arm".equals(operation) || verifiedPlan == null || !verifiedPlan.equals(participant.toString()))
+                         throw new SecurityException("participant-scenario-plan-not-packaged");
+diff --git a/tools/checks/test_experiment_participant_plan_binding.py b/tools/checks/test_experiment_participant_plan_binding.py
+index b44a0bd8..74453a08 100644
+--- a/tools/checks/test_experiment_participant_plan_binding.py
++++ b/tools/checks/test_experiment_participant_plan_binding.py
+@@ -59,6 +59,20 @@ final class ParticipantPlanBindingHarness {
+   check(!new JSONObject(cyclic).getString("scenario_sha256").equals(new JSONObject(legacy.get("haupt-15")).getString("scenario_sha256")),"signed APK formats are distinct");
+   BreathingSetupAudio.enabled=true;BreathingSetupAudio.main=cyclic;
+   succeeds(cyclic,"selected cyclic haupt-15 reaches native binding");
++  String preparation="12345678-1234-4123-8123-123456789abc";
++  JSONObject bound=arm(cyclic);
++  bound.getJSONObject("participant").put("preparation_id",preparation);
++  int prior=effects;
++  applyExperimentSessionCommand(bound.toString());
++  check(effects==prior+1,"a trusted plan with preparation metadata reaches JNI");
++  JSONObject observedParticipant=new JSONObject(last).getJSONObject("participant");
++  check(preparation.equals(observedParticipant.getString("preparation_id")),"calibration association reaches JNI");
++  for(Object invalid:new Object[]{"12345678-1234-1123-8123-123456789abc",1,JSONObject.NULL}){
++   bound.getJSONObject("participant").put("preparation_id",invalid);
++   rejects(bound,"invalid preparation identity");
++  }
++  bound.getJSONObject("participant").put("preparation_id",preparation).put("scenario_sha256","untrusted");
++  rejects(bound,"a preparation ID cannot authorize a modified packaged plan");
+   rejects(arm(legacy.get("haupt-15")),"selected owner must reject legacy haupt-15");
+   succeeds(legacy.get("probe-5"),"selected non-main preserves legacy plan");
+   BreathingSetupAudio.enabled=false;succeeds(legacy.get("haupt-15"),"nonselected main preserves legacy plan");

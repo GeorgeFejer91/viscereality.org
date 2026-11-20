@@ -1,5 +1,28 @@
 # Atmungsraum Quest 2 APKs
 
+## Developer 41 participant plan binding
+
+Apply [calibration-participant-binding.patch](../calibration-participant-binding.patch)
+to Developer 40 native source `70c85fbb1c519b95ca2677c72989288e91f7a826`.
+It reconstructs source `c3d2df89b644189efcf08279783e01d97a83f819`, tree
+`a9eaa0337974409a7cb32757e99c47e21dc9eb82`. Patch SHA-256
+`4e9193a27074a6d578a400135bc793fca29552b4f087cb5c743b49bc69029391`.
+Use the same canonical assembly and audio inputs as Developer 40.
+Signed `0.2.40-dev` / 41 is 73,678,912 bytes, SHA-256
+`c326aa532e3e438b207af35940d17171f7fba29b79d3d6f7d2ef0befe08a9b37`.
+The lab Quest confirmed the installed hash and canonical Developer signer.
+Meta Developer build `1472952499237095` is active for Quest 2. The
+basic malware and detailed security checks passed.
+
+The Android command validates the optional preparation UUID and compares
+the remaining plan with the verified package. JNI receives the original
+participant record and its preparation ID for matching the fit.
+The APK-bound Java regression passed 34 checks, including rejecting
+a mutated packaged plan even when it carries a valid preparation ID.
+The physical Volume fit completed both guided cycles at zero bias. A
+later main-start attempt advanced the run generation, but the Quest
+returned to IDLE before opening a writer. End-to-end acceptance remains open.
+
 ## Developer 40 calibration storage repair
 
 Apply [calibration-storage-lock.patch](../calibration-storage-lock.patch) to
@@ -13,8 +36,14 @@ Use the canonical Developer assembly and audio inputs at website source
 The Android build uses a nonblocking exclusive `flock` on the existing
 attempt file so a live writer and recovery cannot own it at the same time.
 Seven host capture tests passed and a Quest platform probe confirmed
-lock contention and release on close. Signed APK and attended acceptance
-are pending.
+lock contention and release on close. Signed `0.2.39-dev` / 40 is
+73,678,911 bytes, SHA-256
+`16f470ce09f9e7a7d6fdabd265dde33b17457f9bd6859584c327dc4195e83c0f`.
+The lab Quest read back those exact installed bytes and completed both
+guided Volume cycles at zero bias. The following Arm was rejected
+before dispatch because the packaged-plan comparator included the
+new preparation ID. Meta Developer build `1472920202573658` became
+active for Quest 2 with both scans passed.
 
 ## Developer 39 calibrated Volume candidate — 2026-11-20
 

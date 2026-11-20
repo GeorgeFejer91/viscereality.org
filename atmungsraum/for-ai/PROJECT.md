@@ -78,8 +78,24 @@
   for `File::try_lock` on Android. Controller State reaches its preview
   because it does not open a guided Polar capture. Developer 40 uses the
   Android nonblocking exclusive lock for admission and recovery. A
-  device storage probe confirmed one owner and release on close. The
-  signed replacement and the two-session hardware run are pending.
+  device storage probe confirmed one owner and release on close.
+- [x] Verify Developer 40 on the paired Quest and Pixel. A signed
+  Volume admission led to both guided cycles, live preview and a ready
+  fit with bias zero. The next Arm was rejected before dispatch because
+  the native packaged-plan comparator included the optional calibration
+  preparation ID. Meta made the code 40 build active in the Developer
+  channel and both security scans passed.
+- [ ] Verify Developer 41 on the paired Quest. The generated Android
+  command validates and retains the preparation UUID as metadata, then
+  independently verifies the packaged plan. The 34-check Java regression
+  passed. Repeat Volume with bias zero, real range loss and Continue, then
+  complete two consecutive main sessions in the same app process.
+- [x] Publish signed Developer 41 to Meta Developer for Quest 2. Confirm
+  both security scans and code 41 active. The physical two-cycle Volume
+  calibration reached ready with zero bias. One later main-start attempt
+  was rejected after the run generation advanced. The writer stayed
+  closed and the fit stayed ready. Capture the signed Arm receipt before
+  classifying this failure.
 - [x] Compare adaptive axes, state/volume fusion and renderer radius on
   the 13 available guided browser recordings. Six recordings were held out.
   On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,
