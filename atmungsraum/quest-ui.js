@@ -21,7 +21,7 @@ import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta
 import { MetaUpdateControl } from './meta-update-control.js?v=12';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=4';
 import { ControllerLease } from './controller-lease.js?v=8';
-import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
+import { OperatorDeviceHealth } from './operator-device-health.js?v=3';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -407,6 +407,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let ecgOwner = '';
   let ecgGeneration = null;
   let ecgSensor = '';
+  let ecgPolarConnection = null;
   let breathTimer;
   let controlTimer;
   let deviceTimer;
@@ -796,15 +797,28 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       : `${runTime(progress.value)} / ${runTime(duration)}`);
     const setup = polarSetup(status);
     const source = rehearsal.gateway?.owner;
+    const device = deviceHealth.update(source, rehearsal.state);
     if (calibrationBaseline && source && !sameQuest(calibrationBaseline.owner, source)) resetPreview();
     const ecgSource = source && `${source.device}/${source.epoch}/${source.native_epoch}`;
     let sourceChanged = ecgOwner !== ecgSource;
-    if (sourceChanged) { ecgOwner = ecgSource; ecgGeneration = null; ecgSensor = ''; }
+    if (sourceChanged) {
+      ecgOwner = ecgSource;
+      ecgGeneration = ecgPolarConnection = null;
+      ecgSensor = '';
+    }
     if (status) {
       const sensor = status.y ? `${status.y.s}/${status.y.x}` : ecgSensor;
       sourceChanged ||= ecgGeneration !== status.g || ecgSensor !== sensor;
       ecgGeneration = status.g;
       ecgSensor = sensor;
+    }
+    // The signed health witness survives active phases without setup metadata.
+    // A verified GATT replacement can restart the Polar sample clock even
+    // while the Quest owner and recording generation stay unchanged.
+    const polarConnection = device.polarConnectionGeneration;
+    if (polarConnection !== null) {
+      sourceChanged ||= ecgPolarConnection !== null && ecgPolarConnection !== polarConnection;
+      ecgPolarConnection = polarConnection;
     }
     if (sourceChanged) {
       ecgAttempt?.abort();
@@ -826,7 +840,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (!batteryBinding || batteryAccepted !== batteryBinding) batteryAccepted = '';
     const batteryReviewed = Boolean(batteryAccepted && batteryAccepted === batteryBinding);
     const selectionAllowed = idle && setupComplete && Boolean(previewAccepted) && reviewable;
-    const device = deviceHealth.update(rehearsal.gateway?.owner, rehearsal.state);
     clearTimeout(deviceTimer);
     if (!document.hidden && device.expiresIn !== null) deviceTimer = setTimeout(() => paint(), device.expiresIn + 1);
     text(byId('battery-quest'), device.battery.quest);
