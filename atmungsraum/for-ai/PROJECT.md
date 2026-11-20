@@ -238,6 +238,14 @@ producer cutoff. Hardware capture and sample-exact end coverage remain open.
   compilation, host audio gates, and the focused phone layout at 320 px,
   landscape and 200% text. The browser playground is live in atmungsraum-ui
   at 4ed96a8 and passed Chrome playback, persistence and reset checks.
+- [x] Publish the production controller and native overlay at a9b01e5.
+  [Pages run 44708716401](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44708716401)
+  deployed the exact commit. Nine live files match Git. The exact-commit
+  smartphone gate passed 465 states.
+- [x] Build and verify local rehearsal code 55. Its v3 bench signature,
+  ARM64 OpenXR, bundled MP3 bytes and full audio/session closure passed.
+  See the [APK evidence](../quest/apks/README.md#round-audio-rehearsal-candidate-55--2026-11-20).
+  The 919-second default digital mix measured -24.0 LUFS and -4.8 dBTP.
 - [ ] Qualify a signed APK on the Quest 2 with the installed phone controller.
   Test the instruction-to-music handoff in Freie Erkundung, interruption and
   natural end, then listen at a fixed Quest system volume. Devices were absent
