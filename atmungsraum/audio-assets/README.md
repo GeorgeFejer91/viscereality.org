@@ -2,14 +2,13 @@
 
 The UI's current asset folder is
 [`assets/audio/scenarios/`](../assets/audio/scenarios/). Each scenario owns
-numbered unique silent placeholder WAVs with same-basename CSV/TXT/JSON, asset and
-timeline CSVs, a manifest and a playlist. Sort by Name ascending for first-use
-order. All cue durations are final protocol slots; the main scenario totals
-exactly 15 minutes. These placeholders make the UI usable while final speech
-waits for wording approval. TXT files in these folders are draft scripts;
-metadata explicitly distinguishes them from the silent WAVs' empty spoken text.
+numbered WAVs with same-basename CSV/TXT/JSON, asset and timeline CSVs, a
+manifest and a playlist. Sort by Name ascending for first-use order. Cyclic
+slots play the canonical Zen recordings. Other numbered slots retain silent
+placeholders with draft scripts. All cue durations are protocol slots, and the
+main scenario totals exactly 15 minutes.
 Each cue's CSV lists every occurrence in the scenario, using its global playback
-order, exact frame/second times and matching draft words. Repeated cues appear
+order, exact frame/second times and matching cue text. Repeated cues appear
 in the complete timeline/playlist rather than as duplicate audio files.
 See [scenario documentation](../audio/scenarios/README.md).
 
@@ -26,7 +25,7 @@ text metadata; it does not approve speech synthesis or replacement narration.
 The current main sequence's shared class catalogue is
 `../assets/audio/box-breathing/de/soft-v2/main-asset-classes.csv`; the same classes
 are in `manifest.json`. New Instruction 1, silent Calibration and Outro WAVs have
-adjacent JSON sidecars. Instruction 2 and cyclic cues reuse the original assets.
+adjacent JSON sidecars. Instruction 2 retains its original shared asset. Cyclic cues use the Zen recordings.
 Haupt-Runde is one direct15-minute sequence, including its26–41 second calibration
 window. Secret Tunnel supplies Instruction 1; the earlier local ElevenLabs
 listening variants below are independent. See [the protocol](../audio/calibration.md).

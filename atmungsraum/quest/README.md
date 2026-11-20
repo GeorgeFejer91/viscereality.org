@@ -345,11 +345,13 @@ bound catalog. The selected Quest gateway plays the calibration instruction
 before the first Polar calibration and exposes cancellation on the phone.
 The candidate also advertises the verified Freie Erkundung track and uses
 its media positions and natural end during participant recording. The
-guided Probe-Runde plays the verified instruction before the timed run and
-uses the Quest media clock for the five minutes. The authored Haupt-Runde
-uses one verified FLAC for the 900-second recording and plays the original
-19-second outro after a completed save. The authored source still needs
-signed headset qualification.
+guided Probe-Runde uses one verified timeline for the instruction and
+five guided minutes. The authored Haupt-Runde uses one verified 919-second
+FLAC for the 900-second programme and 19-second outro. Each authored round
+records from official Start to natural media end. Early Stop saves a partial
+round. Apply the [full-round recording overlay](round-polar-recording.patch)
+after the background music source used by authored code 52. Qualify the signed
+APK on Quest with a worn Polar H10 before participant collection.
 
 Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
 existing `ui.experiment_boot_autostart` feature and verifies its resolved lock,

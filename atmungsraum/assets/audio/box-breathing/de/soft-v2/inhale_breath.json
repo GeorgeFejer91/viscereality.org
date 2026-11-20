@@ -1,0 +1,21 @@
+{
+  "id": "inhale_breath",
+  "sample_rate": 44100,
+  "duration_seconds": 4,
+  "file": "inhale_breath.wav",
+  "text": "Einatmen, zwei, drei, vier",
+  "frames": 176400,
+  "bytes": 352844,
+  "sha256": "203fecc48da9d940f9c492255067e01f620de5a1d1399e70816fdf05641188e3",
+  "processing": {
+    "voice_block": "inhale",
+    "breath_peak_dbfs": -20,
+    "source_file": "inhale.wav",
+    "source": "User-supplied Proton Drive recording",
+    "source_sha256": "741f53d8df08cb8ccaeca31f77534e526109a279485567d4976486c67aba3761",
+    "source_duration_seconds": 3.502018140589569,
+    "breath_tempo_factor": 0.8755045351473922,
+    "target_duration_seconds": 4,
+    "voice_sha256": "8a8cd1ee73e5f5938526ed9a931b9f22108bd2b52478f535bcfc45dc133a09bf"
+  }
+}

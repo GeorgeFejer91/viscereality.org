@@ -2500,12 +2500,35 @@ cloud-backed files; it was left untouched. The verified runtime commit
 
 ### Main study audio — 2026-11-16
 
-- [x] Prepare two control WAVs, one instructions WAV, four reusable breathing
-  WAVs and `end.wav`. The [cue library](../assets/audio/scenarios/haupt-15/cue-placeholders/README.md)
-  owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
-  All eight files contain silence. Their timeline totals 900 seconds and
-  serves cue preparation. The active native loop owns Quest playback.
-- [x] Catalogue 24 attachments as 23 unique MP3/TXT pairs. The
+Local Zen meditation audition (2026-11-20). The two German cues in
+`audio-assets/ready-to-listen/zen-meditation-de/` each contain 192,000 PCM
+frames at 48 kHz. Whisper confirmed the words in both exports. The three
+inhale gaps measure 150 ms each, and the connected hold has 2.612 seconds
+of trailing silence. The timing and exact text sit beside each local WAV.
+The user selected this voice for the canonical cycle, including the new
+four-second Ausatmen cue with three 75 ms master gaps. The shared Quest
+loop, all six numbered packs and authored Quest programmes now use this
+recording set. Both holds use identical PCM. The phase edits preserve speech
+speed and the existing 16-second cycle, with the runtime files converted to
+the established 44.1 kHz source clock. The numbered packs and authored
+programmes retain their breath layers. The previous phase takes remain
+available for historical review.
+
+- [x] Verify the source and three local masters with Whisper and check
+  exact frame counts and silence spans.
+- [x] Rebind the six timeline JSON/CSV pairs and verify all 53 numbered cues.
+  The host suite passed 352 cases, with 19 environment-dependent cases
+  skipped. Both Quest audio profiles staged successfully. The authored
+  main FLAC matches the 900-second PCM render and retains its separate outro.
+- [ ] Build and qualify the signed Quest release on the paired Quest and Pixel.
+  ADB listed no attached devices, and the local RustDesk MCP endpoint was
+  unavailable. Resume with the signed build and a complete cycle on hardware.
+
+- [x] Verify the 900-second numbered Haupt-Runde cue timeline. Its
+  [numbered library](../assets/audio/scenarios/haupt-15/0000_timeline.csv)
+  covers the 81-second opening, 50 four-phase cycles and 19-second closing.
+  The active native loop owns Quest playback.
+- [x] Catalogue 25 attachments as 24 unique MP3/TXT pairs. The
   [study library](../assets/audio/main-study/de/README.md) records transcripts,
   phase pools, quiet listening breaks and the review/staging commands.
 - [x] Stage the playground-approved programme. Both controls are exactly
@@ -2545,6 +2568,55 @@ the guided Probe-Runde and Freie Erkundung through the Quest's verified
 scenario list. The authored Haupt-Runde binds one lossless 900-second
 programme to the recording clock and plays the separate 19-second outro
 after saving a complete run. Device acceptance remains open.
+
+On 2026-11-20, the live phone controller and release policy matched Pages
+[run 44673083532](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44673083532)
+at `585732a`. Meta Developer 33 selects the shared four-phase preparation
+and 900-second main loop. The phone offers only the scenarios advertised by
+its paired APK. The signed local authored APK, code 52, contains the main FLAC,
+Probe instruction and timed cues, exploration MP3, calibration prelude and
+separate background music. Its APK SHA-256 matches the
+[signed profile matrix](../quest/apks/README.md#background-music-signed-profile-matrix--2026-11-19).
+At that deployment, all 20 focused audio tests passed. The six numbered
+source timelines contained 53 silent cue WAVs before the Zen cue update.
+Audition the recorded programmes in the
+[playground](https://georgefejer91.github.io/atmungsraum-ui/?view=scenarios).
+The remaining acceptance check is an attended signed authored run on Quest
+and Pixel with audible playback, correct timing and matching exports.
+
+Retired the extra Haupt-Runde placeholder folder introduced by `b3a6a59`.
+All 204 events matched the numbered pack's order, timing, cycle and WAV
+SHA-256. The eight redundant WAVs occupied 10,231,552 bytes. The numbered
+pack remains the reference for cue preparation and its draft scripts.
+
+### Full-round Polar recording — 2026-11-20
+
+- [x] Reproduce the authored path dropping raw Polar samples while the shared
+  preparation loop owns no main interval. Reproduce the missing Probe prelude
+  and Haupt outro in the staged recording timelines.
+- [x] Bind each complete authored round to the existing native recorder and
+  media clock. Preserve the shared-loop plan, participant IDs, CSV schema and
+  historical recovery. Add the Probe instruction and main outro to the
+  verified timed media and duration.
+- [x] Build and inspect [signed authored candidate 54](../quest/apks/README.md#authored-full-round-recording-candidate-54--2026-11-20)
+  with the retained signer and all 67 signed catalog files verified.
+- [ ] Qualify the exact signed authored candidate with the paired Pixel and
+  worn Polar H10. Run full Probe, Freie Erkundung and Haupt, plus an early
+  stop during the instruction and a pause/rejoin case. Check ECG, acceleration
+  and derived breathing in the native recording, exact instruction/outro
+  coverage, one terminal outcome, and matching phone and private Drive CSV.
+  ADB and wireless discovery on this host currently list no device. The
+  local RustDesk loopback endpoint refused the connection.
+
+The native overlay reconstructs tree `e95b3bfe6851ee50d2ac3d975c452ce85e434562`
+from the code 52 source. Verified 909 native tests with six existing isolated
+tests ignored and one Windows junction-cleanup case excluded after it failed
+during cleanup. The actual writer/CSV tests cover all three authored rounds,
+ECG, motion, derived breathing, preserved recovery metadata and a cutoff
+before a queued media-ended command reaches the worker. The gateway passes
+79 host checks, and the Java catalog passes both playback shapes and damaged
+media rejection. The Node suite passes 352 tests with 19 fixture skips. The
+shared-loop package and old recording data retain their existing contracts.
 
 ### Separation of preparation and main study — 2026-11-16
 
@@ -5241,6 +5313,19 @@ USB debugging was subsequently authorized. A serial-scoped ADB shell verified
 the Pixel 10 running Android 16. None of its three installed Chrome WebAPKs
 declared the canonical Atmungsraum URL. Next: open the live URL in Android
 Chrome, install, and verify standalone relaunch from the Android launcher.
+
+## Background music library upload — 2026-11-20
+
+- [x] Add the supplied [MP3](../assets/audio/background/backgroundmusic.mp3)
+  with an empty spoken-word TXT. Full decode passed. The original 50,155,244 bytes
+  match SHA-256 `53bf70a3e1362721a5657eeaf8b8b94348f27c78818430840a6e98b0395b04c4`.
+  The browser and Quest continue to select their configured tracks.
+- [x] Publish the asset on main at 82893d0. [Pages run 44701402444](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44701402444)
+  succeeded. The full public MP3 matched the source SHA-256, a byte range
+  returned HTTP 206, the public TXT was empty, and the app entry returned HTTP
+  200. The context check and exact-commit smartphone gate passed (462 states).
+- [ ] Confirm the installed PWA on the lab Pixel when it is available. The
+  phone was unavailable through the local device connections during publication.
 
 ## Browser session background music — 2026-11-08
 

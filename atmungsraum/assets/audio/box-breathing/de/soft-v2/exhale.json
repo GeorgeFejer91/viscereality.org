@@ -1,0 +1,71 @@
+{
+  "id": "exhale",
+  "sample_rate": 44100,
+  "duration_seconds": 4,
+  "file": "exhale.wav",
+  "text": "Ausatmen, zwei, drei, vier",
+  "frames": 176400,
+  "bytes": 352844,
+  "sha256": "a0928afc435abf65771ad24984f5567154b50c1a1ad363c1bc7886bfc3e690d7",
+  "processing": {
+    "source": "ElevenLabs Zen – Meditation German",
+    "source_sha256": "99d340dd99bcc1a01441d3593728aea516a9ccb0fac7e1602251771c8587a833",
+    "master_wav_sha256": "c47cd4d608f2ea17e35e940634d303f3fc98d46641c4a4164da284f4bcf5deea",
+    "speech_time_stretch": false,
+    "alignment": "Whisper small German word timestamp estimates, refined against the decoded waveform for editing",
+    "source_whisper_words": [
+      {
+        "word": " Ausatmen,",
+        "start": 0.0,
+        "end": 0.96,
+        "probability": 0.9724774559338888
+      },
+      {
+        "word": " zwei,",
+        "start": 1.42,
+        "end": 1.96,
+        "probability": 0.8353790044784546
+      },
+      {
+        "word": " drei,",
+        "start": 2.68,
+        "end": 3.18,
+        "probability": 0.9921901822090149
+      },
+      {
+        "word": " vier.",
+        "start": 3.88,
+        "end": 4.3,
+        "probability": 0.9949591159820557
+      }
+    ],
+    "segments": [
+      {
+        "text": "Ausatmen",
+        "start_frame": 441,
+        "end_frame": 60593
+      },
+      {
+        "text": "zwei",
+        "start_frame": 63901,
+        "end_frame": 105355
+      },
+      {
+        "text": "drei",
+        "start_frame": 108663,
+        "end_frame": 139974
+      },
+      {
+        "text": "vier",
+        "start_frame": 143282,
+        "end_frame": 175078
+      }
+    ],
+    "inter_segment_silence_frames": [
+      3308,
+      3308,
+      3308
+    ],
+    "trailing_silence_frames": 1322
+  }
+}

@@ -152,6 +152,27 @@ This is the new source contract, not evidence of an accepted APK or a completed
 900-second device run. The existing physical-trial results below describe
 their original release.
 
+## Authored round recording boundary
+
+An authored round starts capture at its durable Quest Official Start, before
+its first clip starts, and finalizes on the natural end of the generation's
+verified media. Guided Probe-Runde covers the 2,002,176-frame instruction
+and 300 guided seconds. Haupt-Runde covers the 900-second programme and
+19-second outro. Freie Erkundung covers the instruction and music together.
+A pause holds the playback clock while capture continues. An early save or
+recovered interruption preserves the recorded prefix and its partial outcome.
+
+The writer uses the same participant ID, run UUID, filename and native clock
+anchor as the shared-loop path. It retains original Polar ECG and motion,
+heart-rate and RR in native streams, and the existing breathing observations
+with source provenance. The existing CSV version and sample columns are
+preserved. New Probe and main metadata carry `full_round: true`, exact
+duration and phase boundaries. Restoration accepts earlier recording metadata
+and its original duration. The standalone media path uses its own recorder
+admission instead of the preparation loop's audio frame gate. Calibration
+before a round belongs to setup. Only instructions in the selected round
+belong to that participant run's playback window.
+
 ## Identity and filenames
 
 The primary session CSV has exactly this filename:

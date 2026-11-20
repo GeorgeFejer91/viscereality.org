@@ -1,0 +1,765 @@
+diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+index 7e397260..bf18b812 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+@@ -869,6 +869,7 @@ struct RetryOffer {
+ struct ProducerGate {
+     generation: u64,
+     accepting: bool,
++    authored_media: bool,
+     // Queue admission reserves a reversible cutoff claim. Each actor-validated
+     // terminal releases only its own claim; overlapping requests retain theirs.
+     terminal_claims: usize,
+@@ -1490,7 +1491,7 @@ impl SessionWorker {
+         let finished_authored_audio = matches!(parsed.operation, ParsedOperation::AudioEnded)
+             && self.observe_authored_audio_end(parsed.expected_generation, parsed.at);
+         let finished_authored_main = finished_authored_audio && self.authored_audio.as_ref()
+-            .is_some_and(|audio| audio.scenario == "haupt-15");
++            .is_some_and(|audio| audio.scenario == "haupt-15" && audio.duration_ns == 900_000_000_000);
+         let outcome = self.apply_controller(parsed.expected_generation, parsed.at, command);
+         if !outcome.accepted {
+             self.pending_start = None;
+@@ -1564,6 +1565,9 @@ impl SessionWorker {
+             self.pending_terminal_operation =
+                 Some((outcome.generation, parsed.operation_id.clone()));
+         }
++        if finished_authored_audio {
++            self.close_producer_gate_and_drain(outcome.generation);
++        }
+         // Publish the reducer transition before any durable control operation.
+         // In particular a repeated B/Home interaction observes Saving/Exiting
+         // while finalization owns the control worker and cannot emit a route.
+@@ -2013,14 +2017,16 @@ impl SessionWorker {
+                             self.submitted_frame_generation.store(0, Ordering::Release);
+                             self.submitted_frame_sequence.store(0, Ordering::Release);
+                             self.submitted_frame_elapsed_ns.store(0, Ordering::Release);
++                            let authored_media = self.authored_audio.is_some();
+                             *self
+                                 .producer_gate
+                                 .write()
+                                 .unwrap_or_else(|poisoned| poisoned.into_inner()) = ProducerGate {
+                                 generation,
+-                                accepting: true,
++                                accepting: !authored_media,
++                                authored_media,
+                                 terminal_claims: 0,
+-                                resume_accepting: true,
++                                resume_accepting: !authored_media,
+                             };
+                             self.active_generation.store(generation, Ordering::Release);
+                             // RecordingPrepared is part of the same logical start operation.
+@@ -2081,6 +2087,13 @@ impl SessionWorker {
+                         let _ = self.process_effects(stopping.effects, at);
+                         return Err(format!("recording-control-persistence:{error}"));
+                     }
++                    if kind == SessionEventKind::OfficialStart && self.authored_audio.is_some() {
++                        let mut gate = self.producer_gate.write().unwrap_or_else(|e| e.into_inner());
++                        if gate.generation == self.controller.generation() {
++                            gate.resume_accepting = true;
++                            gate.accepting = gate.terminal_claims == 0;
++                        }
++                    }
+                     self.projection_write(|projection| {
+                         if kind == SessionEventKind::OfficialStart {
+                             projection.official_started_ns = Some(at.get());
+@@ -3141,28 +3154,39 @@ impl ExperimentSessionRuntime {
+         let preparation_cycle = preparation_reservation
+             .as_ref()
+             .map_or_else(crate::meta_update_admission::session_cycle, |r| r.cycle);
+-        let terminal_generation = terminal_command_generation(raw);
+-        let mut terminal_gate = if let Some(generation) = terminal_generation {
+-            let mut gate = match self.producer_gate.try_write() {
++        let cutoff = producer_cutoff_command(raw);
++        let explicit_stop = cutoff.is_some_and(|(_, media_end)| !media_end);
++        let mut terminal_gate = if let Some((generation, media_end)) = cutoff {
++            // The one-shot media callback must establish its cutoff even
++            // when an in-flight sample briefly holds the producer gate.
++            let guard = if media_end {
++                self.producer_gate.write().map_err(TryLockError::Poisoned)
++            } else {
++                self.producer_gate.try_write()
++            };
++            let mut gate = match guard {
+                 Ok(gate) => gate,
+                 Err(TryLockError::WouldBlock) => {
+                     return self.cached(|cache| &cache.terminal_admission_busy)
+                 }
+                 Err(TryLockError::Poisoned(_)) => return self.cached(|cache| &cache.worker_closed),
+             };
+-            let prior_gate = *gate;
+-            if gate.generation == generation {
++            if gate.generation == generation && (!media_end || gate.authored_media) {
++                let prior_gate = *gate;
+                 if gate.terminal_claims == 0 {
+                     gate.resume_accepting = gate.accepting;
+                 }
+                 gate.terminal_claims += 1;
+                 gate.accepting = false;
++                Some((generation, prior_gate, gate))
++            } else {
++                None
+             }
+-            Some((generation, prior_gate, gate))
+         } else {
+             None
+         };
+-        let sender = if terminal_generation.is_some() {
++        // Keep media end ordered with its earlier playback callbacks.
++        let sender = if explicit_stop {
+             &self.terminal_sender
+         } else {
+             &self.command_sender
+@@ -3179,19 +3203,7 @@ impl ExperimentSessionRuntime {
+             }),
+         }) {
+             Ok(()) => self.cached(|cache| &cache.queued),
+-            Err(TrySendError::Full(_)) if terminal_generation.is_some() => {
+-                let (generation, prior_gate, gate) = terminal_gate
+-                    .as_mut()
+-                    .expect("terminal command holds the admission gate");
+-                if gate.generation == *generation
+-                    && self.active_generation.load(Ordering::Acquire) == *generation
+-                {
+-                    **gate = *prior_gate;
+-                }
+-                self.cached(|cache| &cache.terminal_queue_full)
+-            }
+-            Err(TrySendError::Full(_)) => self.cached(|cache| &cache.command_queue_full),
+-            Err(TrySendError::Disconnected(_)) => {
++            Err(error) => {
+                 if let Some((generation, prior_gate, gate)) = terminal_gate.as_mut() {
+                     if gate.generation == *generation
+                         && self.active_generation.load(Ordering::Acquire) == *generation
+@@ -3199,7 +3211,11 @@ impl ExperimentSessionRuntime {
+                         **gate = *prior_gate;
+                     }
+                 }
+-                self.cached(|cache| &cache.worker_closed)
++                match error {
++                    TrySendError::Full(_) if explicit_stop => self.cached(|cache| &cache.terminal_queue_full),
++                    TrySendError::Full(_) => self.cached(|cache| &cache.command_queue_full),
++                    TrySendError::Disconnected(_) => self.cached(|cache| &cache.worker_closed),
++                }
+             }
+         }
+     }
+@@ -3735,9 +3751,10 @@ impl ExperimentSessionRuntime {
+     }
+ 
+     pub(crate) fn try_offer(&self, record: SessionRecord) -> OfferOutcome {
+-        if !crate::experiment_breathing_setup_runtime::recording_sample_admitted(&record) {
+-            return OfferOutcome::NotAccepting;
+-        }
++        // Authored media has its own start and terminal fences. An armed or
++        // paused preparation loop cannot veto samples from that recording.
++        let shared_loop_admits =
++            crate::experiment_breathing_setup_runtime::recording_sample_admitted(&record);
+         let gate = match self.producer_gate.try_read() {
+             Ok(gate) => gate,
+             // A write-held gate defines the producer cutoff. This offer is
+@@ -3747,7 +3764,7 @@ impl ExperimentSessionRuntime {
+             Err(TryLockError::Poisoned(_)) => return OfferOutcome::WriterClosed,
+         };
+         let generation = gate.generation;
+-        if generation == 0 || !gate.accepting {
++        if generation == 0 || !gate.accepting || (!gate.authored_media && !shared_loop_admits) {
+             return OfferOutcome::NotAccepting;
+         }
+         let writer = match self.writer_slot.try_lock() {
+@@ -5301,15 +5318,16 @@ fn is_status_command(raw: &str) -> bool {
+     object.len() == 2 && object.get("operation").and_then(Value::as_str) == Some("status")
+ }
+ 
+-fn terminal_command_generation(raw: &str) -> Option<u64> {
++fn producer_cutoff_command(raw: &str) -> Option<(u64, bool)> {
+     // A partial operation/generation match is not permission to interrupt sampling.
+     // State, operation-history and monotonic validation remain serial actor work.
+     let parsed = parse_mutating_command(parse_command_value(raw).ok()?, Instant::now()).ok()?;
+-    matches!(
+-        parsed.operation,
+-        ParsedOperation::RestartToExperimenter | ParsedOperation::SaveAndExit
+-    )
+-    .then_some(parsed.expected_generation)
++    let media_end = match parsed.operation {
++        ParsedOperation::RestartToExperimenter | ParsedOperation::SaveAndExit => false,
++        ParsedOperation::AudioEnded => true,
++        _ => return None,
++    };
++    Some((parsed.expected_generation, media_end))
+ }
+ 
+ fn parse_audio_identity(object: &Map<String, Value>) -> Result<AudioAssetIdentity, &'static str> {
+@@ -5738,6 +5756,14 @@ mod tests {
+             json!([[0,"instruction"],[960_768,"rest"]]));
+     }
+ 
++    #[test]
++    fn full_authored_rounds_accept_polar_and_keep_instruction_and_outro_samples() {
++        check_authored_media_clock("probe-5", 15_232_176, 345_400, 345_400,
++            json!([[0,"instruction"],[2_002_176,"inhale"]]));
++        check_authored_media_clock("haupt-15", 40_527_900, 919_000, 918_999,
++            json!([[0,"instruction_1"],[13_230_000,"inhale"],[39_690_000,"outro"]]));
++    }
++
+     #[test]
+     fn authored_probe_uses_media_positions_and_saves_after_five_minutes() {
+         check_authored_media_clock("probe-5", 13_230_000, 300_000, 299_999,
+@@ -5781,6 +5807,10 @@ mod tests {
+         if scenario == "haupt-15" {
+             participant["authored_main"] = json!(true);
+         }
++        let full_round = matches!(frames, 15_232_176 | 40_527_900);
++        if full_round {
++            participant["full_round"] = json!(true);
++        }
+         let session = SelectedControllerStudy::start_with_participant(Some(participant));
+         let runtime = &session.runtime;
+         let readback = |needle: &str| {
+@@ -5796,6 +5826,73 @@ mod tests {
+         assert_eq!(readback("\"control_state\":\"running\"")["duration_ms"], duration);
+         assert_eq!(readback("\"control_state\":\"running\"")["active_time_ms"], 0);
+         runtime.apply_command_json(&command("audio-started", "media-start", 1, 17_025_000_000));
++        readback("\"last_operation_id\":\"media-start\"");
++        let sample = |sequence, at| runtime.try_offer(SessionRecord::PolarEcg(PolarEcgBatch {
++            frame_sequence: sequence,
++            samples: vec![PolarEcgSample {
++                source_sequence: sequence,
++                sample_index: 0,
++                source_time: SourceTimestamp { clock: SourceClock::PolarSensor, value_ns: at },
++                received_source: SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: at },
++                observed_at: MonotonicNanos::new(at),
++                microvolts: 141,
++            }].into_boxed_slice(),
++        }));
++        if full_round || scenario == "free-exploration" {
++            let outcome = sample(1, 17_027_000_000);
++            assert!(matches!(outcome, OfferOutcome::Accepted { .. } | OfferOutcome::AdmissionBusy),
++                "{scenario} first sample: {outcome:?}, gate: {:?}", runtime.producer_gate.read().unwrap());
++            let at = 17_028_000_000;
++            let observed_at = MonotonicNanos::new(at);
++            let host = SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: at };
++            let tracker = SourceTimestamp { clock: SourceClock::OpenXrTime, value_ns: at };
++            let motion = SessionRecord::PolarAcc(PolarAccBatch {
++                frame_sequence: 1,
++                samples: vec![PolarAccSample {
++                    source_sequence: 1,
++                    sample_index: 0,
++                    source_time: SourceTimestamp { clock: SourceClock::PolarSensor, value_ns: at },
++                    received_source: host,
++                    observed_at,
++                    xyz_mg: [0.0, 0.0, 1000.0],
++                }].into_boxed_slice(),
++            });
++            let breath = SessionRecord::Breath(BreathObservation {
++                assessment_source: Some("polar-acc"),
++                tracking_status: Some("valid"),
++                polar_source_provenance: Some(crate::polar_composition_adapters::PolarPresentationProvenance {
++                    policy: "latest-java-sample-smoothed-at-xr-target",
++                    java_before_ns: at - 1000,
++                    java_after_ns: at + 1000,
++                    xr_target_ns: at,
++                    java_target_ns: at,
++                    source_left_sequence_id: 1,
++                    source_right_sequence_id: 1,
++                    source_left_host_ns: at - 1000,
++                    source_right_host_ns: at - 1000,
++                    source_left_sensor_ns: at - 1000,
++                    source_right_sensor_ns: at - 1000,
++                }),
++                guidance_bias_revision: 0,
++                source_sequence: 1,
++                sampled_at: tracker,
++                observed_source: tracker,
++                observed_at,
++                phase: BreathPhase::Inhale,
++                unbiased_phase: BreathPhase::Inhale,
++                guidance_phase: None,
++                guidance_bias_percent: 0,
++                guidance_active_time_ms: None,
++                volume01: Some(0.5),
++                quality01: 1.0,
++                settings_revision: 1,
++            });
++            for record in [motion, breath] {
++                let outcome = runtime.try_offer(record);
++                assert!(matches!(outcome, OfferOutcome::Accepted { .. } | OfferOutcome::AdmissionBusy),
++                    "{scenario} Polar observation: {outcome:?}");
++            }
++        }
+         position("stale-media-clock", 0, 17_030_000_000, 40_000);
+         position("actual-media-clock", 1, 17_035_000_000, 22_000);
+         readback("\"active_time_ms\":22000");
+@@ -5804,10 +5901,26 @@ mod tests {
+         position("paused-media-clock", 1, 17_045_000_000, 32_000);
+         runtime.apply_command_json(&command("resume", "media-resume", 1, 17_050_000_000));
+         assert_eq!(readback("\"control_state\":\"running\"")["active_time_ms"], 22000);
+-        position("ending-media-clock", 1, 17_055_000_000, duration + 1);
++        let end_at = 17_036_000_000 + duration * 1_000_000;
++        position("ending-media-clock", 1, end_at - 3_000_000, duration + 1);
+         assert_eq!(readback(&format!("\"active_time_ms\":{last_ms}"))["completion"], "not-reached");
+-        runtime.apply_command_json(&command("audio-ended", "media-end", 1, 17_060_000_000));
+-        if scenario == "haupt-15" {
++        if full_round || scenario == "free-exploration" {
++            let outcome = sample(2, end_at - 2_000_000);
++            assert!(matches!(outcome, OfferOutcome::Accepted { .. } | OfferOutcome::AdmissionBusy),
++                "{scenario} final sample: {outcome:?}");
++        }
++        if full_round || scenario == "free-exploration" {
++            let (entered, resume) = session.pause_worker();
++            entered.recv_timeout(Duration::from_secs(2)).unwrap();
++            let receipt = runtime.apply_command_json(&command("audio-ended", "media-end", 1, end_at));
++            let after_end = sample(3, end_at + 1_000_000);
++            resume.send(()).unwrap();
++            assert!(receipt.contains("queued"), "{receipt}");
++            assert_eq!(after_end, OfferOutcome::NotAccepting);
++        } else {
++            runtime.apply_command_json(&command("audio-ended", "media-end", 1, end_at));
++        }
++        if scenario == "haupt-15" && !full_round {
+             let completed = readback("\"control_event\":\"main-outro\"");
+             assert_eq!(completed["phase"], "idle");
+             assert_eq!(completed["control_receipt_generation"], 1);
+@@ -5821,6 +5934,23 @@ mod tests {
+         assert_eq!(final_record["participant_csv"]["name"], format!("Tes_30_N_2024-08-30_{scenario}_r1.csv"));
+         let events = fs::read_to_string(directory.join("events.jsonl")).unwrap();
+         assert_eq!(events.matches("\"audio-ended\"").count(), 1);
++        if full_round || scenario == "free-exploration" {
++            let csv = fs::read_to_string(directory.join(final_record["participant_csv"]["name"].as_str().unwrap())).unwrap();
++            let rows: Vec<_> = csv.lines().filter(|line| line.contains(",ecg,")).collect();
++            assert_eq!(rows.len(), 2, "{csv}");
++            assert!(csv.lines().any(|line| line.contains(",accelerometer,") && line.split(',').nth(7) == Some("8000")));
++            assert!(csv.lines().any(|line| line.contains(",breath,") && line.split(',').nth(20) == Some("inhale")));
++            // V4 streams leave per-sample playback cells empty. The native
++            // clock events and bound phase offsets establish those windows.
++            assert_eq!(rows[0].split(',').nth(7), Some("7000"));
++            let tail_us: u64 = rows[1].split(',').nth(7).unwrap().parse().unwrap();
++            assert!(tail_us > (duration - 20) * 1000 && tail_us < (duration + 20) * 1000);
++            let saved_participant = &final_record["participant"];
++            assert_eq!(saved_participant.get("full_round").is_some(), full_round);
++            let restored = crate::session_recording_participant::ParticipantRun::restore(saved_participant).unwrap();
++            assert_eq!(restored.metadata(), *saved_participant);
++            assert_eq!(sample(3, end_at + 10_000_000), OfferOutcome::NotAccepting);
++        }
+     }
+ 
+     #[test]
+@@ -8228,7 +8358,7 @@ mod tests {
+                     .unwrap();
+             value.as_object_mut().unwrap().remove(missing);
+             let raw = value.to_string();
+-            assert_eq!(terminal_command_generation(&raw), None);
++            assert_eq!(producer_cutoff_command(&raw), None);
+             runtime.apply_command_json(&raw);
+             assert!(runtime.producer_gate.read().unwrap().accepting);
+             wait_for(
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
+index a9d6cf95..cb1ecd91 100644
+--- a/apps/native-renderer-android/native/src/session_recording_participant.rs
++++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
+@@ -91,15 +91,17 @@ pub(crate) struct ParticipantPlan {
+     duration_ns: u64,
+     phases: Vec<(u64, String)>,
+     authored_main: bool,
++    full_round: bool,
+ }
+ 
+ impl ParticipantPlan {
+     pub(crate) fn parse(value: &Value) -> Result<Self, &'static str> {
+         const BAD: &str = "participant-plan-invalid";
+         let authored_main = value.get("authored_main").is_some();
++        let full_round = value.get("full_round").is_some();
+         value
+             .as_object()
+-            .filter(|object| object.len() == 6 + usize::from(authored_main))
++            .filter(|object| object.len() == 6 + usize::from(authored_main) + usize::from(full_round))
+             .ok_or(BAD)?;
+         let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
+         let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
+@@ -114,7 +116,14 @@ impl ParticipantPlan {
+             .as_u64()
+             .filter(|rate| (8000..=48000).contains(rate))
+             .ok_or(BAD)?;
+-        let expected_frames = scenario_frames(scenario, rate).ok_or(BAD)?;
++        if full_round && (value["full_round"] != true || scenario == "haupt-15" && !authored_main) {
++            return Err(BAD);
++        }
++        let expected_frames = if full_round {
++            full_round_frames(scenario, rate)
++        } else {
++            scenario_frames(scenario, rate)
++        }.ok_or(BAD)?;
+         let frames = value["total_frames"]
+             .as_u64()
+             .filter(|frames| *frames == expected_frames)
+@@ -146,6 +155,20 @@ impl ParticipantPlan {
+         if phases[0].0 != 0 {
+             return Err(BAD);
+         }
++        if full_round {
++            let boundary = match scenario {
++                "probe-5" => phases[0].1 == "instruction" && phases.get(1).is_some_and(|phase| {
++                    phase.0 == (2_002_176 * NANOS_PER_SECOND).div_ceil(rate) && phase.1 == "inhale"
++                }),
++                "haupt-15" => phases.last().is_some_and(|phase| {
++                    phase.0 == 900 * NANOS_PER_SECOND && phase.1 == "outro"
++                }),
++                _ => false,
++            };
++            if !boundary {
++                return Err(BAD);
++            }
++        }
+         Ok(Self {
+             participant,
+             scenario: scenario.to_owned(),
+@@ -153,6 +176,7 @@ impl ParticipantPlan {
+             duration_ns: (frames * NANOS_PER_SECOND).div_ceil(rate),
+             phases,
+             authored_main,
++            full_round,
+         })
+     }
+ 
+@@ -199,6 +223,17 @@ fn scenario_frames(scenario: &str, rate: u64) -> Option<u64> {
+     Some(seconds * rate)
+ }
+ 
++fn full_round_frames(scenario: &str, rate: u64) -> Option<u64> {
++    if rate != EXPLORATION_SAMPLE_RATE {
++        return None;
++    }
++    match scenario {
++        "probe-5" => Some(15_232_176),
++        "haupt-15" => Some(40_527_900),
++        _ => None,
++    }
++}
++
+ fn scenario_duration_ns(scenario: &str) -> Option<u64> {
+     let frames = scenario_frames(scenario, EXPLORATION_SAMPLE_RATE)?;
+     Some((frames * NANOS_PER_SECOND).div_ceil(EXPLORATION_SAMPLE_RATE))
+@@ -259,7 +294,16 @@ impl ParticipantRun {
+         const BAD: &str = "participant-recovery-metadata-invalid";
+         let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
+         let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
+-        let duration_ns = scenario_duration_ns(scenario).ok_or(BAD)?;
++        let full_round = value.get("full_round").is_some();
++        let duration_ns = if full_round {
++            if value["full_round"] != true {
++                return Err(BAD);
++            }
++            let frames = full_round_frames(scenario, EXPLORATION_SAMPLE_RATE).ok_or(BAD)?;
++            (frames * NANOS_PER_SECOND).div_ceil(EXPLORATION_SAMPLE_RATE)
++        } else {
++            scenario_duration_ns(scenario).ok_or(BAD)?
++        };
+         let sha256 = value["scenario_sha256"]
+             .as_str()
+             .filter(|hash| valid_hash(hash))
+@@ -305,6 +349,7 @@ impl ParticipantRun {
+                 duration_ns,
+                 phases,
+                 authored_main: false,
++                full_round,
+             },
+             index,
+             uuid: uuid.to_owned(),
+@@ -337,6 +382,9 @@ impl ParticipantRun {
+         if !self.plan.phases.is_empty() {
+             metadata["phase_offsets_ns"] = json!(self.plan.phases);
+         }
++        if self.plan.full_round {
++            metadata["full_round"] = json!(true);
++        }
+         metadata
+     }
+ 
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index 593dce7a..3d57f124 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -1198,9 +1198,15 @@ public final class ExperimentSessionCommandGateway {
+             if (save && probeInstruction != null) retireProbeInstruction();
+             if (start != null) {
+                 String armedScenario = start.optString("scenario_id");
++                boolean fullProbe = false;
+                 if ("probe-5".equals(armedScenario)) {
+-                    deferProbeStart(request, start);
+-                    return journal.original(id);
++                    String plan = delegate instanceof WifiDelegate ? ((WifiDelegate) delegate).recordingPlan("probe-5") : null;
++                    fullProbe = plan != null && Boolean.TRUE.equals(new JSONObject(plan).opt("full_round"));
++                    if (!fullProbe) {
++                        deferProbeStart(request, start);
++                        return journal.original(id);
++                    }
++                    if (!probeStartReady(start)) throw new SecurityException("probe-start-unavailable");
+                 }
+                 boolean authoredMain = "haupt-15".equals(armedScenario) && delegate instanceof WifiDelegate
+                     && ((WifiDelegate) delegate).hasAuthoredMain();
+@@ -1208,7 +1214,7 @@ public final class ExperimentSessionCommandGateway {
+                         || !BreathingSetupAudio.status().optBoolean("ready"))) {
+                     throw new SecurityException("main-breathing-input-unavailable");
+                 }
+-                if (!"free-exploration".equals(armedScenario) && !authoredMain) {
++                if (!"free-exploration".equals(armedScenario) && !authoredMain && !fullProbe) {
+                     deferMainStart(id, request);
+                     return journal.original(id);
+                 }
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
+index e1b425bf..e53302ed 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
+@@ -66,7 +66,7 @@ final class ScenarioAudioAndroidTracks
+ 
+     @Override public boolean hasProbeInstruction() {
+         ScenarioAudioPackage selected = catalog;
+-        return selected != null && selected.probeInstructionPath() != null;
++        return selected != null && selected.hasAuthoredProbe();
+     }
+ 
+     @Override public Runnable playProbeInstruction(Runnable completed, Runnable failed) throws Exception {
+@@ -78,7 +78,7 @@ final class ScenarioAudioAndroidTracks
+ 
+     @Override public boolean hasAuthoredMain() {
+         ScenarioAudioPackage selected = catalog;
+-        return selected != null && selected.mainOutroPath() != null;
++        return selected != null && selected.hasEncodedTrack("haupt-15");
+     }
+ 
+     @Override public Runnable playMainOutro(Runnable completed, Runnable failed) throws Exception {
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
+index 491ebee8..372990f8 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
+@@ -32,6 +32,7 @@ final class ScenarioAudioPackage {
+     private final Map<String, FileIdentity> encodedTracks = new HashMap<>();
+     private final FileIdentity calibrationInstruction;
+     private String probeInstructionPath;
++    private boolean fullProbe;
+     private String mainOutroPath;
+     private final int sampleRate;
+     private final FileIdentity library;
+@@ -127,6 +128,7 @@ final class ScenarioAudioPackage {
+     }
+ 
+     boolean hasCalibrationInstruction() { return calibrationInstruction != null; }
++    boolean hasAuthoredProbe() { return fullProbe || probeInstructionPath != null; }
+     String probeInstructionPath() { return probeInstructionPath; }
+     String mainOutroPath() { return mainOutroPath; }
+ 
+@@ -170,7 +172,16 @@ final class ScenarioAudioPackage {
+         if (!plan.getString("audio_assets_base_directory").equals("../../" + cuePrefix) || plan.has("encoded_audio")) {
+             throw new IOException("Unexpected scenario audio format");
+         }
+-        verifySessionClips(scenarioId, plan, frames);
++        boolean fullRound = Boolean.TRUE.equals(plan.opt("full_round"));
++        if (plan.has("full_round") && !fullRound) throw new IOException("Invalid full-round flag");
++        if (fullRound) {
++            if (output != null && "haupt-15".equals(scenarioId)) {
++                throw new IOException("Full main requires its verified encoded track");
++            }
++            verifyFullRound(scenarioId, plan, events, frames);
++        } else {
++            verifySessionClips(scenarioId, plan, frames);
++        }
+         if (events.length() < 1 || events.length() > 1000) {
+             throw new IOException("Invalid scenario audio event count");
+         }
+@@ -202,16 +213,18 @@ final class ScenarioAudioPackage {
+                             !entry.getString("sha256").equals(identity.sha256)) {
+                         throw new IOException("Scenario cue binding differs: " + identity.path);
+                     }
+-                    retainedBytes += identity.bytes;
+-                    if (retainedBytes > MAX_FILE_BYTES) {
+-                        throw new IOException("Scenario cue set exceeds its memory bound");
++                    if (output != null || !hasEncodedTrack(scenarioId)) {
++                        retainedBytes += identity.bytes;
++                        if (retainedBytes > MAX_FILE_BYTES) {
++                            throw new IOException("Scenario cue set exceeds its memory bound");
++                        }
+                     }
+                     cue = decodeCue(verified(identity), duration, entry.getBoolean("placeholder"));
+-                    cues.put(id, cue);
++                    cues.put(id, output == null ? new Cue(null, 0, duration) : cue);
+                 }
+                 if (cue.frames != duration) throw new IOException("Repeated cue length differs");
+             }
+-            segments.add(new Segment(cue, duration));
++            if (output != null) segments.add(new Segment(cue, duration));
+             offset += duration;
+         }
+         if (offset != frames || cues.size() != registry.length()) {
+@@ -228,7 +241,11 @@ final class ScenarioAudioPackage {
+                 JSONObject recordingPlan = new JSONObject().put("scenario_id", scenarioId)
+                     .put("scenario_sha256", planFile.sha256).put("sample_rate", sampleRate)
+                     .put("total_frames", frames).put("phases", phases);
+-                if ("haupt-15".equals(scenarioId) && mainOutroPath != null) recordingPlan.put("authored_main", true);
++                if ("haupt-15".equals(scenarioId) && hasEncodedTrack(scenarioId)) recordingPlan.put("authored_main", true);
++                if (fullRound) {
++                    recordingPlan.put("full_round", true);
++                    if ("probe-5".equals(scenarioId)) fullProbe = true;
++                }
+                 recordingPlans.put(scenarioId, recordingPlan.toString());
+             }
+             return frames;
+@@ -268,6 +285,28 @@ final class ScenarioAudioPackage {
+         encodedTracks.put("free-exploration", track);
+     }
+ 
++    private void verifyFullRound(String scenarioId, JSONObject plan, JSONArray events, int frames)
++            throws IOException, JSONException {
++        if (sampleRate != 44_100 || plan.has("pre_session_audio") || plan.has("post_session_audio")) {
++            throw new IOException("Full round must use one 44.1 kHz playback timeline");
++        }
++        if ("probe-5".equals(scenarioId)) {
++            JSONObject opening = events.getJSONObject(0);
++            if (frames != 15_232_176 || !"instruction".equals(opening.getString("id"))
++                    || opening.getInt("duration_frames") != 2_002_176 || opening.isNull("asset")
++                    || plan.has("timed_audio")) throw new IOException("Full Probe lacks its recorded opening");
++        } else if ("haupt-15".equals(scenarioId)) {
++            JSONObject closing = events.getJSONObject(events.length() - 1);
++            if (frames != 40_527_900 || !"outro".equals(closing.getString("id"))
++                    || closing.getInt("offset_frames") != 39_690_000 || closing.isNull("asset")) {
++                throw new IOException("Full main lacks its recorded outro");
++            }
++            verifyMainTrack(plan.getJSONObject("timed_audio"), frames);
++        } else {
++            throw new IOException("Unexpected full-round format");
++        }
++    }
++
+     private void verifySessionClips(String scenarioId, JSONObject plan, int totalFrames)
+             throws IOException, JSONException {
+         if (plan.has("pre_session_audio")) {
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
+index d9097c84..9b487b8c 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
+@@ -29,14 +29,30 @@ public final class ScenarioAudioPackageTest {
+         String scenario = "free-exploration";
+         String media = "assets/audio/playground/" + scenario + ".mp3";
+         check(catalog.ids().contains(scenario), "authored exploration is discoverable");
+-        check("assets/audio/main-study/de/probe-instructions.wav".equals(catalog.probeInstructionPath()),
+-            "verified authored instruction is discoverable independently of the timed practice");
+         String timedMain = "assets/audio/scenarios/haupt-15/haupt-15.flac";
+-        check(timedMain.equals(catalog.encodedTrackPath("haupt-15"))
+-            && "assets/audio/box-breathing/de/soft-v2/outro.wav".equals(catalog.mainOutroPath()),
+-            "verified main playback has distinct timed and post-session media");
+-        check(new org.json.JSONObject(catalog.recordingPlan("haupt-15")).getBoolean("authored_main"),
+-            "the participant plan binds the timed mix rather than the legacy loop");
++        check(catalog.hasAuthoredProbe(), "verified Probe is discoverable");
++        check(timedMain.equals(catalog.encodedTrackPath("haupt-15")), "verified main uses the encoded track");
++        org.json.JSONObject main = new org.json.JSONObject(catalog.recordingPlan("haupt-15"));
++        org.json.JSONObject probe = new org.json.JSONObject(catalog.recordingPlan("probe-5"));
++        check(main.getBoolean("authored_main"), "the participant plan binds the authored mix");
++        String instruction;
++        String outro;
++        if (main.optBoolean("full_round")) {
++            check(probe.getBoolean("full_round") && probe.getInt("total_frames") == 15_232_176,
++                "Probe binds the opening and five guided minutes");
++            check(main.getInt("total_frames") == 40_527_900 && catalog.mainOutroPath() == null
++                && catalog.probeInstructionPath() == null, "main binds the outro without extra playback");
++            Receipt probeAudio = new Receipt();
++            check(catalog.writeWave("probe-5", probeAudio) == 15_232_176
++                && probeAudio.bytes == 44 + 2 * 15_232_176 && probeAudio.nonzeroPcm, "full Probe WAV");
++            instruction = recordedCue(root, "probe-5", false);
++            outro = recordedCue(root, "haupt-15", true);
++        } else {
++            instruction = catalog.probeInstructionPath();
++            outro = catalog.mainOutroPath();
++            check("assets/audio/main-study/de/probe-instructions.wav".equals(instruction)
++                && "assets/audio/box-breathing/de/soft-v2/outro.wav".equals(outro), "legacy clips remain valid");
++        }
+         try (java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream()) {
+             check(catalog.writeEncodedTrack(scenario, output) == 19_715_793, "original exploration frame count");
+             check(java.util.Arrays.equals(Files.readAllBytes(root.resolve(media)), output.toByteArray()),
+@@ -48,7 +64,7 @@ public final class ScenarioAudioPackageTest {
+         } catch (IOException expected) { }
+ 
+         for (String damagedPath : new String[] { media, timedMain, "assets/audio/playground/calibration-prelude.mp3",
+-                "assets/audio/main-study/de/probe-instructions.wav", "assets/audio/box-breathing/de/soft-v2/outro.wav" }) {
++                instruction, outro }) {
+             ScenarioAudioPackage damaged = ScenarioAudioPackage.open(path -> {
+                 if (!path.equals(damagedPath)) return Files.newInputStream(root.resolve(path));
+                 byte[] bytes = Files.readAllBytes(root.resolve(path));
+@@ -63,6 +79,14 @@ public final class ScenarioAudioPackageTest {
+         System.out.println("PASS: authored catalog, exact encoded input and damaged media rejection.");
+     }
+ 
++    private static String recordedCue(Path root, String scenario, boolean last) throws Exception {
++        org.json.JSONObject plan = new org.json.JSONObject(Files.readString(root.resolve("audio/scenarios/" + scenario + ".json")));
++        org.json.JSONArray events = plan.getJSONArray("events");
++        String id = events.getJSONObject(last ? events.length() - 1 : 0).getString("asset");
++        return "assets/audio/scenarios/" + scenario + "/" + plan.getJSONObject("audio_assets")
++            .getJSONObject(id).getString("file");
++    }
++
+     public static void main(String[] args) throws Exception {
+         Path root = Path.of(args[0]).toAbsolutePath();
+         String catalogHash = args[1];
+@@ -86,7 +110,13 @@ public final class ScenarioAudioPackageTest {
+             long frames = catalog.writeWave(ids[i], output);
+             check(frames == 44100L * seconds[i], "frame length for " + ids[i]);
+             check(output.bytes == 44 + 2 * frames, "WAV byte length for " + ids[i]);
+-            check(!output.nonzeroPcm, "placeholder PCM for " + ids[i]);
++            org.json.JSONObject staged = new org.json.JSONObject(Files.readString(root.resolve("audio/scenarios/" + ids[i] + ".json")));
++            org.json.JSONObject registered = staged.getJSONObject("audio_assets");
++            boolean recorded = false;
++            for (String key : registered.keySet()) {
++                recorded |= !registered.getJSONObject(key).getBoolean("placeholder");
++            }
++            check(output.nonzeroPcm == recorded, "expected recorded or placeholder PCM for " + ids[i]);
+         }
+         try {
+             ScenarioAudioPackage.open(path -> Files.newInputStream(root.resolve(path)), "0".repeat(64));
+@@ -110,6 +140,6 @@ public final class ScenarioAudioPackageTest {
+         } catch (IOException expected) {
+             check(output.bytes == 0, "wrote playback bytes before verifying all inputs");
+         }
+-        System.out.println("PASS: six native WAV renders, exact frames, silent placeholders, catalog and cue integrity.");
++        System.out.println("PASS: six native WAV renders, exact frames, declared PCM status, catalog and cue integrity.");
+     }
+ }
+diff --git a/tools/checks/test_experiment_gateway_breathing_boundary.py b/tools/checks/test_experiment_gateway_breathing_boundary.py
+index a04fab1d..ae373361 100644
+--- a/tools/checks/test_experiment_gateway_breathing_boundary.py
++++ b/tools/checks/test_experiment_gateway_breathing_boundary.py
+@@ -56,7 +56,7 @@ final class GatewayBreathingBoundaryTest {
+  Object context=new Object();long identity=1,epoch=7;String deferredMainId="";boolean remote=true;
+  CalibrationInstruction calibrationInstruction;
+  ProbeInstruction probeInstruction;
+- boolean calibrationSelected,probePackaged=true,polarReady=true;Runnable narrationCompleted,narrationFailed;int narrationStarts,narrationReleases;
++ boolean calibrationSelected,probePackaged=true,polarReady=true,fullProbe;Runnable narrationCompleted,narrationFailed;int narrationStarts,narrationReleases;
+  boolean authoredMain; int outroRetirements;
+  int dispatches,dispatchAttempts,rejectedUpdates;boolean failDispatch;String phase="ARMED",scenario="";
+  ExperimentSessionCommandJournal journal=new ExperimentSessionCommandJournal();
+@@ -80,6 +80,7 @@ final class GatewayBreathingBoundaryTest {
+   }
+   public boolean hasCalibrationInstruction(){return calibrationSelected;}
+   public boolean hasProbeInstruction(){return probePackaged;}
++  public String recordingPlan(String scenario){return new JSONObject().put("full_round",fullProbe).toString();}
+   public boolean hasAuthoredMain(){return authoredMain;}
+   public void retireMainOutro(){outroRetirements++;if(NativeRendererMetaUpdate.failOutro)throw new IllegalStateException("release deferred");}
+   public Runnable playProbeInstruction(Runnable completed,Runnable failed) {
+@@ -96,6 +97,7 @@ final class GatewayBreathingBoundaryTest {
+   boolean hasCalibrationInstruction() throws Exception;
+   Runnable playCalibrationInstruction(Runnable completed,Runnable failed) throws Exception;
+   boolean hasProbeInstruction();
++  String recordingPlan(String scenario);
+   boolean hasAuthoredMain(); void retireMainOutro();
+   Runnable playProbeInstruction(Runnable completed,Runnable failed) throws Exception;
+  }
+@@ -240,6 +242,13 @@ final class GatewayBreathingBoundaryTest {
+   h.probePackaged=true;
+   check(h.ownerExchange("participant-arm",arm).getString("state").equals("confirmed")&&h.dispatches==1,
+     "verified guided probe arms through the existing participant plan");
++  h=fresh();h.scenario="probe-5";h.fullProbe=true;
++  check(h.start().getString("state").equals("confirmed")&&h.dispatches==1&&h.narrationStarts==0,
++    "full Probe dispatches once to the recorder-owned player");
++  check(h.start().getString("state").equals("confirmed")&&h.dispatches==1,"full Probe retry preserves the original dispatch");
++  h=fresh();h.scenario="probe-5";h.fullProbe=true;h.polarReady=false;
++  check(h.start().getString("state").equals("rejected")&&h.dispatches==0&&h.narrationStarts==0,
++    "full Probe cannot play without fresh Polar input");
+   h=fresh();h.scenario="probe-5";
+   check(h.start().getString("state").equals("pending")&&h.dispatches==0&&BreathingSetupAudio.muted,
+     "probe remains armed during narration");

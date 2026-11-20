@@ -15,19 +15,26 @@ const plans = [
 ];
 const scenarioUrl = id => new URL(`../audio/scenarios/${id}.json`, import.meta.url);
 
-test('Every scenario owns numbered placeholder WAVs and draft TXT scripts', async () => {
+test('Every scenario preserves its numbered files and uses canonical recordings for cyclic cues', async () => {
   for (const [id] of plans) {
     const plan = JSON.parse(await readFile(scenarioUrl(id)));
     assert.ok(plan.audio_assets, `${id} has no independent audio assets`);
     assert.equal(plan.audio_assets_base_directory, `../../assets/audio/scenarios/${id}/`);
     for (const asset of Object.values(plan.audio_assets)) {
       assert.match(asset.file, /^\d{4}_\d{2}m\d{2}s_[a-z0-9-]+\.wav$/);
-      assert.equal(asset.placeholder, true);
-      assert.equal(asset.spoken_text, '');
       const url = new URL(asset.file, new URL(plan.audio_assets_base_directory, scenarioUrl(id)));
       const wav = await readFile(url);
       assert.equal(hash(wav), asset.sha256);
-      assert.ok(wav.subarray(44).every(byte => byte === 0));
+      if (['inhale', 'hold_in', 'exhale', 'hold_out'].includes(asset.phase_id)) {
+        assert.equal(asset.placeholder, false);
+        assert.equal(asset.spoken_text, asset.text);
+        assert.equal(asset.sha256, library.blocks[asset.id].sha256);
+        assert.ok(wav.subarray(44).some(byte => byte !== 0));
+      } else {
+        assert.equal(asset.placeholder, true);
+        assert.equal(asset.spoken_text, '');
+        assert.ok(wav.subarray(44).every(byte => byte === 0));
+      }
       assert.equal(await readFile(new URL(asset.transcript_file, url), 'utf8'), asset.text + (asset.text ? '\n' : ''));
     }
   }
@@ -110,7 +117,7 @@ test('Invalid scenario timing, assets, identities and library revisions fail bef
     plan => { plan.audio_assets_base_directory = '../elsewhere/'; },
     plan => { plan.audio_assets.inhale.file = '../inhale.wav'; },
     plan => { plan.audio_assets.inhale.frames++; },
-    plan => { plan.audio_assets.inhale.spoken_text = 'claimed narration'; },
+    plan => { plan.audio_assets.instruction.spoken_text = 'claimed narration'; },
   ];
   for (const mutate of invalid) {
     const plan = structuredClone(valid); mutate(plan);
@@ -168,10 +175,10 @@ test('Playback uses the loaded timeline, records its hash, and maps all final ch
     assert.equal(session.protocol.events[1].asset, 'exhale');
     assert.equal(context.nodes[1].buffer, engine.buffers['probe-5'].exhale);
     assert.notEqual(engine.buffers['probe-5'].exhale, engine.buffers['probe-10'].exhale);
-    assert.equal(requestedAudio.length, 8, 'seven silent durations plus the scenario-specific recording');
+    assert.equal(requestedAudio.length, 12, 'shared buffers plus the scenario-specific recording');
     assert.equal(engine.receipt().scenario_id, 'probe-5');
     assert.equal(engine.receipt().scenario_sha256, hash(changedBytes));
-    assert.equal(engine.receipt().audio_asset_mode, 'silent-placeholders');
+    assert.equal(engine.receipt().audio_asset_mode, 'recorded-audio');
     assert.ok(Object.isFrozen(session.protocol.events[1]));
     engine.abort();
     await session.done;

@@ -3,9 +3,9 @@
 Every final sequence loads its authored JSON timeline from
 [`scenarios/`](scenarios/README.md), with a matching CSV timing sheet. All clips
 come from each scenario’s own numbered folder under
-[`assets/audio/scenarios/`](../assets/audio/scenarios/). All current runtime WAVs
-are silent UI placeholders with matching draft TXT/JSON/CSV; final speech awaits
-wording approval. The shared library recordings below are retained references. JSON determines timing/order.
+[`assets/audio/scenarios/`](../assets/audio/scenarios/). Cyclic slots use verified copies of the canonical Zen cues with matching
+TXT/JSON/CSV. Other slots in the numbered packs retain their silent placeholders.
+JSON determines timing and order.
 CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`.
 
 ## Session timing
@@ -18,20 +18,20 @@ transcript, asset classes and Respyra comparison](calibration.md). Calibration
 runs at 26–41 seconds and exposes an advance event/receipt for later H10
 accelerometer integration; measured value/unit/method remain unset.
 The new Instruction 1 uses Secret Tunnel's existing-instructor clone. The
-original nine ElevenLabs samples and practice behavior retain their bytes.
+shared manifest identifies the preparation, timing and cyclic assets.
 
 The browser loads reusable samples once. It repeats four separate phase cues:
 **inhale -> pause after inhale -> exhale -> pause after exhale**. Every phase is
-exactly four seconds. Inhale/exhale cue and counts occur at 0, 1, 2, and 3
-seconds. Each hold begins with Und halten and continues quietly to its boundary.
+exactly four seconds. The Zen inhale and exhale use equal pauses between their
+words. Both hold roles use the same connected “und halten” and quiet tail.
 Instruction and ending play once. A separate rest sample plays between longer
 breathing blocks. No speech generation or downloads occur during a session.
 
 ## Current sample set
 
 The canonical manifest is `../assets/audio/box-breathing/de/soft-v2/manifest.json`.
-All files are mono 16-bit PCM WAV at 44,100 Hz. The original v1 samples remain
-available for comparison; the engine uses soft-v2.
+All files are mono 16-bit PCM WAV at 44,100 Hz. The 48 kHz listening masters were converted to the scenario and Quest loop's
+44.1 kHz frame contract. The soft-v2 paths identify the current cue library.
 
 | File | Length | Speech/role |
 | --- | --- | --- |
@@ -54,22 +54,12 @@ are no spoken hold counts. Every third
 complete cycle uses both breath-overlay variants. Cycle numbers count across
 rests; rest and introduction speech do not change the overlay cadence.
 
-Welcome, rest, and ending directly address the listener with du. The latest phase
-labels use the requested Einatmen/Ausatmen/Und halten wording. Speech uses the
-saved British Breathing Instructor voice, Eleven v4, and
-requested soft/calm/slow delivery tags. Voice sample peaks are -8 dBFS. Long-form
-narration is additionally retimed with pitch preserved to 80% speed; counts are
-placed individually on exact one-second beats during inhale/exhale. Einatmen and
-Ausatmen are slightly retimed to fit before the next beat. Und halten retains its
-1.085-second utterance followed by silence. This is authored delivery and PCM
-processing, not evidence of a human listening judgment.
-
-The exact German welcome/ending/rest texts, settings, hashes, source durations,
-and mix provenance are recorded in the manifest. The supplied Proton Drive
-inhale (3.502 s) and exhale (4.411 s) are gently retimed to four seconds, faded at
-the boundaries, and mixed at -20 dBFS sample peak beneath the voice. Original
-recordings and synthesis responses stay in ignored `reference-audio/soft-box-v2/`.
-No credential or private absolute source path is stored in the shipped manifest.
+The cyclic files use the supplied ElevenLabs Zen meditation voice. Whisper
+identified the words and waveform edits preserved the speech speed. At 44.1 kHz
+the inhale's gaps are 6,615 frames each and the exhale's are 3,308 frames each.
+Both hold files have identical PCM. The shared Quest loop uses the dry takes.
+The numbered variants and authored programmes preserve their existing breath layers.
+The manifest and adjacent JSON files record timing, transcripts and asset hashes.
 
 The requested alternative free German voice is being evaluated separately. See
 [voice sourcing](voice-sourcing.md) for corpus norms, local audition profiles,

@@ -547,9 +547,13 @@ avoid blindly retrying generation after an ambiguous response, since requests
 consume account credits. Update durations/hashes and fully decode every new MP3
 before recording technical verification. Listening review is a separate check.
 
-For reusable box-breathing samples, use the PCM assets and frame contract in
-`assets/audio/box-breathing/de/soft-v2/manifest.json`, not the earlier variable-duration
-MP3 cue set. Keep the four phase files separate and reuse them on every cycle.
+For reusable box-breathing audio, use the approved Zen recordings and frame
+contract in `assets/audio/box-breathing/de/soft-v2/manifest.json`. Inhale and
+exhale each have equal pauses between their words. Both hold slots use identical
+PCM. Preserve the 44.1 kHz source clock required by the existing scenario and
+Quest loop contracts. The 48 kHz listening masters remain in the local listening
+folder. Rebuild numbered scenario packs and the shared Quest loop hash whenever
+the cyclic recordings change. Use the legacy synthesis helper for auditions.
 Run `pnpm run test:audio` and the silent `tests/offline-audio.html` diagnostic
 when changing the scheduler or sample set. `pnpm run render:audio -- 5` (or 10/15/20)
 provides an optional offline verification export; it is not the runtime strategy.

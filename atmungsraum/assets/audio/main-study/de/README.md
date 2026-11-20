@@ -21,10 +21,9 @@ contain 24 distinct files: the 14:20:45 ElevenLabs export is identical to
 Speech was transcribed locally with Whisper and normalized for German spelling,
 punctuation and written-out counts. [Wispr Flow](https://wisprflow.ai/notetaker/how-to-transcribe-in-person-meetings)
 does not accept prerecorded MP3s. The combined count-and-hold originals retain
-their full spoken TXT. The manifest records where to end each phase excerpt
-before the attached hold and the words retained in the runtime cue. Each
-excerpt fits its four-second slot using tail trim, pitch-preserving tempo
-adjustment when needed, and silence. Holds use the two standalone takes.
+their full spoken TXT. The manifest preserves the earlier phase-pool edit
+boundaries. The authored programme now uses the canonical Zen cyclic recordings
+from the [shared manifest](../../box-breathing/de/soft-v2/manifest.json).
 
 ## Review and staging
 
@@ -41,26 +40,27 @@ and return attention. The next sections resume at 0:28, 0:57, and 1:33 in
 both controls. A final quiet period follows each closing prompt. The two
 controls and the 45.322449-second instruction fill exactly five minutes.
 
-The guided section runs from 5:00 to 15:00. It rotates the 18 voice takes,
-with the recorded breath sound underneath inhale and exhale. It ends with a
+The guided section runs from 5:00 to 15:00. It repeats the canonical Zen
+inhale, hold, exhale and hold, with the recorded breath sound underneath
+inhale and exhale. It ends with a
 four-second inhale and four-second exhale after 37 four-phase cycles. The
 full review then plays the 19-second recorded outro. The music comes in at
 the first guided inhale and fades out by 15:00.
 
-The Probe-Runde stages the supplied 45.401-second instruction as pre-session
-audio and then 300 seconds of guided breathing. It reuses the same phase
-takes and ends with a final inhale, hold and exhale after 18 full cycles.
-The instruction lives outside the five-minute Quest recording timeline.
+The Probe-Runde places the supplied 45.401-second instruction at the start
+of the Quest recording timeline, followed by 300 seconds of guided breathing.
+It reuses the same phase takes and ends with a final inhale, hold and exhale
+after 18 full cycles.
 
-The staged Quest programme uses a lossless mix of 39,690,000 frames. Its
-decoded PCM matches the first 900 seconds of the review render, and the
-catalog binds the original outro separately. The authored build also includes the
+The staged Quest programme uses a lossless mix of 40,527,900 frames. Its
+decoded PCM matches the entire 919-second review render, including the outro.
+The authored build also includes the
 first calibration instruction and the full Freie Erkundung recording from the
 playground. Freie Erkundung has 960,768 instruction frames and 18,755,025 music
 frames at 44.1 kHz. The Quest reader passes the original stereo MP3 to Android
 with its instruction boundary and catalog hash verified. The authored
-Haupt-Runde uses the timed source for recording and plays the outro after a
-complete save. Existing signed packages use the continuous shared loop.
+Haupt-Runde saves after the outro ends. The canonical shared-loop package
+uses its 900-second main interval.
 
 Source recordings are unchanged from the [calibration instruction](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/9ed333e)
 and [Freie Erkundung](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/234ebd0ac154b8a5c16e7cbae6814534904b723d)
