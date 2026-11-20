@@ -1,0 +1,4057 @@
+diff --git a/apps/native-renderer-android/native/src/breath_composition_driver.rs b/apps/native-renderer-android/native/src/breath_composition_driver.rs
+index f3636d85..7ec99b9a 100644
+--- a/apps/native-renderer-android/native/src/breath_composition_driver.rs
++++ b/apps/native-renderer-android/native/src/breath_composition_driver.rs
+@@ -402,6 +402,7 @@ impl BreathCompositionDriver {
+                     return;
+                 }
+                 SetupDriverOutput::PolarTilt {
++                    volume,
+                     confirmed_phase,
+                     confirmation_revision,
+                     lineage,
+@@ -426,6 +427,21 @@ impl BreathCompositionDriver {
+                         self.setup_boundary = Some(boundary);
+                     }
+                     self.setup_availability = availability.as_str();
++                    if self.renderer_lineage.is_some_and(|lineage| lineage.volume_input()) {
++                        if let Some(volume) = volume {
++                            self.integrator.reset(volume as f32);
++                            self.status = DriverStatus::AppliedVolume;
++                            self.reason = "setup-participant-tilt-volume";
++                            self.effective = snapshot.effective;
++                            self.generation = snapshot.generation;
++                            self.accepted_outputs = self.accepted_outputs.saturating_add(1);
++                        } else {
++                            self.status = DriverStatus::Waiting;
++                            self.reason = "setup-volume-unavailable";
++                        }
++                        self.last_observed_at = Some(observed_at);
++                        return;
++                    }
+                     // Callback-side confirmation survives a masked batch tail;
+                     // sample availability stays independent of applied state.
+                     let newer_than_fence =
+@@ -928,6 +944,37 @@ pub(crate) mod tests {
+         );
+     }
+ 
++    #[test]
++    fn personal_volume_drives_the_radius_directly_and_holds_it_when_signal_returns_unknown() {
++        use crate::experiment_breathing_setup::SetupInput;
++        use crate::experiment_breathing_setup_runtime::{
++            SetupDriverOutput, SetupPolarLineage, SetupRendererLineage, SetupSampleAvailability,
++        };
++        let mut driver = BreathCompositionDriver::new(settings());
++        let renderer = SetupRendererLineage::test_fixture(1, SetupInput::PolarVolume);
++        let lineage = SetupPolarLineage {
++            audio_generation: 7, driver_epoch: 1, source_binding: (5, 1), source_reference: 1,
++            projection_generation: Some(3), model_generation: 1,
++        };
++        let output = |volume, availability| SetupDriverOutput::PolarTilt {
++            volume,
++            phase: CommonBreathPhase::Unknown,
++            confirmed_phase: None,
++            confirmation_revision: 0,
++            lineage,
++            availability,
++        };
++        setup_frame_with_lineage(
++            &mut driver, output(Some(0.64), SetupSampleAvailability::Ready), renderer, 100_000_000, 0.04,
++        );
++        assert_eq!(driver.value01(), 0.64);
++        setup_frame_with_lineage(
++            &mut driver, output(None, SetupSampleAvailability::SampleUnavailable), renderer, 160_000_000, 0.06,
++        );
++        assert_eq!(driver.value01(), 0.64);
++        assert_eq!(driver.status, DriverStatus::Waiting);
++    }
++
+     #[test]
+     fn manual_wait_without_a_diagnosis_holds_radius_and_app_owner_change_retires_phase() {
+         use crate::experiment_breathing_setup::SetupInput;
+diff --git a/apps/native-renderer-android/native/src/breath_composition_runtime.rs b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
+index 733833da..92712b65 100644
+--- a/apps/native-renderer-android/native/src/breath_composition_runtime.rs
++++ b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
+@@ -1530,9 +1530,19 @@ pub(crate) fn prepare_guided_arm(
+     generation: u64,
+     operation_id: &str,
+ ) -> Result<Value, &'static str> {
+-    if let Some(result) = crate::experiment_breathing_setup_runtime::guided_tracking_configuration(
++    prepare_guided_arm_for_preparation(at_ns, generation, operation_id, None)
++}
++
++pub(crate) fn prepare_guided_arm_for_preparation(
++    at_ns: u64,
++    generation: u64,
++    operation_id: &str,
++    preparation: Option<&str>,
++) -> Result<Value, &'static str> {
++    if let Some(result) = crate::experiment_breathing_setup_runtime::guided_tracking_configuration_for_preparation(
+         generation,
+         operation_id,
++        preparation,
+     ) {
+         return result;
+     }
+@@ -1697,9 +1707,7 @@ fn validate_setup_tracking_configuration(value: &Value) -> Result<(), &'static s
+     let object = value
+         .as_object()
+         .ok_or("tracking-configuration-object-invalid")?;
+-    require_fields(
+-        object,
+-        &[
++    let mut fields = vec![
+             "schema",
+             "input",
+             "source",
+@@ -1722,9 +1730,23 @@ fn validate_setup_tracking_configuration(value: &Value) -> Result<(), &'static s
+             "prepared_monotonic_clock",
+             "acknowledgement",
+             "tracking_claim",
+-        ],
+-    )?;
+-    if value["mapping"] != "state"
++        ];
++    if let Some(identity) = object.get("personal_tilt_attempt_id") {
++        #[cfg(feature = "showcase")]
++        let valid = false;
++        #[cfg(not(feature = "showcase"))]
++        let valid = identity.as_str().is_some_and(crate::session_recording_participant::valid_uuid)
++            && matches!(value["input"].as_str(), Some("polar-tilt" | "polar-volume"));
++        #[cfg(feature = "showcase")]
++        let _ = identity;
++        if !valid {
++            return Err("setup-personal-tilt-attempt-invalid");
++        }
++        fields.push("personal_tilt_attempt_id");
++    }
++    require_fields(object, &fields)?;
++    let expected_mapping = if value["input"] == "polar-volume" { "volume" } else { "state" };
++    if value["mapping"] != expected_mapping
+         || value["controller_projection"] != "fixed-orientation"
+         || value["acknowledgement"] != "setup-input-retained"
+         || value["tracking_claim"] != "fresh-input-observed"
+@@ -1756,7 +1778,7 @@ fn validate_setup_tracking_configuration(value: &Value) -> Result<(), &'static s
+                     .as_u64()
+                     .is_some_and(|g| g > 0)
+                 && value["model"].is_null() => {}
+-        Some("polar-tilt" | "polar-tilt-fixed" | "polar-tilt-adaptive")
++        Some("polar-tilt" | "polar-volume" | "polar-tilt-fixed" | "polar-tilt-adaptive")
+             if value["source"] == "polar-acc"
+                 && value["phase_classifier"]
+                     == match value["input"].as_str() {
+@@ -1821,7 +1843,7 @@ fn validate_setup_tracking_configuration(value: &Value) -> Result<(), &'static s
+                     return Err("setup-sensor-clock-projection-invalid");
+                 }
+             }
+-            if value["input"] != "polar-tilt" {
++            if matches!(value["input"].as_str(), Some("polar-tilt-fixed" | "polar-tilt-adaptive")) {
+                 require_fields(model, &["owner", "generation", "kind", "projection"])?;
+                 if value["model"]["kind"] != "pretrained-paired-controller-tilt-v1"
+                     || value["model"]["projection"] != value["phase_classifier"]
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+index 712d8538..905fc830 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+@@ -96,6 +96,7 @@ impl SetupFailure {
+ pub(crate) enum SetupInput {
+     Automatic,
+     PolarTilt,
++    PolarVolume,
+     PolarTiltFixed,
+     PolarTiltAdaptive,
+     Controller,
+@@ -104,9 +105,12 @@ impl SetupInput {
+     pub(crate) fn is_polar(self) -> bool {
+         matches!(
+             self,
+-            Self::PolarTilt | Self::PolarTiltFixed | Self::PolarTiltAdaptive
++            Self::PolarTilt | Self::PolarVolume | Self::PolarTiltFixed | Self::PolarTiltAdaptive
+         )
+     }
++    pub(crate) fn personalized(self) -> bool {
++        matches!(self, Self::PolarTilt | Self::PolarVolume)
++    }
+     pub(crate) fn pretrained(self) -> bool {
+         matches!(self, Self::PolarTiltFixed | Self::PolarTiltAdaptive)
+     }
+@@ -122,6 +126,7 @@ impl SetupInput {
+         match self {
+             Self::Automatic => "automatic",
+             Self::PolarTilt => "polar-tilt",
++            Self::PolarVolume => "polar-volume",
+             Self::PolarTiltFixed => "polar-tilt-fixed",
+             Self::PolarTiltAdaptive => "polar-tilt-adaptive",
+             Self::Controller => "controller-state",
+@@ -182,6 +187,7 @@ pub(crate) struct SetupStatus {
+     pub(crate) playing: bool,
+     pub(crate) ready: bool,
+     pub(crate) calibration: CalibrationState,
++    pub(crate) calibration_input: SetupInput,
+     pub(crate) calibration_generation: u64,
+     pub(crate) calibration_start_frame: Option<u64>,
+     pub(crate) calibration_completed_frames: u64,
+@@ -319,6 +325,7 @@ pub(crate) struct BreathingSetup {
+     delivery_witness_ns: Option<u64>,
+     calibration_last_mapped_frame: Option<u64>,
+     input: SetupInput,
++    calibration_input: SetupInput,
+     calibration: CalibrationState,
+     calibration_generation: u64,
+     calibration_start_frame: Option<u64>,
+@@ -358,6 +365,7 @@ impl BreathingSetup {
+             delivery_witness_ns: None,
+             calibration_last_mapped_frame: None,
+             input: SetupInput::Automatic,
++            calibration_input: SetupInput::PolarTilt,
+             calibration: CalibrationState::Idle,
+             calibration_generation: 0,
+             calibration_start_frame: None,
+@@ -555,7 +563,7 @@ impl BreathingSetup {
+                     Ok(model) => {
+                         self.model = Some(model);
+                         self.calibration = CalibrationState::Succeeded;
+-                        self.input = SetupInput::PolarTilt;
++                        self.input = self.calibration_input;
+                         self.failure = None;
+                     }
+                     Err(error) => self.fail(self.final_quality_failure(error)),
+@@ -625,13 +633,23 @@ impl BreathingSetup {
+         }
+     }
+ 
++    #[cfg(test)]
+     pub(crate) fn start_calibration(
+         &mut self,
+         source_owner: u64,
+         now_ns: u64,
++    ) -> Result<(), SetupFailure> {
++        self.start_calibration_for(SetupInput::PolarTilt, source_owner, now_ns)
++    }
++
++    pub(crate) fn start_calibration_for(
++        &mut self,
++        input: SetupInput,
++        source_owner: u64,
++        now_ns: u64,
+     ) -> Result<(), SetupFailure> {
+         self.ensure_preparation()?;
+-        if source_owner == 0 {
++        if !input.personalized() || source_owner == 0 {
+             return Err(SetupFailure::InvalidSource);
+         }
+         if !self.clock_ready(now_ns) && !(self.parked() && self.clock_fresh(now_ns)) {
+@@ -650,6 +668,7 @@ impl BreathingSetup {
+             .checked_add(1)
+             .ok_or(SetupFailure::FrameOverflow)?;
+         self.input = SetupInput::Automatic;
++        self.calibration_input = input;
+         self.calibration = CalibrationState::Waiting;
+         self.calibration_generation = generation;
+         self.calibration_start_frame = Some(start);
+@@ -774,7 +793,7 @@ impl BreathingSetup {
+     /// Forget all timed observations while keeping an already fitted axis.
+     /// The caller must prove the original physical source and composition.
+     pub(crate) fn reanchor_unchanged_polar_source(&mut self) -> bool {
+-        if self.input != SetupInput::PolarTilt
++        if !self.input.personalized()
+             || self.experiment != ExperimentState::Running
+             || self.calibration != CalibrationState::Succeeded
+             || !self.model.as_ref().is_some_and(|model| self.source_owner == Some(model.source_owner))
+@@ -1217,7 +1236,7 @@ impl BreathingSetup {
+                     source_timestamp_ns: live.host_ns,
+                 })
+             }
+-            SetupInput::PolarTilt if self.input_ready(now_ns) => {
++            input if input.personalized() && self.input_ready(now_ns) => {
+                 let model = self.model.as_ref()?;
+                 let live = self.live?;
+                 let volume = model.normalized_tilt(live.unit).clamp(0.0, 1.0);
+@@ -1275,6 +1294,7 @@ impl BreathingSetup {
+             playing: self.clock.is_some_and(|clock| clock.playing),
+             ready: self.input_ready(now_ns),
+             calibration: self.calibration,
++            calibration_input: self.calibration_input,
+             calibration_generation: self.calibration_generation,
+             calibration_start_frame: self.calibration_start_frame,
+             calibration_completed_frames: self.calibration_completed_frames,
+@@ -1324,7 +1344,7 @@ impl BreathingSetup {
+                         now_ns >= live.host_ns && now_ns - live.host_ns <= SIGNAL_FRESH_NS
+                     })
+             }
+-            SetupInput::PolarTilt => {
++            SetupInput::PolarTilt | SetupInput::PolarVolume => {
+                 self.model
+                     .as_ref()
+                     .is_some_and(|model| self.source_owner == Some(model.source_owner))
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+index 0b0eedbc..f066b4e3 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+@@ -4,7 +4,12 @@ use crate::experiment_breathing_setup::{
+     PERSONAL_TILT_PHASE_SCALE,
+ };
+ #[cfg(not(feature = "showcase"))]
+-use crate::session_recording_contract::CompletionAudioClock;
++use crate::{
++    personal_tilt_attempt_capture::{AttemptOutcome, AttemptRecord, AttemptSpec, PolarClockPair},
++    personal_tilt_attempt_owner::{self as attempt_owner, AttemptFitIdentity, AttemptOwner},
++    polar_composition_adapters::SetupSensorTransport,
++    session_recording_contract::CompletionAudioClock,
++};
+ use rusty_quest_breath_contract::{
+     assessment::CommonBreathPhase,
+     phase::{
+@@ -111,6 +116,7 @@ fn closed(value: &Value, keys: &[&str]) -> Result<(), &'static str> {
+     }
+ }
+ const AUDIO_RECOVERY_NS: u64 = 2_000_000_000;
++const PERSONAL_VOLUME_SMOOTHING_TAU_US: f64 = 600_000.0;
+ 
+ struct AudioRecovery {
+     command: Value,
+@@ -127,6 +133,12 @@ struct AudioRecovery {
+ 
+ struct Runtime {
+     core: BreathingSetup,
++    #[cfg(not(feature = "showcase"))]
++    capture_transport: Option<SetupSensorTransport>,
++    #[cfg(not(feature = "showcase"))]
++    live_attempt: Option<AttemptOwner>,
++    #[cfg(not(feature = "showcase"))]
++    fit_attempt: Option<AttemptFitIdentity>,
+     schedule: LoopSchedule,
+     digest: String,
+     generation: u64,
+@@ -168,6 +180,7 @@ struct Runtime {
+     confirmation_revision: u64,
+     sequence: u64,
+     phase: CommonBreathPhase,
++    smoothed_personal_volume: Option<(u64, f64)>,
+     ledger: VecDeque<(Value, Value)>,
+     recovery: Option<AudioRecovery>,
+     retired_audio_generation: u64,
+@@ -191,6 +204,9 @@ impl SetupRendererLineage {
+     pub(crate) fn manual_input(self) -> bool {
+         self.input != SetupInput::Automatic
+     }
++    pub(crate) fn volume_input(self) -> bool {
++        self.input == SetupInput::PolarVolume
++    }
+     // Visual continuity is separate from full data/admission lineage.
+     pub(crate) fn continues_visual_input(self, previous: Self) -> bool {
+         self.manual_input() && self.same_input_namespace(previous)
+@@ -217,6 +233,8 @@ struct RendererRadius {
+     lineage: SetupRendererLineage,
+     progress01: f32,
+     radius_m: f32,
++    radius_limits_m: Option<[f32; 2]>,
++    cue: Option<(f64, u64)>,
+     frame: u64,
+     observed_ns: u64,
+     render_generation: u64,
+@@ -240,10 +258,20 @@ impl RendererRadius {
+         {
+             return Value::Null;
+         }
+-        json!({"v":1,"progress01":self.progress01,"radius_m":self.radius_m,
++        let mut value = json!({"v":1,"progress01":self.progress01,"radius_m":self.radius_m,
+             "frame":self.frame,"render_generation":self.render_generation,
+             "settings_revision":self.settings_revision,"observed_ns":self.observed_ns.to_string(),
+-            "age_ns":now-self.observed_ns})
++            "age_ns":now-self.observed_ns});
++        if let Some([low, high]) = self.radius_limits_m {
++            value["radius_min_m"] = json!(low);
++            value["radius_max_m"] = json!(high);
++            if let Some((progress, observed_ns)) = self.cue {
++                value["cue_progress01"] = json!(progress);
++                value["cue_observed_ns"] = json!(observed_ns.to_string());
++                value["audio_generation"] = json!(self.lineage.audio_generation);
++            }
++        }
++        value
+     }
+ }
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+@@ -418,7 +446,7 @@ impl Runtime {
+                 "owner":s.source_owner,"generation":s.model_generation}),
+             )
+         } else {
+-            self.core.model().filter(|_|s.input==SetupInput::PolarTilt).map(|m|json!({"owner":m.source_owner,"generation":m.generation,"axis":m.axis,"low":m.low,"high":m.high}))
++            self.core.model().filter(|_|s.input.personalized()).map(|m|json!({"owner":m.source_owner,"generation":m.generation,"axis":m.axis,"low":m.low,"high":m.high}))
+         };
+         let source_pair = if s.input.is_polar() {
+             let (nano, elapsed, observed) = self
+@@ -435,7 +463,7 @@ impl Runtime {
+         };
+         Ok(
+             json!({"schema":"rusty.quest.breathing_setup_tracking_configuration.v1","input":s.input.as_str(),"source":if s.input==SetupInput::Controller {"controller"} else {"polar-acc"},
+-            "mapping":"state","controller_projection":"fixed-orientation","phase_classifier":if s.input==SetupInput::Controller {"controller-state"} else if s.input.pretrained() {s.input.projection()} else {"common-normalized-tilt"},
++            "mapping":if s.input == SetupInput::PolarVolume {"volume"} else {"state"},"controller_projection":"fixed-orientation","phase_classifier":if s.input==SetupInput::Controller {"controller-state"} else if s.input.pretrained() {s.input.projection()} else {"common-normalized-tilt"},
+             "sampled_clock":if s.input==SetupInput::Controller {"openxr-time"} else {"java-nano-time"},"core_alignment_clock":"android-elapsed-realtime",
+             "raw_sampled_clock":if s.input==SetupInput::Controller {"openxr-time"} else {"java-nano-time"},"source_clock_pair":source_pair,
+             "sensor_clock_projection":self.sensor_clock_metadata(s.input),
+@@ -491,6 +519,7 @@ impl Runtime {
+         if let Some(sample) = self.core.usable_polar_signal_sample(now) {
+             usable = sample.source_timestamp_ns == host;
+             if Some(sample.model_generation) != self.classified_model {
++                self.smoothed_personal_volume = None;
+                 let _ = self
+                     .personal_tilt_classifier
+                     .reset(BreathTimestampMicros::new(source_ns / 1000));
+@@ -499,6 +528,18 @@ impl Runtime {
+                 self.phase = CommonBreathPhase::Unknown;
+                 self.last_confirmed_phase = None;
+             }
++            if usable && sample.input == SetupInput::PolarVolume {
++                if let Some(current) = self.core.driver_sample(now) {
++                    let value = crate::polar_acc_breath_adapter::smooth_volume(
++                        sensor / 1000,
++                        current.volume,
++                        self.smoothed_personal_volume,
++                        250_000,
++                        PERSONAL_VOLUME_SMOOTHING_TAU_US,
++                    );
++                    self.smoothed_personal_volume = Some((sensor / 1000, value));
++                }
++            }
+             if self.classified_at != Some(source_ns) {
+                 self.sequence = self.sequence.saturating_add(1);
+                 self.phase = if sample.input.pretrained() {
+@@ -553,6 +594,7 @@ impl Runtime {
+         self.synchronize_evidence_retirement(source_ns);
+         let epoch = self.core.phase_history_epoch();
+         if self.classified_signal_epoch != epoch {
++            self.smoothed_personal_volume = None;
+             let _ = self
+                 .personal_tilt_classifier
+                 .reset(BreathTimestampMicros::new(source_ns / 1000));
+@@ -602,6 +644,7 @@ impl Runtime {
+         };
+     }
+     fn retire_driver_phase(&mut self) {
++        self.smoothed_personal_volume = None;
+         self.reset_pretrained_classifier();
+         self.driver_epoch = self.driver_epoch.saturating_add(1);
+         self.last_confirmed_phase = None;
+@@ -646,8 +689,15 @@ impl Runtime {
+                 }
+                 let sample = self.core.driver_sample(now);
+                 let classified = self.classified_model_matches(Some(lineage.model_generation));
+-                let availability = if sample.is_none() {
++                let volume = if s.input == SetupInput::PolarVolume {
++                    sample.and(self.smoothed_personal_volume.map(|(_, value)| value))
++                } else {
++                    sample.filter(|s| !s.input.pretrained()).map(|s| s.volume)
++                };
++                let availability = if sample.is_none() || s.input == SetupInput::PolarVolume && volume.is_none() {
+                     SetupSampleAvailability::SampleUnavailable
++                } else if s.input == SetupInput::PolarVolume {
++                    SetupSampleAvailability::Ready
+                 } else if !classified
+                     || !matches!(
+                         self.phase,
+@@ -661,7 +711,7 @@ impl Runtime {
+                     SetupSampleAvailability::Ready
+                 };
+                 return SetupDriverOutput::PolarTilt {
+-                    volume: sample.filter(|s| !s.input.pretrained()).map(|s| s.volume),
++                    volume,
+                     phase: if classified && sample.is_some() {
+                         self.phase
+                     } else {
+@@ -694,6 +744,12 @@ impl Runtime {
+     fn new(schedule: LoopSchedule, digest: String) -> Self {
+         Self {
+             core: BreathingSetup::new(schedule),
++            #[cfg(not(feature = "showcase"))]
++            capture_transport: None,
++            #[cfg(not(feature = "showcase"))]
++            live_attempt: None,
++            #[cfg(not(feature = "showcase"))]
++            fit_attempt: None,
+             schedule,
+             digest,
+             generation: 0,
+@@ -739,6 +795,7 @@ impl Runtime {
+             confirmation_revision: 0,
+             sequence: 0,
+             phase: CommonBreathPhase::Unknown,
++            smoothed_personal_volume: None,
+             ledger: VecDeque::new(),
+             recovery: None,
+             retired_audio_generation: 0,
+@@ -869,6 +926,20 @@ impl Runtime {
+                 .get_or_insert(s.experiment_completed_frames);
+         }
+         self.complete_recovery_if_ready(ns);
++        #[cfg(not(feature = "showcase"))]
++        if self.last_clock == Some((g, frame, ns, playing)) {
++            if let Some(attempt) = self.live_attempt.as_mut() {
++                let polar_clock_pair = self.source_clock_pair
++                    .filter(|(_, _, at)| at.elapsed().as_nanos() <= 250_000_000)
++                    .map(|(java_monotonic_ns, android_elapsed_ns, _)| PolarClockPair {
++                        java_monotonic_ns, android_elapsed_ns,
++                    });
++                attempt.clock(ns, AttemptRecord::Audio {
++                    generation: g, absolute_frame: frame, observed_elapsed_ns: ns,
++                    playing, clock_valid: s.clock_valid, polar_clock_pair,
++                });
++            }
++        }
+         self.refresh(ns);
+     }
+     fn bind_source(&mut self, binding: (u64, u64)) {
+@@ -895,6 +966,8 @@ impl Runtime {
+             });
+         }
+         let projection = crate::polar_composition_adapters::setup_sensor_clock_snapshot(binding);
++        #[cfg(not(feature = "showcase"))]
++        { self.capture_transport = projection.transport; }
+         if projection.expected {
+             if self
+                 .projection_generation
+@@ -972,6 +1045,7 @@ impl Runtime {
+         self.recovery.is_none()
+             && s.ready
+             && (!s.input.is_polar() || self.projection_ready)
++            && (s.input != SetupInput::PolarVolume || self.smoothed_personal_volume.is_some())
+             && (!s.input.pretrained()
+                 || (self.classified_model_matches(s.model_generation)
+                     && matches!(
+@@ -1016,10 +1090,55 @@ impl Runtime {
+             },
+         }
+     }
++    #[cfg(not(feature = "showcase"))]
++    fn capture_seed(
++        &self, value: &Value, now: u64, java_now: u64,
++    ) -> Result<Option<(&'static std::path::Path, AttemptSpec, u64, u64)>, &'static str> {
++        let Some(input) = attempt_owner::operation(value) else { return Ok(None) };
++        let Some(app_files) = attempt_owner::app_files() else {
++            return if cfg!(target_os = "android") { Err("calibration-recording-root-unavailable") } else { Ok(None) };
++        };
++        let operation = value["id"].as_str().ok_or("calibration-command-id-invalid")?;
++        let identity = crate::session_recording_participant::new_session_id()
++            .map_err(|_| "calibration-recording-identity-unavailable")?;
++        let transport = self.capture_transport.ok_or("calibration-recording-polar-lineage-unavailable")?;
++        let status = self.core.snapshot(now);
++        Ok(Some((app_files, AttemptSpec {
++            attempt_id: identity, accepted_operation_id: operation.to_owned(),
++            preparation_id: value["preparation_id"].as_str().map(str::to_owned),
++            requested_elapsed_ns: now, requested_java_ns: java_now,
++            polar_connection_generation: transport.connection_generation,
++            polar_source_token: transport.source_token,
++            sensor_clock_generation: self.projection_generation.filter(|generation| *generation > 0),
++            audio_generation: self.generation, loop_sha256: self.digest.clone(),
++            sample_rate_hz: self.schedule.sample_rate, input,
++            calibration_target_frames: status.calibration_target_frames,
++        }, status.calibration_generation, self.source_reference)))
++    }
++    #[cfg(not(feature = "showcase"))]
++    fn sync_attempt(&mut self, status: SetupStatus, now: u64) {
++        if let Some(attempt) = self.live_attempt.as_mut() {
++            if let Some(fit) = attempt.observe(
++                status, self.generation, self.source_reference, self.capture_transport,
++                self.recovery.is_some(), self.core.model(), now,
++            ) {
++                self.fit_attempt = Some(fit);
++            }
++        }
++        if status.calibration != CalibrationState::Succeeded || self.core.model().is_none() {
++            self.fit_attempt = None;
++        }
++        if self.live_attempt.as_ref().is_some_and(AttemptOwner::is_closed) {
++            self.live_attempt = None;
++        }
++    }
++
+     fn refresh(&mut self, now: u64) {
+         self.expire_recovery(now);
+         self.synchronize_evidence_retirement(now);
+         let s = self.core.snapshot(now);
++        #[cfg(not(feature = "showcase"))]
++        self.sync_attempt(s, now);
+         if self
+             .last_confirmed_phase
+             .is_some_and(|(lineage, _)| self.polar_lineage(s) != Some(lineage))
+@@ -1061,7 +1180,7 @@ impl Runtime {
+         self.refresh(now);
+         let s = self.core.snapshot(now);
+         let (observed_ns, last_advance_ns, clock_reason) = self.core.clock_diagnostics(now);
+-        json!({"v":1,"g":self.generation,"r":self.revision,"stage":self.stage(s),"input":s.input.as_str(),"phase":s.phase.as_str(),
++        let status = json!({"v":1,"g":self.generation,"r":self.revision,"stage":self.stage(s),"input":s.input.as_str(),"phase":s.phase.as_str(),
+             "clock_valid":s.clock_valid,"clock":{"healthy":s.clock_valid,"reason":clock_reason,
+                 "observed_ns":observed_ns,"observation_age_ns":observed_ns.map(|ns|now.saturating_sub(ns)),
+                 "last_advance_ns":last_advance_ns,"advance_age_ns":last_advance_ns.map(|ns|now.saturating_sub(ns))},
+@@ -1069,15 +1188,23 @@ impl Runtime {
+             "renderer":self.renderer_radius.map_or(Value::Null,|radius|radius.json(self.renderer_lineage(now),now)),
+             "audio_recovery_available":self.recovery_available(s),
+             "maintenance_park_cycle":crate::meta_update_admission::pending_park_cycle().map(|c|c.to_string()),
+-            "polar_modes":["calibrated","fixed","adaptive"],"parked":s.parked,"source_clock_ready":self.projection_ready,
++            "polar_modes":["calibrated","volume"],"parked":s.parked,"source_clock_ready":self.projection_ready,
+             "quality":{"accepted":s.accepted_samples,"masked":s.quality.masked,"motion":s.quality.motion,"timing":s.quality.timing,"invalid":s.quality.invalid,
+                 "usable_fraction":(s.accepted_samples as f64/((s.calibration_completed_frames/1764).max(1) as f64)).clamp(0.0,1.0),"warning":s.quality.warning},
+             "position_frames":s.absolute_frame,"cycle_frames":s.cycle_frames,"target_frames":s.calibration_target_frames,
+             "completed_frames":s.calibration_completed_frames,"attempt":s.calibration_generation,
++            "calibration_input":s.calibration_input.as_str(),
+             "calibration":if s.calibration==CalibrationState::Succeeded {"ready"} else {s.calibration.as_str()},
+             "failure":if self.controller_lost {"controller_stale"} else {s.failure.map_or("",|f|f.as_str())},
+             "ready":self.ready(s,now),"playing":s.playing,"input_phase":self.input_phase(now),"input_volume01":self.input_volume(now),"experiment_elapsed_ms":s.experiment_completed_frames*1000/44100,
+-            "main_start_frame":s.experiment_start_frame,"main_started":!self.controller_lost && matches!(s.experiment,ExperimentState::Running|ExperimentState::Finished),"maximum_bias_percent":0})
++            "main_start_frame":s.experiment_start_frame,"main_started":!self.controller_lost && matches!(s.experiment,ExperimentState::Running|ExperimentState::Finished),"maximum_bias_percent":0});
++        #[cfg(not(feature = "showcase"))]
++        if attempt_owner::app_files().is_some() {
++            let mut advertised = status;
++            advertised["calibration_capture"] = json!(1);
++            return advertised;
++        }
++        status
+     }
+     fn can_end_preparation(&self) -> bool {
+         self.recovery.is_none()
+@@ -1085,6 +1212,11 @@ impl Runtime {
+             && self.core.snapshot(self.now_ns()).experiment == ExperimentState::Preparation
+     }
+     fn reset_for_maintenance(&mut self) {
++        #[cfg(not(feature = "showcase"))]
++        if let Some(mut attempt) = self.live_attempt.take() {
++            let now = self.now_ns();
++            attempt.retire(now, self.core.snapshot(now).calibration_completed_frames);
++        }
+         self.park_after = Some((self.generation, self.now_ns()));
+         self.core.reset_preparation();
+         self.started = false;
+@@ -1138,6 +1270,18 @@ impl Runtime {
+         self.expire_recovery(now);
+         if matches!(v["op"].as_str(), Some("end-main" | "cancel-main" | "defer-main")) {
+             closed(v, &["v", "id", "g", "r", "op", "main_start_frame"])?;
++        } else if v.get("preparation_id").is_some() {
++            #[cfg(feature = "showcase")]
++            return Err("command-invalid");
++            #[cfg(not(feature = "showcase"))]
++            {
++                if attempt_owner::operation(v).is_none()
++                    || !v["preparation_id"].as_str().is_some_and(crate::session_recording_participant::valid_uuid)
++                {
++                    return Err("command-invalid");
++                }
++                closed(v, &["v", "id", "g", "r", "op", "preparation_id"])?;
++            }
+         } else {
+             closed(v, &["v", "id", "g", "r", "op"])?;
+         }
+@@ -1150,6 +1294,7 @@ impl Runtime {
+                 Some(
+                     "start"
+                         | "calibrate"
++                        | "polar-volume"
+                         | "polar-fixed"
+                         | "polar-adaptive"
+                         | "controller"
+@@ -1209,12 +1354,12 @@ impl Runtime {
+         let parked_start = s.parked
+             && matches!(
+                 v["op"].as_str(),
+-                Some("calibrate" | "polar-fixed" | "polar-adaptive" | "controller")
++                Some("calibrate" | "polar-volume" | "polar-fixed" | "polar-adaptive" | "controller")
+             );
+         if !s.clock_valid || (!s.playing && !parked_start) {
+             if !matches!(
+                 v["op"].as_str(),
+-                Some("calibrate" | "polar-fixed" | "polar-adaptive" | "controller")
++                Some("calibrate" | "polar-volume" | "polar-fixed" | "polar-adaptive" | "controller")
+             ) {
+                 return Err("clock-stale");
+             }
+@@ -1255,7 +1400,7 @@ impl Runtime {
+         let s = self.core.snapshot(now);
+         if matches!(
+             v["op"].as_str(),
+-            Some("calibrate" | "polar-fixed" | "polar-adaptive" | "controller")
++            Some("calibrate" | "polar-volume" | "polar-fixed" | "polar-adaptive" | "controller")
+         ) && (!s.clock_valid || (!s.playing && !s.parked))
+         {
+             if polar_operation(v) && self.source_binding.is_none_or(|binding| binding.0 == 0) {
+@@ -1299,12 +1444,12 @@ impl Runtime {
+             "polar-fixed" | "polar-adaptive" => {
+                 self.select_pretrained(v["op"].as_str().unwrap(), now)
+             }
+-            "calibrate" => {
++            "calibrate" | "polar-volume" => {
+                 if self.source_binding.is_none_or(|b| b.0 == 0) {
+                     Err("polar-source-unavailable")
+                 } else {
+                     self.core
+-                        .start_calibration(self.source_reference, now)
++                        .start_calibration_for(calibration_input(v), self.source_reference, now)
+                         .map_err(|f| f.as_str())
+                 }
+             }
+@@ -1342,7 +1487,7 @@ impl Runtime {
+         if accepted {
+             if matches!(
+                 v["op"].as_str(),
+-                Some("calibrate" | "polar-fixed" | "polar-adaptive" | "controller" | "end-main")
++                Some("calibrate" | "polar-volume" | "polar-fixed" | "polar-adaptive" | "controller" | "end-main")
+             ) {
+                 self.retire_driver_phase();
+             }
+@@ -1451,7 +1596,7 @@ impl Runtime {
+                         && receipt["state"] == "confirmed"
+                         && matches!(
+                             command["op"].as_str(),
+-                            Some("calibrate" | "polar-fixed" | "polar-adaptive" | "controller")
++                            Some("calibrate" | "polar-volume" | "polar-fixed" | "polar-adaptive" | "controller")
+                         )
+                 });
+             return json!({"accepted":allowed,"effect":allowed,"reason":if allowed {"setup-start-current"} else {"setup-start-retired"}});
+@@ -1539,8 +1684,8 @@ impl Runtime {
+             return;
+         }
+         let result = if calibrate {
+-            if recovery.command["op"] == "calibrate" {
+-                self.core.start_calibration(self.source_reference, now)
++            if matches!(recovery.command["op"].as_str(), Some("calibrate" | "polar-volume")) {
++                self.core.start_calibration_for(calibration_input(&recovery.command), self.source_reference, now)
+             } else {
+                 let input = if recovery.command["op"] == "polar-fixed" {
+                     SetupInput::PolarTiltFixed
+@@ -1611,7 +1756,11 @@ impl Runtime {
+                     .saturating_add(now.saturating_sub(sample.source_timestamp_ns))
+                     / 1000,
+             ),
+-            volume01: (!sample.input.pretrained()).then_some(sample.volume),
++            volume01: if sample.input == SetupInput::PolarVolume {
++                self.smoothed_personal_volume.map(|(_, value)| value)
++            } else {
++                (!sample.input.pretrained()).then_some(sample.volume)
++            },
+             phase: self.phase,
+             calibration: CalibrationLifecycle::Ready,
+             tracking: BreathTrackingState::Valid,
+@@ -1620,10 +1769,13 @@ impl Runtime {
+         .ok()
+     }
+ }
++fn calibration_input(command: &Value) -> SetupInput {
++    if command["op"] == "polar-volume" { SetupInput::PolarVolume } else { SetupInput::PolarTilt }
++}
+ fn polar_operation(command: &Value) -> bool {
+     matches!(
+         command["op"].as_str(),
+-        Some("calibrate" | "polar-fixed" | "polar-adaptive")
++        Some("calibrate" | "polar-volume" | "polar-fixed" | "polar-adaptive")
+     )
+ }
+ fn receipt(command: &Value, accepted: bool, reason: &str) -> Value {
+@@ -1748,6 +1900,10 @@ pub(crate) fn status_json(now: u64) -> Value {
+     }
+ }
+ pub(crate) fn command_json(text: &str, now: u64) -> Value {
++    command_json_with_java_clock(text, now, 0)
++}
++
++fn command_json_with_java_clock(text: &str, now: u64, _java_now: u64) -> Value {
+     if text.len() > 2048 {
+         return receipt(&Value::Null, false, "command-invalid");
+     }
+@@ -1789,6 +1945,8 @@ pub(crate) fn command_json(text: &str, now: u64) -> Value {
+         return receipt(&value, true, "terminal-parked");
+     }
+     let binding = crate::polar_input_health::source_binding();
++    #[cfg(not(feature = "showcase"))]
++    let capture_seed;
+     {
+         let mut guard = state().lock().unwrap_or_else(|e| e.into_inner());
+         let Some(r) = guard.as_mut() else {
+@@ -1803,6 +1961,13 @@ pub(crate) fn command_json(text: &str, now: u64) -> Value {
+             Err(reason) => return receipt(&value, false, reason),
+             Ok(None) => {}
+         }
++        #[cfg(not(feature = "showcase"))]
++        {
++            capture_seed = match r.capture_seed(&value, now, _java_now) {
++                Ok(seed) => seed,
++                Err(reason) => return receipt(&value, false, reason),
++            };
++        }
+     }
+     // Terminal cleanup is permitted while the next cycle is waiting for its park acknowledgment.
+     let preparation_reservation = if matches!(value["op"].as_str(), Some("end-main" | "cancel-main")) {
+@@ -1813,6 +1978,20 @@ pub(crate) fn command_json(text: &str, now: u64) -> Value {
+             None => return receipt(&value, false, "startup-update-maintenance"),
+         }
+     };
++    #[cfg(not(feature = "showcase"))]
++    let mut new_attempt = match capture_seed {
++        Some((root, spec, previous_calibration, source_reference)) => {
++            match AttemptOwner::begin(root, spec, previous_calibration, source_reference) {
++                Ok(attempt) => Some(attempt),
++                Err(_error) => {
++                    #[cfg(target_os = "android")]
++                    crate::marker("personal-tilt-capture", format!("stage=admission reason={_error}"));
++                    return receipt(&value, false, "calibration-recording-unavailable");
++                }
++            }
++        }
++        None => None,
++    };
+     // Composition callbacks run without the setup mutex. The closed command gate
+     // serializes mutations; raw acquisition and audio observations remain live.
+     let controller_generation = if value["op"] == "controller" {
+@@ -1842,8 +2021,39 @@ pub(crate) fn command_json(text: &str, now: u64) -> Value {
+         {
+             return receipt(&value, false, "startup-update-maintenance");
+         }
++        #[cfg(not(feature = "showcase"))]
++        if new_attempt.as_ref().is_some_and(|attempt| !attempt.matching_source(r.source_reference, r.capture_transport)) {
++            return receipt(&value, false, "calibration-recording-polar-lineage-retired");
++        }
++        #[cfg(not(feature = "showcase"))]
++        let old_frames = r.core.snapshot(now).calibration_completed_frames;
++        #[cfg(not(feature = "showcase"))]
++        let retires_capture = matches!(value["op"].as_str(), Some("controller" | "polar-fixed" | "polar-adaptive" | "end-main"));
++        #[cfg(not(feature = "showcase"))]
++        let mut previous = if new_attempt.is_some() || retires_capture { r.live_attempt.take() } else { None };
+         let result = r.apply_command(&value, now);
++        #[cfg(not(feature = "showcase"))]
++        if result["accepted"] != true && previous.is_some() {
++            r.live_attempt = previous.take();
++        }
+         if result["accepted"] == true {
++            #[cfg(not(feature = "showcase"))]
++            if let Some(mut attempt) = new_attempt.take() {
++                if let Some(mut previous) = previous.take() {
++                    previous.end(AttemptOutcome::Superseded, "calibration-superseded", now, old_frames, None);
++                }
++                r.fit_attempt = None;
++                attempt.activate();
++                r.live_attempt = Some(attempt);
++                r.refresh(now);
++            }
++            #[cfg(not(feature = "showcase"))]
++            if retires_capture {
++                if let Some(mut previous) = previous.take() {
++                    previous.retire(now, old_frames);
++                }
++                r.fit_attempt = None;
++            }
+             if let Some(reservation) = preparation_reservation.as_ref() {
+                 crate::meta_update_admission::admit_session_cycle(reservation.cycle);
+             }
+@@ -1961,6 +2171,7 @@ pub(crate) fn observe_renderer_radius(
+     lineage: Option<SetupRendererLineage>,
+     progress01: f32,
+     radius_m: f32,
++    radius_limits_m: Option<[f32; 2]>,
+     frame: u64,
+     observed_ns: u64,
+     render_generation: u64,
+@@ -1988,10 +2199,27 @@ pub(crate) fn observe_renderer_radius(
+         return;
+     }
+     r.renderer_generation_floor = render_generation;
++    let radius_limits_m = radius_limits_m.filter(|[low, high]| {
++        low.is_finite() && high.is_finite() && *low > 0.0 && *high > *low
++            && (radius_m - (*low + (*high - *low) * progress01)).abs() <= 0.001
++    });
++    let s = r.core.snapshot(observed_ns);
++    let cue = if s.experiment == ExperimentState::Running && s.playing && s.clock_valid {
++        r.last_clock
++            .filter(|&(generation, frame, at, playing)| {
++                generation == lineage.audio_generation && frame == s.absolute_frame && playing
++                    && observed_ns >= at && observed_ns - at <= 250_000_000
++            })
++            .map(|(_, _, at, _)| (s.automatic_volume, at))
++    } else {
++        None
++    };
+     r.renderer_radius = Some(RendererRadius {
+         lineage,
+         progress01,
+         radius_m,
++        radius_limits_m,
++        cue,
+         frame,
+         observed_ns,
+         render_generation,
+@@ -2021,6 +2249,14 @@ pub(crate) fn selected_input() -> Option<SetupInput> {
+ pub(crate) fn guided_tracking_configuration(
+     generation: u64,
+     operation: &str,
++) -> Option<Result<Value, &'static str>> {
++    guided_tracking_configuration_for_preparation(generation, operation, None)
++}
++
++pub(crate) fn guided_tracking_configuration_for_preparation(
++    generation: u64,
++    operation: &str,
++    _preparation: Option<&str>,
+ ) -> Option<Result<Value, &'static str>> {
+     if !selected() {
+         return None;
+@@ -2030,7 +2266,25 @@ pub(crate) fn guided_tracking_configuration(
+     Some(match guard.as_mut() {
+         Some(r) => {
+             r.bind_source(binding);
+-            r.tracking_configuration(generation, operation)
++            let result = r.tracking_configuration(generation, operation);
++            #[cfg(not(feature = "showcase"))]
++            if let Some(preparation) = _preparation {
++                return Some(result.map(|mut configuration| {
++                    // Use the exact model and source read under the same setup lock.
++                    if let Some(identity) = r.fit_attempt.as_ref().and_then(|fit| {
++                        fit.matches(
++                            preparation,
++                            configuration["calibration_generation"].as_u64()?,
++                            configuration["model"]["generation"].as_u64()?,
++                            configuration["model"]["owner"].as_u64()?,
++                        )
++                    }) {
++                        configuration["personal_tilt_attempt_id"] = json!(identity);
++                    }
++                    configuration
++                }));
++            }
++            result
+         }
+         None => Err("setup-not-configured"),
+     })
+@@ -2434,9 +2688,12 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Br
+     _class: jni::objects::JClass,
+     command: jni::objects::JString,
+     now: jni::sys::jlong,
++    java_now: jni::sys::jlong,
+ ) -> jni::sys::jstring {
+     let result = match env.with_env(|e| command.try_to_string(e)).into_outcome() {
+-        jni::Outcome::Ok(command) => command_json(&command, now.max(0) as u64),
++        jni::Outcome::Ok(command) => command_json_with_java_clock(
++            &command, now.max(0) as u64, java_now.max(0) as u64,
++        ),
+         _ => receipt(&Value::Null, false, "jni-string-invalid"),
+     };
+     jni_response(env, result)
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+index 688efeff..50983fd1 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+@@ -1114,6 +1114,10 @@ fn running_main_keeps_the_last_diagnosis_and_radius_ramp_through_quality_loss()
+ }
+ 
+ fn calibrated_inhale_runtime_with_binding(binding: (u64, u64)) -> (Runtime, u64, u64) {
++    calibrated_inhale_runtime_for(binding, "calibrate")
++}
++
++fn calibrated_inhale_runtime_for(binding: (u64, u64), operation: &str) -> (Runtime, u64, u64) {
+     let mut r = runtime();
+     r.observe_clock(7, 0, sample_time(0), true);
+     r.bind_source(binding);
+@@ -1123,7 +1127,7 @@ fn calibrated_inhale_runtime_with_binding(binding: (u64, u64)) -> (Runtime, u64,
+         vector(0.0),
+     );
+     assert_eq!(
+-        command(&mut r, 1, "calibrate", sample_time(0))["accepted"],
++        command(&mut r, 1, operation, sample_time(0))["accepted"],
+         true
+     );
+     for frame in (1764..=2_116_800).step_by(1764) {
+@@ -1150,6 +1154,26 @@ fn calibrated_inhale_runtime_with_binding(binding: (u64, u64)) -> (Runtime, u64,
+     (r, frame, sample_time(frame))
+ }
+ 
++#[test]
++fn personal_volume_applies_its_smoothed_projection_and_stays_bound_to_the_fit() {
++    let (mut r, frame, now) = calibrated_inhale_runtime_for((5, 1), "polar-volume");
++    r.observe_source_pair(now, now);
++    let status = r.status(now);
++    assert_eq!(status["input"], "polar-volume");
++    assert_eq!(status["calibration_input"], "polar-volume");
++    assert_eq!(status["calibration"], "ready");
++    assert_eq!(status["ready"], true);
++    let raw = r.core.driver_sample(now).unwrap().volume;
++    let filtered = status["input_volume01"].as_f64().unwrap();
++    assert!(filtered < raw, "{filtered} >= {raw}");
++    let configuration = r.tracking_configuration(1, "volume-main").unwrap();
++    assert_eq!(configuration["mapping"], "volume");
++    assert_eq!(configuration["input"], "polar-volume");
++    let missing = now + 300_000_000;
++    r.observe_clock(7, frame + 13_230, missing, true);
++    assert!(r.status(missing)["input_volume01"].is_null());
++}
++
+ #[test]
+ fn personal_tilt_classifies_direction_below_the_visible_floor() {
+     let (mut runtime, base_frame, base_ns) = calibrated_inhale_runtime();
+@@ -2227,6 +2251,11 @@ fn actual_ingress_and_public_arm_keep_calibrated_tilt_then_existing_fixed_contro
+     assert_eq!(receipt["input"], "polar-tilt");
+     assert_eq!(receipt["sampled_clock"], "java-nano-time");
+     crate::breath_composition_runtime::validate_tracking_configuration(&receipt).unwrap();
++    let mut associated = receipt.clone();
++    associated["personal_tilt_attempt_id"] = json!("949d7553-4725-439c-9c80-c7ae5e479ef4");
++    crate::breath_composition_runtime::validate_tracking_configuration(&associated).unwrap();
++    associated["personal_tilt_attempt_id"] = json!("unknown");
++    assert!(crate::breath_composition_runtime::validate_tracking_configuration(&associated).is_err());
+     let projected = crate::breath_composition_runtime::snapshot();
+     assert_eq!(
+         projected.effective.unwrap().source,
+@@ -2347,12 +2376,19 @@ fn renderer_readback_fences_freshness_identity_and_invalid_values() {
+         lineage,
+         progress01: 0.75,
+         radius_m: 1.6,
++        radius_limits_m: Some([1.0, 1.8]),
++        cue: Some((0.5, 990_000_000)),
+         frame: 42,
+         observed_ns: 1_000_000_000,
+         render_generation: 7,
+         settings_revision: 3,
+     };
+     assert_eq!(sample.json(lineage, 1_500_000_000)["progress01"], 0.75);
++    let readback = sample.json(lineage, 1_000_000_000);
++    assert_eq!(readback["radius_min_m"].as_f64(), Some(1.0));
++    assert_eq!(readback["cue_progress01"], 0.5);
++    assert_eq!(readback["cue_observed_ns"], "990000000");
++    assert_eq!(readback["audio_generation"], lineage.audio_generation);
+     assert_eq!(
+         sample.json(lineage, 1_500_000_000)["observed_ns"],
+         "1000000000"
+@@ -2409,6 +2445,8 @@ fn renderer_readback_cannot_relabel_old_frame_after_audio_or_input_boundary() {
+         lineage,
+         progress01: 0.75,
+         radius_m: 1.6,
++        radius_limits_m: None,
++        cue: None,
+         frame: 42,
+         observed_ns: 1_000_000_000,
+         render_generation: 7,
+@@ -2437,6 +2475,7 @@ fn renderer_publication_global_owner_integration() {
+             parameter_source: "particle-visual-profile-driver-slot-0",
+             progress01: 0.75,
+             radius_m: 1.6,
++            radius_limits_m: Some([1.0, 1.8]),
+             frame: 42,
+             render_generation: 7,
+             settings_revision: 3,
+@@ -2456,6 +2495,7 @@ fn renderer_publication_global_owner_integration() {
+             parameter_source: "particle-visual-profile-driver-slot-0",
+             progress01: 0.8,
+             radius_m: 1.7,
++            radius_limits_m: None,
+             frame: 60,
+             render_generation: 7,
+             settings_revision: 3,
+@@ -2467,7 +2507,7 @@ fn renderer_publication_global_owner_integration() {
+         status_json(1_200_000_001)["renderer"]["observed_ns"],
+         "1200000000"
+     );
+-    observe_renderer_radius(lineage, 0.9, 1.8, 43, 1_200_000_002, 6, 3);
++    observe_renderer_radius(lineage, 0.9, 1.8, None, 43, 1_200_000_002, 6, 3);
+     assert_eq!(
+         status_json(1_200_000_003)["renderer"]["render_generation"],
+         7
+@@ -2482,7 +2522,7 @@ fn renderer_publication_global_owner_integration() {
+         .as_mut()
+         .unwrap()
+         .retire_driver_phase();
+-    observe_renderer_radius(lineage, 0.9, 1.8, 43, 1_200_000_004, 7, 3);
++    observe_renderer_radius(lineage, 0.9, 1.8, None, 43, 1_200_000_004, 7, 3);
+     assert!(status_json(1_200_000_005)["renderer"].is_null());
+ }
+ 
+@@ -2500,7 +2540,7 @@ fn pretrained_polar_modes_select_without_participant_fit_and_preserve_pcm_owner(
+         let status = r.status(start);
+         assert_eq!(
+             status["polar_modes"],
+-            json!(["calibrated", "fixed", "adaptive"])
++            json!(["calibrated", "volume"])
+         );
+         let request =
+             json!({"v":1,"id":"0000000000000001","g":status["g"],"r":status["r"],"op":op});
+@@ -2965,6 +3005,8 @@ fn retired_polar_evidence_cannot_recover_from_readback_or_old_confirmation() {
+                 lineage: old,
+                 progress01: 0.7,
+                 radius_m: 1.5,
++                radius_limits_m: None,
++                cue: None,
+                 frame: 50,
+                 observed_ns: now,
+                 render_generation: 1,
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
+index f5eebe4f..c8bc4e34 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
+@@ -26,9 +26,13 @@ fn parked_load_is_minimum_and_initial_calibration_waits_for_real_play_frame_zero
+ }
+ 
+ fn window_quality_fixture(rate: u64, pattern: u8) -> (BreathingSetup, u64) {
++    window_quality_fixture_for(rate, pattern, SetupInput::PolarTilt)
++}
++
++fn window_quality_fixture_for(rate: u64, pattern: u8, input: SetupInput) -> (BreathingSetup, u64) {
+     let mut setup = BreathingSetup::new(schedule());
+     setup.observe_clock(1, 0, time(0), false);
+-    setup.start_calibration(7, time(0)).unwrap();
++    setup.start_calibration_for(input, 7, time(0)).unwrap();
+     setup.observe_clock(1, 0, time(0), true);
+     let period = 1_000_000_000 / rate;
+     let mut next = period;
+@@ -79,6 +83,22 @@ fn window_quality_fixture(rate: u64, pattern: u8) -> (BreathingSetup, u64) {
+     (setup, now)
+ }
+ 
++#[test]
++fn personal_volume_uses_the_same_two_cycle_fit_and_normalized_observation() {
++    let (state, now) = window_quality_fixture_for(200, 0, SetupInput::PolarTilt);
++    let (volume, _) = window_quality_fixture_for(200, 0, SetupInput::PolarVolume);
++    let fitted = volume.snapshot(now);
++    assert_eq!(fitted.calibration, CalibrationState::Succeeded);
++    assert_eq!(fitted.calibration_completed_frames, 1_411_200);
++    assert_eq!(fitted.input, SetupInput::PolarVolume);
++    assert!(fitted.ready);
++    let (state_model, volume_model) = (state.model().unwrap(), volume.model().unwrap());
++    assert_eq!(state_model.axis, volume_model.axis);
++    assert_eq!(state_model.low, volume_model.low);
++    assert_eq!(state_model.high, volume_model.high);
++    assert_eq!(state.driver_sample(now).unwrap().volume, volume.driver_sample(now).unwrap().volume);
++}
++
+ #[test]
+ fn full_window_noise_and_one_brief_motion_segment_can_still_fit() {
+     for rate in [25, 200] {
+diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+index cf677d62..eba7c477 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+@@ -906,9 +906,11 @@ trait RecordingBackend: Send {
+         at_ns: u64,
+         generation: u64,
+         operation_id: &str,
++        preparation: Option<&str>,
+     ) -> Result<Value, String> {
+-        crate::breath_composition_runtime::prepare_guided_arm(at_ns, generation, operation_id)
+-            .map_err(|reason| format!("guided-breath-preparation:{reason}"))
++        crate::breath_composition_runtime::prepare_guided_arm_for_preparation(
++            at_ns, generation, operation_id, preparation,
++        ).map_err(|reason| format!("guided-breath-preparation:{reason}"))
+     }
+     fn record_bias_change(&self, change: BiasChange) -> Result<(), String>;
+     fn record_control(
+@@ -1971,7 +1973,10 @@ impl SessionWorker {
+                                 if spec.experiment_identity.breath_guidance.is_some() {
+                                     stage = "guided-input";
+                                     let boundary_at = at.get().saturating_add(received_at.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+-                                    spec.breath_tracking_configuration = Some(self.backend.prepare_guided_breath(boundary_at, generation, &operation_id)?);
++                                    let preparation = spec.participant.as_ref().and_then(|plan| plan.preparation_id());
++                                    spec.breath_tracking_configuration = Some(self.backend.prepare_guided_breath(
++                                        boundary_at, generation, &operation_id, preparation,
++                                    )?);
+                                 } else if crate::breath_composition_runtime::effective_request().is_some() {
+                                     // Preserve optional non-guided composition startup, but
+                                     // propagate a selected owner's failure before recording.
+@@ -2659,6 +2664,20 @@ impl SessionWorker {
+                         Ok(outcome) => {
+                             if let Err(error) = self.process_effects(outcome.effects, at) {
+                                 self.publish_rejection(None, &error);
++                            } else if matches!(
++                                self.controller.recording_result(),
++                                RecordingResult::Saved { completed: true }
++                            ) {
++                                // The automatic shared main bypasses Android's manual
++                                // stop path. Its condition player still owns this
++                                // generation while the shared PCM parks separately.
++                                self.projection_write(|projection| {
++                                    projection.control_receipt_generation = outcome.generation;
++                                    projection.control_receipt_revision =
++                                        projection.control_receipt_revision.saturating_add(1);
++                                    projection.control_event = "shared-main-completed";
++                                    projection.control_event_elapsed_realtime_ns = at.get();
++                                });
+                             }
+                         }
+                         Err(error) => self.publish_rejection(None, &error),
+@@ -4511,6 +4530,8 @@ pub(crate) fn initialize_app_lifetime(
+     {
+         return Err("recording-root-contract-invalid".to_owned());
+     }
++    #[cfg(target_os = "android")]
++    crate::personal_tilt_attempt_owner::initialize_app_files(&trusted_files_root)?;
+     registry().initialize(recording_root, trusted_inventory)
+ }
+ 
+@@ -5100,6 +5121,12 @@ pub(crate) fn active_radius_m_for_progress(progress01: f32) -> Option<f32> {
+     profile?.radius_m_for_progress(progress01)
+ }
+ 
++pub(crate) fn active_radius_limits_m() -> Option<[f32; 2]> {
++    let runtime = runtime().ok()?;
++    let profile = (*runtime.effective_radius_profile.read().ok()?)?;
++    Some([profile.radius_m_for_progress(0.0)?, profile.radius_m_for_progress(1.0)?])
++}
++
+ pub(crate) fn record_effective_radius_snapshot(
+     source_frame: u64,
+     observed_at_ns: u64,
+@@ -6182,6 +6209,18 @@ mod tests {
+         resume_tx.send(()).unwrap();
+         let terminal = wait_for(&runtime, "\"phase\":\"idle\"");
+         assert!(terminal.contains("\"status\":\"saved\""));
++        let closeout: Value = serde_json::from_str(&wait_for(
++            &runtime,
++            "\"control_event\":\"shared-main-completed\"",
++        ))
++        .unwrap();
++        assert_eq!(closeout["readback"]["control_receipt_generation"], 1);
++        assert!(
++            closeout["readback"]["control_receipt_revision"]
++                .as_u64()
++                .unwrap()
++                > 0
++        );
+         let directory = root.join("utc-ns-01725000000000000000");
+         let final_bytes = fs::read(directory.join("final.json")).unwrap();
+         let final_value: Value = serde_json::from_slice(&final_bytes).unwrap();
+@@ -7144,13 +7183,15 @@ mod tests {
+             at_ns: u64,
+             generation: u64,
+             operation_id: &str,
++            preparation: Option<&str>,
+         ) -> Result<Value, String> {
+             match self.guided_composition.as_mut() {
+                 Some(runtime) => runtime.prepare_guided_arm(at_ns, generation, operation_id),
+-                None => crate::breath_composition_runtime::prepare_guided_arm(
++                None => crate::breath_composition_runtime::prepare_guided_arm_for_preparation(
+                     at_ns,
+                     generation,
+                     operation_id,
++                    preparation,
+                 ),
+             }
+             .map_err(|reason| format!("guided-breath-preparation:{reason}"))
+diff --git a/apps/native-renderer-android/native/src/gpu_private_particles.rs b/apps/native-renderer-android/native/src/gpu_private_particles.rs
+index 4dc966c9..52946aef 100644
+--- a/apps/native-renderer-android/native/src/gpu_private_particles.rs
++++ b/apps/native-renderer-android/native/src/gpu_private_particles.rs
+@@ -3538,6 +3538,17 @@ impl GpuPrivateParticleRenderer {
+             diagnostic_snapshot: self.last_diagnostic_snapshot,
+         };
+         #[cfg(not(feature = "showcase"))]
++        let radius_limits_m = match world_anchor_scale_parameter_source {
++            #[cfg(feature = "particle-visual-profile")]
++            "particle-visual-profile-driver-slot-0" => crate::particle_visual_profile::packaged()
++                .ok()
++                .map(|profile| [profile.radius_m(0.0), profile.radius_m(1.0)]),
++            "experiment-session-driver-slot-0" => {
++                crate::experiment_session_runtime::active_radius_limits_m()
++            }
++            _ => None,
++        };
++        #[cfg(not(feature = "showcase"))]
+         crate::renderer_radius_telemetry::observe_frame(
+             crate::renderer_radius_telemetry::RendererRadiusFrame {
+                 lineage: self.breath_composition_driver.renderer_lineage(),
+@@ -3546,6 +3557,7 @@ impl GpuPrivateParticleRenderer {
+                 parameter_source: world_anchor_scale_parameter_source,
+                 progress01: runtime_settings.driver0_value01,
+                 radius_m: world_center_scale[3],
++                radius_limits_m,
+                 frame: frame_count,
+                 render_generation: self.render_session_generation,
+                 settings_revision: self.settings_revision,
+diff --git a/apps/native-renderer-android/native/src/lib.rs b/apps/native-renderer-android/native/src/lib.rs
+index 9fb2305d..7591e34b 100644
+--- a/apps/native-renderer-android/native/src/lib.rs
++++ b/apps/native-renderer-android/native/src/lib.rs
+@@ -81,6 +81,10 @@ mod environment_depth_scene_map;
+ mod environment_depth_surface_support;
+ mod experiment_breathing_setup;
+ mod experiment_breathing_setup_runtime;
++#[cfg(not(feature = "showcase"))]
++mod personal_tilt_attempt_capture;
++#[cfg(not(feature = "showcase"))]
++mod personal_tilt_attempt_owner;
+ mod meta_update_admission;
+ mod polar_sensor_clock;
+ mod experiment_control_mode;
+diff --git a/apps/native-renderer-android/native/src/personal_tilt_attempt_capture.rs b/apps/native-renderer-android/native/src/personal_tilt_attempt_capture.rs
+new file mode 100644
+index 00000000..62f97a81
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/personal_tilt_attempt_capture.rs
+@@ -0,0 +1,822 @@
++//! App-private storage for one Personal Tilt calibration attempt.
++//! The setup owner will mint the IDs, choose the acquisition window and submit
++//! bounded batches on a persistence worker. This module never admits a
++//! calibration, changes a model, or writes to the experiment session store.
++
++use std::{
++    fs::{self, File, OpenOptions},
++    io::Read,
++    path::{Path, PathBuf},
++};
++
++use serde_json::{json, Value};
++
++use crate::{
++    session_recording_participant::valid_uuid,
++    session_recording_writer::{publish_json_exclusive, sync_directory},
++};
++
++const STORE: &str = "personal-tilt-attempts";
++const MANIFEST: &str = "manifest.json";
++const FINAL: &str = "final.json";
++const LEASE: &str = ".writer-lock";
++const MANIFEST_SCHEMA: &str = "rusty.quest.personal_tilt_attempt.v1";
++const CHUNK_SCHEMA: &str = "rusty.quest.personal_tilt_attempt_chunk.v1";
++const FINAL_SCHEMA: &str = "rusty.quest.personal_tilt_attempt_final.v1";
++pub(crate) const MAX_CHUNK_RECORDS: usize = 256;
++const MAX_ATTEMPT_RECORDS: u64 = 32_768;
++const MAX_ARTIFACT_BYTES: u64 = 512 * 1024;
++
++#[derive(Clone)]
++pub(crate) struct AttemptSpec {
++    pub(crate) attempt_id: String,
++    pub(crate) accepted_operation_id: String,
++    pub(crate) preparation_id: Option<String>,
++    pub(crate) requested_elapsed_ns: u64,
++    pub(crate) requested_java_ns: u64,
++    pub(crate) polar_connection_generation: u64,
++    pub(crate) polar_source_token: u64,
++    pub(crate) sensor_clock_generation: Option<u64>,
++    pub(crate) audio_generation: u64,
++    pub(crate) loop_sha256: String,
++    pub(crate) sample_rate_hz: u32,
++    pub(crate) input: &'static str,
++    pub(crate) calibration_target_frames: u64,
++}
++
++impl AttemptSpec {
++    fn manifest(&self) -> Result<Value, String> {
++        let value = json!({
++            "schema": MANIFEST_SCHEMA,
++            "attempt_id": self.attempt_id,
++            "accepted_operation_id": self.accepted_operation_id,
++            "preparation_id": self.preparation_id,
++            "requested_elapsed_ns": self.requested_elapsed_ns,
++            "requested_java_ns": self.requested_java_ns,
++            "polar_connection_generation": self.polar_connection_generation,
++            "polar_source_token": self.polar_source_token,
++            "sensor_clock_generation": self.sensor_clock_generation,
++            "audio_generation": self.audio_generation,
++            "loop_sha256": self.loop_sha256,
++            "sample_rate_hz": self.sample_rate_hz,
++            "input": self.input,
++            "calibration_target_frames": self.calibration_target_frames,
++        });
++        validate_manifest(&self.attempt_id, &value)?;
++        Ok(value)
++    }
++}
++
++#[derive(Clone, Copy)]
++pub(crate) struct PolarTiming {
++    pub(crate) connection_generation: u64,
++    pub(crate) source_token: u64,
++    pub(crate) frame_sequence: u64,
++    pub(crate) sample_index: u32,
++    pub(crate) sample_count: u32,
++    pub(crate) sensor_time_ns: u64,
++    pub(crate) sample_host_time_ns: u64,
++    pub(crate) frame_host_receipt_time_ns: u64,
++    pub(crate) jni_submit_time_ns: u64,
++}
++
++#[derive(Clone, Copy)]
++pub(crate) struct PolarClockPair {
++    pub(crate) java_monotonic_ns: u64,
++    pub(crate) android_elapsed_ns: u64,
++}
++
++#[derive(Clone, Copy)]
++pub(crate) enum AttemptRecord {
++    Ecg {
++        timing: PolarTiming,
++        microvolts: i32,
++    },
++    Acc {
++        timing: PolarTiming,
++        xyz_mg: [i32; 3],
++    },
++    Window {
++        audio_generation: u64,
++        start_frame: u64,
++    },
++    Audio {
++        generation: u64,
++        absolute_frame: u64,
++        observed_elapsed_ns: u64,
++        playing: bool,
++        clock_valid: bool,
++        polar_clock_pair: Option<PolarClockPair>,
++    },
++}
++
++impl AttemptRecord {
++    fn encoded(self) -> Value {
++        let (timing, kind, reading) = match self {
++            Self::Ecg { timing, microvolts } => (timing, "microvolts", json!(microvolts)),
++            Self::Acc { timing, xyz_mg } => (timing, "xyz_mg", json!(xyz_mg)),
++            Self::Window {
++                audio_generation,
++                start_frame,
++            } => {
++                return json!({"kind": "calibration_window", "generation": audio_generation,
++                    "start_frame": start_frame});
++            }
++            Self::Audio {
++                generation,
++                absolute_frame,
++                observed_elapsed_ns,
++                playing,
++                clock_valid,
++                polar_clock_pair,
++            } => {
++                let polar_clock_pair = polar_clock_pair.map(|pair| {
++                    json!({"java_monotonic_ns": pair.java_monotonic_ns,
++                        "android_elapsed_ns": pair.android_elapsed_ns})
++                });
++                return json!({"kind":"audio", "generation":generation,
++                    "absolute_frame":absolute_frame, "observed_elapsed_ns":observed_elapsed_ns,
++                    "playing":playing, "clock_valid":clock_valid,
++                    "polar_clock_pair": polar_clock_pair});
++            }
++        };
++        let mut value = json!({
++            "kind": if kind == "microvolts" { "ecg" } else { "acc" },
++            "connection_generation": timing.connection_generation,
++            "source_token": timing.source_token,
++            "frame_sequence": timing.frame_sequence,
++            "sample_index": timing.sample_index,
++            "sample_count": timing.sample_count,
++            "sensor_time_ns": timing.sensor_time_ns,
++            "sample_host_time_ns": timing.sample_host_time_ns,
++            "frame_host_receipt_time_ns": timing.frame_host_receipt_time_ns,
++            "jni_submit_time_ns": timing.jni_submit_time_ns,
++        });
++        value[kind] = reading;
++        value
++    }
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) enum AttemptOutcome {
++    Succeeded,
++    Failed,
++    Superseded,
++    Abandoned,
++    Interrupted,
++}
++
++impl AttemptOutcome {
++    fn as_str(self) -> &'static str {
++        match self {
++            Self::Succeeded => "succeeded",
++            Self::Failed => "failed",
++            Self::Superseded => "superseded",
++            Self::Abandoned => "abandoned",
++            Self::Interrupted => "interrupted",
++        }
++    }
++
++    fn from_terminal(value: &Value) -> Option<Self> {
++        match value.as_str()? {
++            "succeeded" => Some(Self::Succeeded),
++            "failed" => Some(Self::Failed),
++            "superseded" => Some(Self::Superseded),
++            "abandoned" => Some(Self::Abandoned),
++            _ => None,
++        }
++    }
++}
++
++#[derive(Clone, Debug)]
++pub(crate) struct AttemptFit {
++    pub(crate) model_generation: u64,
++    pub(crate) source_owner: u64,
++    pub(crate) accepted_samples: u64,
++    pub(crate) axis: [f64; 3],
++    pub(crate) low: f64,
++    pub(crate) high: f64,
++}
++impl AttemptFit {
++    fn encoded(&self) -> Value {
++        json!({"model_generation": self.model_generation, "source_owner": self.source_owner,
++            "accepted_samples": self.accepted_samples, "axis": self.axis, "low": self.low, "high": self.high})
++    }
++}
++fn fit_generation(value: &Value, outcome: AttemptOutcome) -> Result<Option<u64>, String> {
++    if outcome != AttemptOutcome::Succeeded {
++        return if value.is_null() {
++            Ok(None)
++        } else {
++            Err("attempt-fit-unexpected".into())
++        };
++    }
++    let generation = positive(&value["model_generation"]).ok_or("attempt-fit-invalid")?;
++    let valid_bounds = value["low"]
++        .as_f64()
++        .zip(value["high"].as_f64())
++        .is_some_and(|(low, high)| low.is_finite() && high.is_finite() && low < high);
++    if positive(&value["source_owner"]).is_none()
++        || positive(&value["accepted_samples"]).is_none()
++        || !value["axis"].as_array().is_some_and(|axis| {
++            axis.len() == 3
++                && axis
++                    .iter()
++                    .all(|component| component.as_f64().is_some_and(f64::is_finite))
++        })
++        || !valid_bounds
++    {
++        return Err("attempt-fit-invalid".into());
++    }
++    Ok(Some(generation))
++}
++
++pub(crate) struct AttemptEnd {
++    pub(crate) outcome: AttemptOutcome,
++    pub(crate) reason: String,
++    pub(crate) ended_elapsed_ns: u64,
++    pub(crate) completed_calibration_frames: u64,
++    pub(crate) fit: Option<AttemptFit>,
++    /// The acquisition owner observed the bounded raw window, including tail policy.
++    pub(crate) raw_window_complete: bool,
++    pub(crate) dropped_records: u64,
++}
++
++#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
++pub(crate) struct RecordCounts {
++    pub(crate) ecg: u64,
++    pub(crate) acc: u64,
++    pub(crate) audio: u64,
++    pub(crate) windows: u64,
++}
++
++impl RecordCounts {
++    fn total(self) -> u64 {
++        self.ecg + self.acc + self.audio + self.windows
++    }
++
++    fn observe(&mut self, rows: &[Value], manifest: &Value) -> Result<(), String> {
++        if rows.is_empty()
++            || rows.len() > MAX_CHUNK_RECORDS
++            || self.total() + rows.len() as u64 > MAX_ATTEMPT_RECORDS
++        {
++            return Err("attempt-chunk-size-invalid".into());
++        }
++        for row in rows {
++            let kind = row["kind"].as_str();
++            if kind == Some("calibration_window") {
++                if self.windows != 0
++                    || !audio_generation_valid(row, manifest)
++                    || row["start_frame"]
++                        .as_u64()
++                        .zip(positive(&manifest["calibration_target_frames"]))
++                        .is_none_or(|(start, target)| start.checked_add(target).is_none())
++                {
++                    return Err("attempt-window-invalid".into());
++                }
++                self.windows += 1;
++                continue;
++            }
++            if kind == Some("audio") {
++                let clock_pair = &row["polar_clock_pair"];
++                if !audio_generation_valid(row, manifest)
++                    || row["absolute_frame"].as_u64().is_none()
++                    || positive(&row["observed_elapsed_ns"]).is_none()
++                    || !row["playing"].is_boolean()
++                    || !row["clock_valid"].is_boolean()
++                    || (!clock_pair.is_null()
++                        && (positive(&clock_pair["java_monotonic_ns"]).is_none()
++                            || positive(&clock_pair["android_elapsed_ns"]).is_none()))
++                {
++                    return Err("attempt-audio-lineage-invalid".into());
++                }
++                self.audio += 1;
++                continue;
++            }
++            let (Some(index), Some(count), Some(sample_host), Some(receipt), Some(submitted)) = (
++                row["sample_index"].as_u64(),
++                positive(&row["sample_count"]),
++                row["sample_host_time_ns"].as_u64(),
++                positive(&row["frame_host_receipt_time_ns"]),
++                positive(&row["jni_submit_time_ns"]),
++            ) else {
++                return Err("attempt-polar-timing-invalid".into());
++            };
++            if index >= count
++                || count > u64::from(u32::MAX)
++                || sample_host < manifest["requested_java_ns"].as_u64().unwrap_or(u64::MAX)
++                || sample_host > receipt
++                || receipt > submitted
++                || positive(&row["frame_sequence"]).is_none()
++                || positive(&row["sensor_time_ns"]).is_none()
++                || row["connection_generation"] != manifest["polar_connection_generation"]
++                || row["source_token"] != manifest["polar_source_token"]
++            {
++                return Err("attempt-polar-lineage-invalid".into());
++            }
++            match kind {
++                Some("ecg") if signed_sample(&row["microvolts"]) => self.ecg += 1,
++                Some("acc")
++                    if row["xyz_mg"]
++                        .as_array()
++                        .is_some_and(|axes| axes.len() == 3 && axes.iter().all(signed_sample)) =>
++                {
++                    self.acc += 1
++                }
++                _ => return Err("attempt-record-invalid".into()),
++            }
++        }
++        Ok(())
++    }
++
++    fn encoded(self) -> Value {
++        json!({"ecg": self.ecg, "acc": self.acc, "audio": self.audio, "windows": self.windows})
++    }
++
++    fn both_streams_with_clock(self) -> bool {
++        self.ecg > 0 && self.acc > 0 && self.audio > 0 && self.windows == 1
++    }
++}
++
++#[derive(Clone, Copy, Default)]
++struct StreamCoverage {
++    first_sensor: Option<u64>,
++    last_sensor: u64,
++    last_host: u64,
++    last_frame: u64,
++    last_index: u64,
++    last_count: u64,
++    gap: bool,
++}
++
++impl StreamCoverage {
++    fn observe(&mut self, row: &Value) {
++        // The typed row has already passed timing and lineage validation.
++        let sensor = row["sensor_time_ns"].as_u64().unwrap_or(0);
++        let frame = row["frame_sequence"].as_u64().unwrap_or(0);
++        let index = row["sample_index"].as_u64().unwrap_or(0);
++        if self.first_sensor.is_some() {
++            let next_in_frame = frame == self.last_frame && index == self.last_index + 1;
++            let next_frame = frame == self.last_frame.saturating_add(1)
++                && self.last_index + 1 == self.last_count
++                && index == 0;
++            self.gap |= (!next_in_frame && !next_frame)
++                || sensor <= self.last_sensor
++                || sensor - self.last_sensor > 100_000_000;
++        }
++        self.first_sensor.get_or_insert(sensor);
++        self.last_sensor = sensor;
++        self.last_host = row["sample_host_time_ns"].as_u64().unwrap_or(0);
++        self.last_frame = frame;
++        self.last_index = index;
++        self.last_count = row["sample_count"].as_u64().unwrap_or(0);
++    }
++
++    fn spans(self, duration_ns: u64, end_java_ns: u64) -> bool {
++        // Notification batching and the Java/audio pair bound this check to
++        // a conservative start/end tolerance. No packet/index gaps qualify.
++        const END_TOLERANCE_NS: u64 = 750_000_000;
++        self.first_sensor.is_some_and(|first| {
++            let span = self.last_sensor.saturating_sub(first);
++            span > 0
++                && !self.gap
++                && span.saturating_add(END_TOLERANCE_NS) >= duration_ns
++                && self.last_host.saturating_add(END_TOLERANCE_NS) >= end_java_ns
++        })
++    }
++}
++
++#[derive(Clone, Copy, Default)]
++struct RawCoverage {
++    ecg: StreamCoverage,
++    acc: StreamCoverage,
++    clock_pair: bool,
++}
++
++impl RawCoverage {
++    fn observe(&mut self, rows: &[Value]) {
++        for row in rows {
++            match row["kind"].as_str() {
++                Some("ecg") => self.ecg.observe(row),
++                Some("acc") => self.acc.observe(row),
++                Some("audio") if row["clock_valid"] == true && row["playing"] == true => {
++                    self.clock_pair |= !row["polar_clock_pair"].is_null();
++                }
++                _ => {}
++            }
++        }
++    }
++
++    fn complete(self, manifest: &Value, ended_elapsed: u64) -> bool {
++        let frames = manifest["calibration_target_frames"]
++            .as_u64()
++            .unwrap_or(u64::MAX);
++        let rate = manifest["sample_rate_hz"].as_u64().unwrap_or(1).max(1);
++        let duration_ns = frames.saturating_mul(1_000_000_000) / rate;
++        let requested_elapsed = manifest["requested_elapsed_ns"].as_u64().unwrap_or(0);
++        let requested_java = manifest["requested_java_ns"].as_u64().unwrap_or(0);
++        let end_java =
++            requested_java.saturating_add(ended_elapsed.saturating_sub(requested_elapsed));
++        self.clock_pair
++            && self.ecg.spans(duration_ns, end_java)
++            && self.acc.spans(duration_ns, end_java)
++    }
++}
++
++#[derive(Debug, PartialEq, Eq)]
++pub(crate) struct AttemptReceipt {
++    pub(crate) outcome: AttemptOutcome,
++    pub(crate) reason: String,
++    pub(crate) ended_elapsed_ns: Option<u64>,
++    pub(crate) completed_calibration_frames: Option<u64>,
++    pub(crate) model_generation: Option<u64>,
++    pub(crate) raw_window_complete: bool,
++    pub(crate) dropped_records: Option<u64>,
++    pub(crate) counts: RecordCounts,
++}
++
++/// Owns the only write lease for this UUID. Call only on a storage worker.
++pub(crate) struct AttemptCapture {
++    directory: PathBuf,
++    manifest: Value,
++    _lease: File,
++    chunks: u64,
++    counts: RecordCounts,
++    coverage: RawCoverage,
++    storage_fault: bool,
++}
++
++impl AttemptCapture {
++    pub(crate) fn begin(app_files: &Path, spec: AttemptSpec) -> Result<Self, String> {
++        let manifest = spec.manifest()?;
++        let store = store_directory(app_files, true)?;
++        let directory = store.join(&spec.attempt_id);
++        fs::create_dir(&directory).map_err(io_error)?;
++        sync_directory(&store)?;
++        let lease = OpenOptions::new()
++            .read(true)
++            .write(true)
++            .create_new(true)
++            .open(directory.join(LEASE))
++            .map_err(io_error)?;
++        lease.try_lock().map_err(io_error)?;
++        publish_json_exclusive(&directory, MANIFEST, &manifest)?;
++        Ok(Self {
++            directory,
++            manifest,
++            _lease: lease,
++            chunks: 0,
++            counts: RecordCounts::default(),
++            coverage: RawCoverage::default(),
++            storage_fault: false,
++        })
++    }
++
++    pub(crate) fn append(&mut self, records: &[AttemptRecord]) -> Result<(), String> {
++        if self.storage_fault {
++            return Err("attempt-storage-faulted".into());
++        }
++        if records.is_empty() || records.len() > MAX_CHUNK_RECORDS {
++            return Err("attempt-chunk-size-invalid".into());
++        }
++        let rows: Vec<_> = records
++            .iter()
++            .copied()
++            .map(AttemptRecord::encoded)
++            .collect();
++        let mut next_counts = self.counts;
++        next_counts.observe(&rows, &self.manifest)?;
++        let ordinal = self.chunks + 1;
++        let chunk = json!({"schema": CHUNK_SCHEMA, "attempt_id": self.manifest["attempt_id"],
++            "ordinal": ordinal, "records": rows});
++        if let Err(error) =
++            publish_json_exclusive(&self.directory, &chunk_filename(ordinal), &chunk)
++        {
++            self.storage_fault = true;
++            return Err(error);
++        }
++        self.chunks = ordinal;
++        self.counts = next_counts;
++        if let Some(rows) = chunk["records"].as_array() {
++            self.coverage.observe(rows);
++        }
++        Ok(())
++    }
++
++    pub(crate) fn finish(self, end: AttemptEnd) -> Result<AttemptReceipt, String> {
++        if self.storage_fault {
++            return Err("attempt-storage-faulted".into());
++        }
++        if end.outcome == AttemptOutcome::Interrupted
++            || !valid_reason(&end.reason)
++            || !valid_terminal_time(
++                &self.manifest,
++                end.outcome,
++                end.ended_elapsed_ns,
++                end.completed_calibration_frames,
++            )
++        {
++            return Err("attempt-terminal-invalid".into());
++        }
++        let fit = end.fit.as_ref().map_or(Value::Null, AttemptFit::encoded);
++        let model_generation = fit_generation(&fit, end.outcome)?;
++        if model_generation.is_some() && self.counts.windows != 1 {
++            return Err("attempt-window-missing".into());
++        }
++        let result = AttemptReceipt {
++            outcome: end.outcome,
++            reason: end.reason,
++            ended_elapsed_ns: Some(end.ended_elapsed_ns),
++            completed_calibration_frames: Some(end.completed_calibration_frames),
++            model_generation,
++            raw_window_complete: end.raw_window_complete
++                && end.dropped_records == 0
++                && self.counts.both_streams_with_clock()
++                && self.coverage.complete(&self.manifest, end.ended_elapsed_ns),
++            dropped_records: Some(end.dropped_records),
++            counts: self.counts,
++        };
++        publish_json_exclusive(
++            &self.directory,
++            FINAL,
++            &json!({
++                "schema": FINAL_SCHEMA, "attempt_id": self.manifest["attempt_id"], "chunks": self.chunks,
++                "outcome": result.outcome.as_str(), "reason": result.reason,
++                "ended_elapsed_ns": result.ended_elapsed_ns,
++                "completed_calibration_frames": result.completed_calibration_frames,
++                "raw_window_complete": result.raw_window_complete, "dropped_records": result.dropped_records,
++                "fit": fit,
++                "counts": result.counts.encoded(),
++            }),
++        )?;
++        Ok(result)
++    }
++}
++
++/// Recovers only visible immutable chunks. A power/process loss cannot prove
++/// the final raw window or the number of samples buffered in memory. Recovery
++/// derives an interrupted receipt without promoting or rewriting partial files.
++pub(crate) fn recover_attempt(
++    app_files: &Path,
++    attempt_id: &str,
++) -> Result<AttemptReceipt, String> {
++    if !valid_uuid(attempt_id) {
++        return Err("attempt-id-invalid".into());
++    }
++    let directory = store_directory(app_files, false)?.join(attempt_id);
++    require_directory(&directory)?;
++    let lease_path = directory.join(LEASE);
++    require_file(&lease_path)?;
++    let lease = OpenOptions::new()
++        .read(true)
++        .write(true)
++        .open(lease_path)
++        .map_err(io_error)?;
++    lease.try_lock().map_err(io_error)?;
++
++    let manifest = read_json(&directory.join(MANIFEST))?;
++    validate_manifest(attempt_id, &manifest)?;
++    let mut ordinals = Vec::new();
++    for entry in fs::read_dir(&directory).map_err(io_error)? {
++        let name = entry.map_err(io_error)?.file_name();
++        let Some(name) = name.to_str() else {
++            continue;
++        };
++        let Some(digits) = name
++            .strip_prefix("chunk-")
++            .and_then(|value| value.strip_suffix(".json"))
++        else {
++            continue;
++        };
++        let ordinal: u64 = digits
++            .parse()
++            .map_err(|_| "attempt-chunk-name-invalid".to_owned())?;
++        if ordinal == 0 || ordinal > MAX_ATTEMPT_RECORDS || name != chunk_filename(ordinal) {
++            return Err("attempt-chunk-name-invalid".into());
++        }
++        ordinals.push(ordinal);
++        if ordinals.len() as u64 > MAX_ATTEMPT_RECORDS {
++            return Err("attempt-chunk-size-invalid".into());
++        }
++    }
++    ordinals.sort_unstable();
++    let mut counts = RecordCounts::default();
++    let mut coverage = RawCoverage::default();
++    for (index, ordinal) in ordinals.iter().copied().enumerate() {
++        if ordinal != index as u64 + 1 {
++            return Err("attempt-chunk-order-invalid".into());
++        }
++        let chunk = read_json(&directory.join(chunk_filename(ordinal)))?;
++        if chunk["schema"] != CHUNK_SCHEMA
++            || chunk["attempt_id"] != attempt_id
++            || chunk["ordinal"] != ordinal
++        {
++            return Err("attempt-chunk-identity-invalid".into());
++        }
++        let rows = chunk["records"]
++            .as_array()
++            .ok_or("attempt-records-invalid")?;
++        counts.observe(rows, &manifest)?;
++        coverage.observe(rows);
++    }
++
++    let final_path = directory.join(FINAL);
++    match fs::symlink_metadata(&final_path) {
++        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(AttemptReceipt {
++            outcome: AttemptOutcome::Interrupted,
++            reason: "missing-terminal-receipt".into(),
++            ended_elapsed_ns: None,
++            completed_calibration_frames: None,
++            model_generation: None,
++            raw_window_complete: false,
++            dropped_records: None,
++            counts,
++        }),
++        Err(error) => Err(io_error(error)),
++        Ok(_) => {
++            let terminal = read_json(&final_path)?;
++            let outcome = AttemptOutcome::from_terminal(&terminal["outcome"])
++                .ok_or("attempt-terminal-invalid")?;
++            let reason = terminal["reason"]
++                .as_str()
++                .filter(|reason| valid_reason(reason))
++                .ok_or("attempt-terminal-invalid")?;
++            let ended = terminal["ended_elapsed_ns"]
++                .as_u64()
++                .ok_or("attempt-terminal-invalid")?;
++            let completed = terminal["completed_calibration_frames"]
++                .as_u64()
++                .ok_or("attempt-terminal-invalid")?;
++            let dropped = terminal["dropped_records"]
++                .as_u64()
++                .ok_or("attempt-terminal-invalid")?;
++            let complete = terminal["raw_window_complete"]
++                .as_bool()
++                .ok_or("attempt-terminal-invalid")?;
++            let model_generation = fit_generation(&terminal["fit"], outcome)?;
++            if (model_generation.is_some() && counts.windows != 1)
++                || terminal["schema"] != FINAL_SCHEMA
++                || terminal["attempt_id"] != attempt_id
++                || terminal["chunks"] != ordinals.len()
++                || terminal["counts"] != counts.encoded()
++                || !valid_terminal_time(&manifest, outcome, ended, completed)
++                || complete
++                    && (dropped > 0
++                        || !counts.both_streams_with_clock()
++                        || !coverage.complete(&manifest, ended))
++            {
++                return Err("attempt-terminal-invalid".into());
++            }
++            Ok(AttemptReceipt {
++                outcome,
++                reason: reason.to_owned(),
++                ended_elapsed_ns: Some(ended),
++                completed_calibration_frames: Some(completed),
++                model_generation,
++                raw_window_complete: complete,
++                dropped_records: Some(dropped),
++                counts,
++            })
++        }
++    }
++}
++
++fn validate_manifest(attempt_id: &str, value: &Value) -> Result<(), String> {
++    if !valid_uuid(attempt_id)
++        || value["attempt_id"] != attempt_id
++        || value["schema"] != MANIFEST_SCHEMA
++        || !value["accepted_operation_id"]
++            .as_str()
++            .is_some_and(|id| valid_hex(id, 16))
++        || !(value["preparation_id"].is_null()
++            || value["preparation_id"].as_str().is_some_and(valid_uuid))
++        || positive(&value["requested_elapsed_ns"]).is_none()
++        || positive(&value["requested_java_ns"]).is_none()
++        || positive(&value["polar_connection_generation"]).is_none()
++        || positive(&value["polar_source_token"]).is_none()
++        || !(value["sensor_clock_generation"].is_null()
++            || positive(&value["sensor_clock_generation"]).is_some())
++        || positive(&value["audio_generation"]).is_none()
++        || !value["loop_sha256"]
++            .as_str()
++            .is_some_and(|hash| valid_hex(hash, 64))
++        || !positive(&value["sample_rate_hz"]).is_some_and(|rate| rate <= u64::from(u32::MAX))
++        || !matches!(value["input"].as_str(), Some("polar-tilt" | "polar-volume"))
++        || positive(&value["calibration_target_frames"]).is_none()
++    {
++        return Err("attempt-manifest-invalid".into());
++    }
++    Ok(())
++}
++
++fn audio_generation_valid(row: &Value, manifest: &Value) -> bool {
++    positive(&row["generation"])
++        .zip(positive(&manifest["audio_generation"]))
++        .is_some_and(|(observed, accepted)| observed >= accepted)
++}
++
++fn valid_terminal_time(
++    manifest: &Value,
++    outcome: AttemptOutcome,
++    ended: u64,
++    completed: u64,
++) -> bool {
++    let target = manifest["calibration_target_frames"].as_u64().unwrap_or(0);
++    ended
++        >= manifest["requested_elapsed_ns"]
++            .as_u64()
++            .unwrap_or(u64::MAX)
++        && completed <= target
++        && (outcome != AttemptOutcome::Succeeded || completed == target)
++}
++
++fn valid_hex(value: &str, digits: usize) -> bool {
++    value.len() == digits
++        && value
++            .bytes()
++            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
++}
++
++fn valid_reason(value: &str) -> bool {
++    !value.is_empty()
++        && value.len() <= 96
++        && value.bytes().all(|byte| {
++            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-' || byte == b'_'
++        })
++}
++
++fn positive(value: &Value) -> Option<u64> {
++    value.as_u64().filter(|number| *number > 0)
++}
++
++fn signed_sample(value: &Value) -> bool {
++    value
++        .as_i64()
++        .is_some_and(|number| i32::try_from(number).is_ok())
++}
++
++fn store_directory(app_files: &Path, create: bool) -> Result<PathBuf, String> {
++    if !app_files.is_absolute() {
++        return Err("attempt-files-root-invalid".into());
++    }
++    require_directory(app_files)?;
++    let store = app_files.join(STORE);
++    if create {
++        match fs::create_dir(&store) {
++            Ok(()) => {}
++            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
++            Err(error) => return Err(io_error(error)),
++        }
++        // A concurrent begin may have created the store without syncing it yet.
++        sync_directory(app_files)?;
++    }
++    require_directory(&store)?;
++    Ok(store)
++}
++
++fn require_directory(path: &Path) -> Result<(), String> {
++    if !fs::symlink_metadata(path)
++        .map_err(io_error)?
++        .file_type()
++        .is_dir()
++    {
++        return Err("attempt-directory-invalid".into());
++    }
++    Ok(())
++}
++
++fn require_file(path: &Path) -> Result<(), String> {
++    if !fs::symlink_metadata(path)
++        .map_err(io_error)?
++        .file_type()
++        .is_file()
++    {
++        return Err("attempt-file-invalid".into());
++    }
++    Ok(())
++}
++
++fn read_json(path: &Path) -> Result<Value, String> {
++    require_file(path)?;
++    let mut bytes = Vec::new();
++    File::open(path)
++        .map_err(io_error)?
++        .take(MAX_ARTIFACT_BYTES + 1)
++        .read_to_end(&mut bytes)
++        .map_err(io_error)?;
++    if bytes.len() as u64 > MAX_ARTIFACT_BYTES {
++        return Err("attempt-artifact-too-large".into());
++    }
++    serde_json::from_slice(&bytes).map_err(|_| "attempt-artifact-invalid".into())
++}
++
++fn chunk_filename(ordinal: u64) -> String {
++    format!("chunk-{ordinal:05}.json")
++}
++
++fn io_error(error: impl std::fmt::Display) -> String {
++    format!("attempt-storage:{error}")
++}
++#[cfg(test)]
++#[path = "personal_tilt_attempt_capture_tests.rs"]
++mod tests;
+diff --git a/apps/native-renderer-android/native/src/personal_tilt_attempt_capture_tests.rs b/apps/native-renderer-android/native/src/personal_tilt_attempt_capture_tests.rs
+new file mode 100644
+index 00000000..b8d5ee68
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/personal_tilt_attempt_capture_tests.rs
+@@ -0,0 +1,313 @@
++use super::*;
++
++const FIRST: &str = "949d7553-4725-439c-9c80-c7ae5e479ef4";
++const SECOND: &str = "949d7553-4725-439c-9c80-c7ae5e479ef5";
++const PREPARATION: &str = "397f0003-4125-435c-afe6-0cfa45479d78";
++
++struct Scratch(PathBuf);
++
++impl Scratch {
++    fn new() -> Self {
++        let mut bytes = [0u8; 16];
++        getrandom::fill(&mut bytes).unwrap();
++        let path = std::env::temp_dir().join(format!(
++            "rusty-quest-tilt-attempt-{:032x}",
++            u128::from_le_bytes(bytes)
++        ));
++        fs::create_dir(&path).unwrap();
++        Self(path)
++    }
++}
++
++impl Drop for Scratch {
++    fn drop(&mut self) {
++        let _ = fs::remove_dir_all(&self.0);
++    }
++}
++
++fn spec(id: &str, preparation: Option<&str>) -> AttemptSpec {
++    AttemptSpec {
++        attempt_id: id.into(),
++        accepted_operation_id: "70635f2412d103a0".into(),
++        preparation_id: preparation.map(str::to_owned),
++        requested_elapsed_ns: 900,
++        requested_java_ns: 100,
++        polar_connection_generation: 8,
++        polar_source_token: 4,
++        sensor_clock_generation: Some(14),
++        audio_generation: 3,
++        loop_sha256: "a".repeat(64),
++        sample_rate_hz: 44_100,
++        input: "polar-tilt",
++        calibration_target_frames: 1_411_200,
++    }
++}
++
++fn timing(index: u32) -> PolarTiming {
++    PolarTiming {
++        connection_generation: 8,
++        source_token: 4,
++        frame_sequence: 9,
++        sample_index: index,
++        sample_count: 73,
++        sensor_time_ns: 13_000 + u64::from(index),
++        sample_host_time_ns: 1000 + u64::from(index),
++        frame_host_receipt_time_ns: 1100,
++        jni_submit_time_ns: 1200,
++    }
++}
++
++fn ecg(index: u32) -> AttemptRecord {
++    AttemptRecord::Ecg {
++        timing: timing(index),
++        microvolts: -23,
++    }
++}
++
++fn end(outcome: AttemptOutcome, dropped_records: u64) -> AttemptEnd {
++    AttemptEnd {
++        outcome,
++        reason: "fixture-ended".into(),
++        ended_elapsed_ns: 2_000,
++        completed_calibration_frames: 1_411_200,
++        fit: (outcome == AttemptOutcome::Succeeded).then_some(AttemptFit {
++            model_generation: 5,
++            source_owner: 1,
++            accepted_samples: 750,
++            axis: [0.0, 0.0, 1.0],
++            low: -0.2,
++            high: 0.2,
++        }),
++        raw_window_complete: true,
++        dropped_records,
++    }
++}
++
++#[test]
++fn each_attempt_is_exclusive_and_keeps_typed_samples_and_clock_witness() {
++    let root = Scratch::new();
++    let mut first = AttemptCapture::begin(&root.0, spec(FIRST, Some(PREPARATION))).unwrap();
++    assert!(AttemptCapture::begin(&root.0, spec(FIRST, Some(PREPARATION))).is_err());
++    first
++        .append(&[
++            ecg(0),
++            AttemptRecord::Acc {
++                timing: PolarTiming {
++                    sample_count: 36,
++                    ..timing(1)
++                },
++                xyz_mg: [-10, 200, 987],
++            },
++            AttemptRecord::Audio {
++                generation: 3,
++                absolute_frame: 705_600,
++                observed_elapsed_ns: 1234,
++                playing: true,
++                clock_valid: true,
++                polar_clock_pair: Some(PolarClockPair {
++                    java_monotonic_ns: 1210,
++                    android_elapsed_ns: 1230,
++                }),
++            },
++            AttemptRecord::Window {
++                audio_generation: 3,
++                start_frame: 705_600,
++            },
++        ])
++        .unwrap();
++    let result = first.finish(end(AttemptOutcome::Succeeded, 0)).unwrap();
++    assert_eq!(result.outcome, AttemptOutcome::Succeeded);
++    assert_eq!(
++        result.counts,
++        RecordCounts {
++            ecg: 1,
++            acc: 1,
++            audio: 1,
++            windows: 1,
++        }
++    );
++    assert!(
++        !result.raw_window_complete,
++        "only one raw sample was committed for each stream"
++    );
++    assert_eq!(recover_attempt(&root.0, FIRST).unwrap(), result);
++
++    let directory = root.0.join(STORE).join(FIRST);
++    let manifest = read_json(&directory.join(MANIFEST)).unwrap();
++    assert_eq!(manifest["attempt_id"], FIRST);
++    assert_eq!(manifest["accepted_operation_id"], "70635f2412d103a0");
++    assert_eq!(manifest["preparation_id"], PREPARATION);
++    let chunk = read_json(&directory.join(chunk_filename(1))).unwrap();
++    assert_eq!(chunk["records"][0]["sensor_time_ns"], 13_000);
++    assert_eq!(chunk["records"][0]["microvolts"], -23);
++    assert_eq!(chunk["records"][1]["xyz_mg"], json!([-10, 200, 987]));
++    assert_eq!(chunk["records"][2]["absolute_frame"], 705_600);
++    assert_eq!(
++        chunk["records"][2]["polar_clock_pair"]["java_monotonic_ns"],
++        1210
++    );
++    assert_eq!(
++        chunk["records"][2]["polar_clock_pair"]["android_elapsed_ns"],
++        1230
++    );
++
++    let mut second_spec = spec(SECOND, Some(PREPARATION));
++    second_spec.accepted_operation_id = "704f513b5b8f1651".into();
++    let second = AttemptCapture::begin(&root.0, second_spec).unwrap();
++    let second = second.finish(end(AttemptOutcome::Superseded, 0)).unwrap();
++    assert_eq!(second.counts, RecordCounts::default());
++    assert!(!second.raw_window_complete);
++    assert_eq!(recover_attempt(&root.0, FIRST).unwrap(), result);
++}
++
++#[test]
++fn restart_recovers_committed_prefix_and_leaves_partial_tail_untouched() {
++    let root = Scratch::new();
++    let mut capture = AttemptCapture::begin(&root.0, spec(FIRST, None)).unwrap();
++    capture.append(&[ecg(0), ecg(1)]).unwrap();
++    assert!(
++        recover_attempt(&root.0, FIRST).is_err(),
++        "a live capture cannot be recovered"
++    );
++    let directory = root.0.join(STORE).join(FIRST);
++    let partial = directory.join(format!(".{}.partial", chunk_filename(2)));
++    fs::write(&partial, b"{\"incomplete\":").unwrap();
++    drop(capture);
++    let interrupted = recover_attempt(&root.0, FIRST).unwrap();
++    assert_eq!(interrupted.outcome, AttemptOutcome::Interrupted);
++    assert_eq!(interrupted.counts.ecg, 2);
++    assert_eq!(interrupted.dropped_records, None);
++    assert!(!interrupted.raw_window_complete);
++    assert_eq!(fs::read(partial).unwrap(), b"{\"incomplete\":");
++    assert_eq!(recover_attempt(&root.0, FIRST).unwrap(), interrupted);
++}
++
++#[test]
++fn a_foreign_or_oversized_batch_cannot_commit_and_known_loss_is_preserved() {
++    let root = Scratch::new();
++    let mut capture = AttemptCapture::begin(&root.0, spec(FIRST, None)).unwrap();
++    let foreign = AttemptRecord::Ecg {
++        timing: PolarTiming {
++            connection_generation: 9,
++            ..timing(1)
++        },
++        microvolts: 34,
++    };
++    assert!(capture.append(&[ecg(0), foreign]).is_err());
++    assert!(capture
++        .append(&vec![ecg(0); MAX_CHUNK_RECORDS + 1])
++        .is_err());
++    let packet: Vec<_> = (0..73).map(ecg).collect();
++    capture.append(&packet).unwrap();
++    let receipt = capture.finish(end(AttemptOutcome::Failed, 2)).unwrap();
++    assert_eq!(receipt.counts.ecg, 73);
++    assert_eq!(receipt.dropped_records, Some(2));
++    assert!(!receipt.raw_window_complete);
++    assert_eq!(recover_attempt(&root.0, FIRST).unwrap(), receipt);
++    let directory = root.0.join(STORE).join(FIRST);
++    let chunk = read_json(&directory.join(chunk_filename(1))).unwrap();
++    for (index, row) in chunk["records"].as_array().unwrap().iter().enumerate() {
++        assert_eq!(row["sample_index"], index);
++    }
++}
++
++#[test]
++fn failed_durable_append_blocks_finalization_and_recovers_only_the_committed_prefix() {
++    let root = Scratch::new();
++    let mut capture = AttemptCapture::begin(&root.0, spec(FIRST, None)).unwrap();
++    capture.append(&[ecg(0)]).unwrap();
++    let path = root.0.join(STORE).join(FIRST);
++    let partial = path.join(format!(".{}.partial", chunk_filename(2)));
++    fs::write(&partial, b"stuck-during-publish").unwrap();
++    assert!(capture.append(&[ecg(1)]).is_err());
++    assert!(capture.finish(end(AttemptOutcome::Succeeded, 0)).is_err());
++    assert!(!path.join(FINAL).exists());
++    let recovered = recover_attempt(&root.0, FIRST).unwrap();
++    assert_eq!(recovered.outcome, AttemptOutcome::Interrupted);
++    assert_eq!(recovered.counts.ecg, 1);
++    assert_eq!(recovered.dropped_records, None);
++}
++
++#[test]
++fn success_requires_the_full_calibration_audio_window() {
++    let root = Scratch::new();
++    let capture = AttemptCapture::begin(&root.0, spec(FIRST, None)).unwrap();
++    let mut terminal = end(AttemptOutcome::Succeeded, 0);
++    terminal.completed_calibration_frames -= 1;
++    assert!(capture.finish(terminal).is_err());
++    assert_eq!(
++        recover_attempt(&root.0, FIRST).unwrap().outcome,
++        AttemptOutcome::Interrupted
++    );
++
++    let capture = AttemptCapture::begin(&root.0, spec(SECOND, None)).unwrap();
++    let mut terminal = end(AttemptOutcome::Failed, 0);
++    terminal.completed_calibration_frames = 32_768;
++    let result = capture.finish(terminal).unwrap();
++    assert_eq!(result.outcome, AttemptOutcome::Failed);
++    assert_eq!(result.completed_calibration_frames, Some(32_768));
++    assert_eq!(recover_attempt(&root.0, SECOND).unwrap(), result);
++}
++
++#[test]
++fn full_raw_coverage_requires_continuous_samples_and_a_valid_clock_witness() {
++    let root = Scratch::new();
++    for (id, gap) in [(FIRST, false), (SECOND, true)] {
++        let mut manifest = spec(id, None);
++        manifest.calibration_target_frames = 44_100 * 32;
++        let mut capture = AttemptCapture::begin(&root.0, manifest).unwrap();
++        capture
++            .append(&[
++                AttemptRecord::Window {
++                    audio_generation: 3,
++                    start_frame: 0,
++                },
++                AttemptRecord::Audio {
++                    generation: 3,
++                    absolute_frame: 0,
++                    observed_elapsed_ns: 1_000,
++                    playing: true,
++                    clock_valid: true,
++                    polar_clock_pair: Some(PolarClockPair {
++                        java_monotonic_ns: 200,
++                        android_elapsed_ns: 1_000,
++                    }),
++                },
++            ])
++            .unwrap();
++        let samples: Vec<_> = (0..=3200u64)
++            .filter(|index| !gap || *index != 1600)
++            .flat_map(|index| {
++                let t = 200 + index * 10_000_000;
++                let timing = PolarTiming {
++                    frame_sequence: index + 1,
++                    sample_index: 0,
++                    sample_count: 1,
++                    sensor_time_ns: t,
++                    sample_host_time_ns: t,
++                    frame_host_receipt_time_ns: t,
++                    jni_submit_time_ns: t,
++                    ..timing(0)
++                };
++                [
++                    AttemptRecord::Ecg {
++                        timing,
++                        microvolts: 7,
++                    },
++                    AttemptRecord::Acc {
++                        timing,
++                        xyz_mg: [10, 20, 1000],
++                    },
++                ]
++            })
++            .collect();
++        for batch in samples.chunks(MAX_CHUNK_RECORDS) {
++            capture.append(batch).unwrap();
++        }
++        let mut terminal = end(AttemptOutcome::Succeeded, 0);
++        terminal.ended_elapsed_ns = 32_000_001_000;
++        let result = capture.finish(terminal).unwrap();
++        assert_eq!(result.raw_window_complete, !gap);
++        assert_eq!(recover_attempt(&root.0, id).unwrap(), result);
++    }
++}
+diff --git a/apps/native-renderer-android/native/src/personal_tilt_attempt_owner.rs b/apps/native-renderer-android/native/src/personal_tilt_attempt_owner.rs
+new file mode 100644
+index 00000000..a19561db
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/personal_tilt_attempt_owner.rs
+@@ -0,0 +1,605 @@
++//! Bounded, off-callback acquisition for one active Personal Tilt attempt.
++//! The Android setup owner alone admits and terminates attempts. Raw ingress
++//! supplies the exact already-admitted GATT lineage and never waits for disk.
++
++use std::{
++    path::{Path, PathBuf},
++    sync::{
++        atomic::{AtomicBool, AtomicU64, Ordering},
++        mpsc::{self, Receiver, SyncSender, TrySendError},
++        Arc, Mutex, OnceLock,
++    },
++    thread,
++    time::{Duration, Instant},
++};
++
++use super::{
++    experiment_breathing_setup::{CalibrationState, SetupStatus, TiltModel},
++    personal_tilt_attempt_capture::{
++        AttemptCapture, AttemptEnd, AttemptFit, AttemptOutcome, AttemptRecord, AttemptSpec,
++        MAX_CHUNK_RECORDS,
++    },
++    polar_composition_adapters::SetupSensorTransport,
++};
++
++const QUEUE_ROWS: usize = 2048;
++const FLUSH_INTERVAL: Duration = Duration::from_millis(150);
++const WORKER_POLL: Duration = Duration::from_millis(25);
++// A normal 130 Hz, 73-sample ECG notification represents roughly 562 ms.
++const SUCCESS_TAIL: Duration = Duration::from_millis(650);
++const MAX_CAPTURE_AGE: Duration = Duration::from_secs(90);
++
++static APP_FILES: OnceLock<PathBuf> = OnceLock::new();
++static RAW_ACTIVE: AtomicBool = AtomicBool::new(false);
++static RAW_DROPS: AtomicU64 = AtomicU64::new(0);
++static RAW_TARGET: Mutex<Option<Arc<Target>>> = Mutex::new(None);
++static LIVE_WORKERS: AtomicU64 = AtomicU64::new(0);
++const MAX_WORKERS: u64 = 4;
++
++#[cfg(target_os = "android")]
++pub(crate) fn initialize_app_files(path: &Path) -> Result<(), String> {
++    let accepted = APP_FILES.get_or_init(|| path.to_owned());
++    if accepted == path {
++        Ok(())
++    } else {
++        Err("calibration-files-root-changed".into())
++    }
++}
++
++pub(crate) fn app_files() -> Option<&'static Path> {
++    APP_FILES.get().map(PathBuf::as_path)
++}
++
++pub(crate) fn operation(value: &serde_json::Value) -> Option<&'static str> {
++    match value["op"].as_str()? {
++        "calibrate" => Some("polar-tilt"),
++        "polar-volume" => Some("polar-volume"),
++        _ => None,
++    }
++}
++
++struct Finish {
++    end: AttemptEnd,
++    deadline: Instant,
++}
++
++#[derive(Default)]
++struct Control {
++    window: Option<AttemptRecord>,
++    finish: Option<Finish>,
++}
++
++struct Target {
++    transport: SetupSensorTransport,
++    source_start_java_ns: u64,
++    sender: SyncSender<AttemptRecord>,
++    control: Mutex<Control>,
++    dropped: AtomicU64,
++    contended_at_start: AtomicU64,
++    published: AtomicBool,
++    closed: AtomicBool,
++}
++
++impl Target {
++    fn offer(&self, record: AttemptRecord) {
++        if self.closed.load(Ordering::Acquire) {
++            return;
++        }
++        if let Err(TrySendError::Full(_)) = self.sender.try_send(record) {
++            self.dropped.fetch_add(1, Ordering::Relaxed);
++        }
++    }
++
++    fn end(&self, end: AttemptEnd, deadline: Instant) {
++        let mut control = self.control.lock().unwrap_or_else(|err| err.into_inner());
++        if control.finish.is_none() {
++            control.finish = Some(Finish { end, deadline });
++        }
++    }
++
++    fn active(&self, transport: SetupSensorTransport) -> bool {
++        self.transport == transport && !self.closed.load(Ordering::Acquire)
++    }
++
++    fn publish(self: &Arc<Self>) {
++        let mut raw = RAW_TARGET.lock().unwrap_or_else(|err| err.into_inner());
++        self.contended_at_start
++            .store(RAW_DROPS.load(Ordering::Relaxed), Ordering::Relaxed);
++        self.published.store(true, Ordering::Release);
++        *raw = Some(Arc::clone(self));
++        RAW_ACTIVE.store(true, Ordering::Release);
++    }
++
++    fn close(self: &Arc<Self>) -> bool {
++        let mut raw = RAW_TARGET.lock().unwrap_or_else(|err| err.into_inner());
++        self.closed.store(true, Ordering::Release);
++        let current = raw.as_ref().is_some_and(|target| Arc::ptr_eq(target, self));
++        if current {
++            RAW_ACTIVE.store(false, Ordering::Release);
++            raw.take();
++        }
++        current
++    }
++
++    fn drops(&self) -> u64 {
++        let contended = if self.published.load(Ordering::Acquire) {
++            RAW_DROPS
++                .load(Ordering::Relaxed)
++                .saturating_sub(self.contended_at_start.load(Ordering::Relaxed))
++        } else {
++            0
++        };
++        self.dropped
++            .load(Ordering::Relaxed)
++            .saturating_add(contended)
++    }
++}
++
++#[cfg(any(target_os = "android", test))]
++pub(crate) fn observe_raw(record: AttemptRecord) {
++    let timing = match record {
++        AttemptRecord::Ecg { timing, .. } | AttemptRecord::Acc { timing, .. } => timing,
++        _ => return,
++    };
++    if !RAW_ACTIVE.load(Ordering::Acquire) {
++        return;
++    }
++    let Ok(raw) = RAW_TARGET.try_lock() else {
++        RAW_DROPS.fetch_add(1, Ordering::Relaxed);
++        return;
++    };
++    let transport = SetupSensorTransport {
++        source_token: timing.source_token,
++        connection_generation: timing.connection_generation,
++    };
++    if let Some(target) = raw.as_ref().filter(|target| target.active(transport)) {
++        if timing.sample_host_time_ns < target.source_start_java_ns {
++            return;
++        }
++        if timing.sample_count == 0
++            || timing.sample_index >= timing.sample_count
++            || timing.sensor_time_ns == 0
++            || timing.frame_sequence == 0
++            || timing.frame_host_receipt_time_ns == 0
++            || timing.jni_submit_time_ns == 0
++            || timing.sample_host_time_ns > timing.frame_host_receipt_time_ns
++            || timing.frame_host_receipt_time_ns > timing.jni_submit_time_ns
++        {
++            target.dropped.fetch_add(1, Ordering::Relaxed);
++        } else {
++            target.offer(record);
++        }
++    }
++}
++
++#[derive(Clone, Debug)]
++pub(crate) struct AttemptFitIdentity {
++    attempt_id: String,
++    preparation_id: Option<String>,
++    calibration_generation: u64,
++    model_generation: u64,
++    source_owner: u64,
++}
++
++impl AttemptFitIdentity {
++    pub(crate) fn matches(
++        &self,
++        preparation_id: &str,
++        calibration_generation: u64,
++        model_generation: u64,
++        source_owner: u64,
++    ) -> Option<&str> {
++        (self.preparation_id.as_deref() == Some(preparation_id)
++            && self.calibration_generation == calibration_generation
++            && self.model_generation == model_generation
++            && self.source_owner == source_owner)
++            .then_some(&self.attempt_id)
++    }
++}
++
++pub(crate) struct AttemptOwner {
++    id: String,
++    preparation_id: Option<String>,
++    created_elapsed_ns: u64,
++    original_calibration_generation: u64,
++    calibration_generation: Option<u64>,
++    source_reference: u64,
++    target: Arc<Target>,
++    armed: bool,
++    finished: bool,
++    clock_at_ns: Option<u64>,
++}
++
++impl AttemptOwner {
++    pub(crate) fn begin(
++        app_files: &Path,
++        spec: AttemptSpec,
++        original_calibration_generation: u64,
++        source_reference: u64,
++    ) -> Result<Self, String> {
++        LIVE_WORKERS
++            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| {
++                (count < MAX_WORKERS).then_some(count + 1)
++            })
++            .map_err(|_| "calibration-recording-workers-busy")?;
++        let writer = match AttemptCapture::begin(app_files, spec.clone()) {
++            Ok(writer) => writer,
++            Err(error) => {
++                LIVE_WORKERS.fetch_sub(1, Ordering::AcqRel);
++                return Err(error);
++            }
++        };
++        let (sender, receiver) = mpsc::sync_channel(QUEUE_ROWS);
++        let target = Arc::new(Target {
++            transport: SetupSensorTransport {
++                source_token: spec.polar_source_token,
++                connection_generation: spec.polar_connection_generation,
++            },
++            source_start_java_ns: spec.requested_java_ns,
++            sender,
++            control: Mutex::new(Control::default()),
++            dropped: AtomicU64::new(0),
++            contended_at_start: AtomicU64::new(0),
++            published: AtomicBool::new(false),
++            closed: AtomicBool::new(false),
++        });
++        let worker = Arc::clone(&target);
++        let started = spec.requested_elapsed_ns;
++        if let Err(error) = thread::Builder::new()
++            .name("quest-calibration-recording".into())
++            .spawn(move || {
++                record_attempt(worker, receiver, writer, started);
++                LIVE_WORKERS.fetch_sub(1, Ordering::AcqRel);
++            })
++        {
++            LIVE_WORKERS.fetch_sub(1, Ordering::AcqRel);
++            return Err(format!("calibration-recording-worker:{error}"));
++        }
++        Ok(Self {
++            id: spec.attempt_id,
++            preparation_id: spec.preparation_id,
++            created_elapsed_ns: started,
++            original_calibration_generation,
++            calibration_generation: None,
++            source_reference,
++            target,
++            armed: false,
++            finished: false,
++            clock_at_ns: None,
++        })
++    }
++
++    pub(crate) fn matching_source(
++        &self,
++        reference: u64,
++        transport: Option<SetupSensorTransport>,
++    ) -> bool {
++        reference == self.source_reference
++            && transport.is_some_and(|transport| self.target.active(transport))
++    }
++
++    pub(crate) fn activate(&mut self) {
++        self.armed = true;
++        self.target.publish();
++    }
++
++    pub(crate) fn is_finished(&self) -> bool {
++        self.finished || self.is_closed()
++    }
++
++    pub(crate) fn is_closed(&self) -> bool {
++        self.target.closed.load(Ordering::Acquire)
++    }
++
++    pub(crate) fn retire(&mut self, now: u64, completed: u64) {
++        if !self.finished {
++            self.end(
++                AttemptOutcome::Abandoned,
++                "calibration-preparation-retired",
++                now,
++                completed,
++                None,
++            );
++            return;
++        }
++        let mut control = self
++            .target
++            .control
++            .lock()
++            .unwrap_or_else(|err| err.into_inner());
++        if let Some(finish) = &mut control.finish {
++            finish.end.raw_window_complete = false;
++            finish.deadline = Instant::now();
++        }
++    }
++
++    pub(crate) fn clock(&mut self, ns: u64, record: AttemptRecord) {
++        if self.armed
++            && !self.is_finished()
++            && self
++                .clock_at_ns
++                .is_none_or(|previous| ns.saturating_sub(previous) >= 50_000_000)
++        {
++            self.clock_at_ns = Some(ns);
++            self.target.offer(record);
++        }
++    }
++
++    pub(crate) fn observe(
++        &mut self,
++        status: SetupStatus,
++        audio_generation: u64,
++        source_reference: u64,
++        transport: Option<SetupSensorTransport>,
++        recovering: bool,
++        model: Option<&TiltModel>,
++        now: u64,
++    ) -> Option<AttemptFitIdentity> {
++        if !self.armed || self.is_finished() {
++            return None;
++        }
++        let completed = status.calibration_completed_frames;
++        if source_reference != self.source_reference
++            || transport.is_none_or(|transport| !self.target.active(transport))
++        {
++            self.end(
++                AttemptOutcome::Failed,
++                "polar-lineage-retired",
++                now,
++                completed,
++                None,
++            );
++            return None;
++        }
++        if self.calibration_generation.is_none() {
++            if recovering {
++                return None;
++            }
++            if status.calibration_generation == self.original_calibration_generation
++                || !matches!(
++                    status.calibration,
++                    CalibrationState::Waiting | CalibrationState::Collecting
++                )
++            {
++                self.end(
++                    AttemptOutcome::Failed,
++                    "calibration-start-retired",
++                    now,
++                    0,
++                    None,
++                );
++                return None;
++            }
++            let Some(start_frame) = status.calibration_start_frame else {
++                self.end(
++                    AttemptOutcome::Failed,
++                    "calibration-window-missing",
++                    now,
++                    0,
++                    None,
++                );
++                return None;
++            };
++            self.calibration_generation = Some(status.calibration_generation);
++            self.target
++                .control
++                .lock()
++                .unwrap_or_else(|err| err.into_inner())
++                .window = Some(AttemptRecord::Window {
++                audio_generation,
++                start_frame,
++            });
++        }
++        if self.calibration_generation != Some(status.calibration_generation) {
++            self.end(
++                AttemptOutcome::Superseded,
++                "calibration-superseded",
++                now,
++                0,
++                None,
++            );
++            return None;
++        }
++        match status.calibration {
++            CalibrationState::Succeeded => {
++                let Some(model) =
++                    model.filter(|model| Some(model.generation) == status.model_generation)
++                else {
++                    self.end(
++                        AttemptOutcome::Failed,
++                        "calibration-fit-missing",
++                        now,
++                        completed,
++                        None,
++                    );
++                    return None;
++                };
++                let fit = AttemptFit {
++                    model_generation: model.generation,
++                    source_owner: model.source_owner,
++                    accepted_samples: status.accepted_samples as u64,
++                    axis: model.axis,
++                    low: model.low,
++                    high: model.high,
++                };
++                self.end(
++                    AttemptOutcome::Succeeded,
++                    "calibration-succeeded",
++                    now,
++                    completed,
++                    Some(fit),
++                );
++                Some(AttemptFitIdentity {
++                    attempt_id: self.id.clone(),
++                    preparation_id: self.preparation_id.clone(),
++                    calibration_generation: status.calibration_generation,
++                    model_generation: model.generation,
++                    source_owner: model.source_owner,
++                })
++            }
++            CalibrationState::Failed => {
++                let reason = status
++                    .failure
++                    .map_or("calibration-failed", |failure| failure.as_str());
++                self.end(AttemptOutcome::Failed, reason, now, completed, None);
++                None
++            }
++            CalibrationState::Idle => {
++                self.end(
++                    AttemptOutcome::Abandoned,
++                    "calibration-reset",
++                    now,
++                    completed,
++                    None,
++                );
++                None
++            }
++            CalibrationState::Waiting | CalibrationState::Collecting => None,
++        }
++    }
++
++    pub(crate) fn end(
++        &mut self,
++        outcome: AttemptOutcome,
++        reason: &str,
++        now: u64,
++        completed_calibration_frames: u64,
++        fit: Option<AttemptFit>,
++    ) {
++        if self.finished {
++            return;
++        }
++        self.finished = true;
++        let raw_window_complete = outcome == AttemptOutcome::Succeeded;
++        let deadline = Instant::now()
++            + if raw_window_complete {
++                SUCCESS_TAIL
++            } else {
++                Duration::ZERO
++            };
++        self.target.end(
++            AttemptEnd {
++                outcome,
++                reason: reason.to_owned(),
++                ended_elapsed_ns: now.max(self.created_elapsed_ns),
++                completed_calibration_frames,
++                fit,
++                raw_window_complete,
++                dropped_records: 0,
++            },
++            deadline,
++        );
++    }
++}
++
++impl Drop for AttemptOwner {
++    fn drop(&mut self) {
++        self.end(
++            AttemptOutcome::Abandoned,
++            "calibration-owner-retired",
++            self.created_elapsed_ns,
++            0,
++            None,
++        );
++    }
++}
++
++fn record_attempt(
++    target: Arc<Target>,
++    receiver: Receiver<AttemptRecord>,
++    mut writer: AttemptCapture,
++    started_elapsed_ns: u64,
++) {
++    let began = Instant::now();
++    let mut flushed = began;
++    let mut batch = Vec::with_capacity(MAX_CHUNK_RECORDS);
++    loop {
++        let (window, pending) = {
++            let mut control = target.control.lock().unwrap_or_else(|err| err.into_inner());
++            let pending = if control
++                .finish
++                .as_ref()
++                .is_some_and(|finish| finish.deadline <= Instant::now())
++            {
++                control.finish.take()
++            } else {
++                None
++            };
++            (control.window.take(), pending)
++        };
++        if let Some(window) = window {
++            batch.push(window);
++            if batch.len() == MAX_CHUNK_RECORDS && !flush(&mut writer, &mut batch) {
++                target.close();
++                return;
++            }
++        }
++        let expired = began.elapsed() >= MAX_CAPTURE_AGE;
++        if let Some(mut finish) = pending.or_else(|| {
++            expired.then(|| Finish {
++                deadline: Instant::now(),
++                end: AttemptEnd {
++                    outcome: AttemptOutcome::Abandoned,
++                    reason: "calibration-capture-time-limit".into(),
++                    ended_elapsed_ns: started_elapsed_ns
++                        .saturating_add(MAX_CAPTURE_AGE.as_nanos() as u64),
++                    completed_calibration_frames: 0,
++                    fit: None,
++                    raw_window_complete: false,
++                    dropped_records: 0,
++                },
++            })
++        }) {
++            finish.end.raw_window_complete &= target.close();
++            for record in receiver.try_iter() {
++                batch.push(record);
++                if batch.len() == MAX_CHUNK_RECORDS && !flush(&mut writer, &mut batch) {
++                    return;
++                }
++            }
++            if flush(&mut writer, &mut batch) {
++                finish.end.dropped_records = target.drops();
++                if let Err(error) = writer.finish(finish.end) {
++                    capture_failure("terminal-publish", &error);
++                }
++            }
++            return;
++        }
++        if let Ok(record) = receiver.recv_timeout(WORKER_POLL) {
++            batch.push(record);
++        }
++        if batch.len() == MAX_CHUNK_RECORDS || flushed.elapsed() >= FLUSH_INTERVAL {
++            if !flush(&mut writer, &mut batch) {
++                target.close();
++                return;
++            }
++            flushed = Instant::now();
++        }
++    }
++}
++
++fn flush(writer: &mut AttemptCapture, batch: &mut Vec<AttemptRecord>) -> bool {
++    if batch.is_empty() {
++        return true;
++    }
++    if let Err(error) = writer.append(batch) {
++        capture_failure("raw-append", &error);
++        return false;
++    }
++    batch.clear();
++    true
++}
++
++fn capture_failure(stage: &str, error: &str) {
++    #[cfg(target_os = "android")]
++    crate::marker(
++        "personal-tilt-capture",
++        format!("stage={stage} reason={error}"),
++    );
++    #[cfg(not(target_os = "android"))]
++    let _ = (stage, error);
++}
++
++#[cfg(test)]
++#[path = "personal_tilt_attempt_owner_tests.rs"]
++mod tests;
+diff --git a/apps/native-renderer-android/native/src/personal_tilt_attempt_owner_tests.rs b/apps/native-renderer-android/native/src/personal_tilt_attempt_owner_tests.rs
+new file mode 100644
+index 00000000..f5e085df
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/personal_tilt_attempt_owner_tests.rs
+@@ -0,0 +1,283 @@
++use super::*;
++use crate::{
++    experiment_breathing_setup::{BreathingSetup, LoopSchedule},
++    personal_tilt_attempt_capture::{
++        recover_attempt, AttemptReceipt, PolarClockPair, PolarTiming, RecordCounts,
++    },
++};
++
++const PREPARATION: &str = "397f0003-4125-435c-afe6-0cfa45479d78";
++const OTHER_PREPARATION: &str = "397f0003-4125-435c-afe6-0cfa45479d79";
++const FIRST: &str = "949d7553-4725-439c-9c80-c7ae5e479ef4";
++const SECOND: &str = "949d7553-4725-439c-9c80-c7ae5e479ef5";
++const THIRD: &str = "949d7553-4725-439c-9c80-c7ae5e479ef6";
++const TRANSPORT: SetupSensorTransport = SetupSensorTransport {
++    source_token: 4,
++    connection_generation: 8,
++};
++
++struct Scratch(PathBuf);
++impl Scratch {
++    fn new() -> Self {
++        let id = crate::session_recording_participant::new_session_id().unwrap();
++        let path = std::env::temp_dir().join(format!("rq-attempt-owner-{id}"));
++        std::fs::create_dir(&path).unwrap();
++        Self(path)
++    }
++}
++impl Drop for Scratch {
++    fn drop(&mut self) {
++        let _ = std::fs::remove_dir_all(&self.0);
++    }
++}
++
++fn spec(id: &str, input: &'static str) -> AttemptSpec {
++    AttemptSpec {
++        attempt_id: id.to_owned(),
++        accepted_operation_id: match id {
++            FIRST => "1000000000000001",
++            SECOND => "1000000000000002",
++            _ => "1000000000000003",
++        }
++        .to_owned(),
++        preparation_id: Some(PREPARATION.to_owned()),
++        requested_elapsed_ns: 10,
++        requested_java_ns: 100,
++        polar_connection_generation: TRANSPORT.connection_generation,
++        polar_source_token: TRANSPORT.source_token,
++        sensor_clock_generation: Some(14),
++        audio_generation: 3,
++        loop_sha256: "a".repeat(64),
++        sample_rate_hz: 44_100,
++        input,
++        calibration_target_frames: 1_411_200,
++    }
++}
++
++fn status(generation: u64, calibration: CalibrationState, completed: u64) -> SetupStatus {
++    let mut status = BreathingSetup::new(LoopSchedule::new(44_100, [176_400; 4]).unwrap())
++        .snapshot(2_000_000_000);
++    status.calibration_generation = generation;
++    status.calibration = calibration;
++    status.calibration_start_frame = Some(705_600);
++    status.calibration_completed_frames = completed;
++    status
++}
++
++fn timing(transport: SetupSensorTransport, index: u32) -> PolarTiming {
++    PolarTiming {
++        connection_generation: transport.connection_generation,
++        source_token: transport.source_token,
++        frame_sequence: 5,
++        sample_index: index,
++        sample_count: 73,
++        sensor_time_ns: 200 + u64::from(index),
++        sample_host_time_ns: 300 + u64::from(index),
++        frame_host_receipt_time_ns: 400,
++        jni_submit_time_ns: 500,
++    }
++}
++
++fn wait_for_receipt(root: &Path, id: &str) -> AttemptReceipt {
++    let start = Instant::now();
++    loop {
++        match recover_attempt(root, id) {
++            Ok(receipt) => return receipt,
++            err if start.elapsed() > Duration::from_secs(3) => panic!("{id}: {err:?}"),
++            _ => thread::sleep(Duration::from_millis(20)),
++        }
++    }
++}
++
++#[test]
++fn attempts_keep_retry_interruption_own_raw_lineage_and_exact_fit_association() {
++    let scratch = Scratch::new();
++
++    let mut first = AttemptOwner::begin(&scratch.0, spec(FIRST, "polar-tilt"), 0, 1).unwrap();
++    first.activate();
++    assert!(first
++        .observe(
++            status(1, CalibrationState::Waiting, 0),
++            3,
++            1,
++            Some(TRANSPORT),
++            false,
++            None,
++            20
++        )
++        .is_none());
++    let first_ecg = timing(TRANSPORT, 0);
++    observe_raw(AttemptRecord::Ecg {
++        timing: first_ecg,
++        microvolts: -23,
++    });
++    first.end(
++        AttemptOutcome::Superseded,
++        "calibration-superseded",
++        30,
++        0,
++        None,
++    );
++
++    let mut second = AttemptOwner::begin(&scratch.0, spec(SECOND, "polar-volume"), 1, 1).unwrap();
++    second.activate();
++    assert!(second
++        .observe(
++            status(1, CalibrationState::Waiting, 0),
++            3,
++            1,
++            Some(TRANSPORT),
++            true,
++            None,
++            40
++        )
++        .is_none());
++    assert!(second
++        .observe(
++            status(2, CalibrationState::Collecting, 10),
++            4,
++            1,
++            Some(TRANSPORT),
++            false,
++            None,
++            50
++        )
++        .is_none());
++    let foreign = timing(
++        SetupSensorTransport {
++            connection_generation: 9,
++            ..TRANSPORT
++        },
++        1,
++    );
++    observe_raw(AttemptRecord::Ecg {
++        timing: foreign,
++        microvolts: 111,
++    });
++    let same_generation_wrong_owner = timing(
++        SetupSensorTransport {
++            source_token: 99,
++            ..TRANSPORT
++        },
++        1,
++    );
++    observe_raw(AttemptRecord::Ecg {
++        timing: same_generation_wrong_owner,
++        microvolts: 222,
++    });
++    let prior_preparation = PolarTiming {
++        sample_host_time_ns: 99,
++        ..timing(TRANSPORT, 1)
++    };
++    observe_raw(AttemptRecord::Ecg {
++        timing: prior_preparation,
++        microvolts: 333,
++    });
++    let valid = timing(TRANSPORT, 1);
++    observe_raw(AttemptRecord::Ecg {
++        timing: valid,
++        microvolts: -24,
++    });
++    observe_raw(AttemptRecord::Acc {
++        timing: valid,
++        xyz_mg: [12, 34, 991],
++    });
++    second.clock(
++        100_000_000,
++        AttemptRecord::Audio {
++            generation: 4,
++            absolute_frame: 705_600,
++            observed_elapsed_ns: 100_000_000,
++            playing: true,
++            clock_valid: true,
++            polar_clock_pair: Some(PolarClockPair {
++                java_monotonic_ns: 500,
++                android_elapsed_ns: 600,
++            }),
++        },
++    );
++    let model = TiltModel {
++        source_owner: 1,
++        generation: 9,
++        axis: [0.0, 0.0, 1.0],
++        low: -0.2,
++        high: 0.2,
++    };
++    let mut fitted = status(2, CalibrationState::Succeeded, 1_411_200);
++    fitted.model_generation = Some(9);
++    fitted.accepted_samples = 700;
++    let proof = second
++        .observe(
++            fitted,
++            4,
++            1,
++            Some(TRANSPORT),
++            false,
++            Some(&model),
++            2_000_000_000,
++        )
++        .unwrap();
++    assert_eq!(proof.matches(PREPARATION, 2, 9, 1), Some(SECOND));
++    assert_eq!(proof.matches(OTHER_PREPARATION, 2, 9, 1), None);
++    assert_eq!(proof.matches(PREPARATION, 1, 9, 1), None);
++    assert_eq!(proof.matches(PREPARATION, 2, 8, 1), None);
++    assert_eq!(proof.matches(PREPARATION, 2, 9, 2), None);
++    // A tail ECG packet can arrive after the actual audio-frame fit.
++    observe_raw(AttemptRecord::Ecg {
++        timing: timing(TRANSPORT, 2),
++        microvolts: -25,
++    });
++    let first_result = wait_for_receipt(&scratch.0, FIRST);
++    assert_eq!(first_result.outcome, AttemptOutcome::Superseded);
++    assert_eq!(
++        first_result.counts,
++        RecordCounts {
++            ecg: 1,
++            acc: 0,
++            audio: 0,
++            windows: 1
++        }
++    );
++    assert!(!first_result.raw_window_complete);
++    let second_result = wait_for_receipt(&scratch.0, SECOND);
++    assert_eq!(second_result.outcome, AttemptOutcome::Succeeded);
++    assert_eq!(
++        second_result.counts,
++        RecordCounts {
++            ecg: 2,
++            acc: 1,
++            audio: 1,
++            windows: 1
++        }
++    );
++    assert_eq!(second_result.model_generation, Some(9));
++    assert!(
++        !second_result.raw_window_complete,
++        "a passing fit alone does not prove full raw coverage"
++    );
++
++    let mut third = AttemptOwner::begin(&scratch.0, spec(THIRD, "polar-tilt"), 2, 1).unwrap();
++    third.activate();
++    third.observe(
++        status(3, CalibrationState::Waiting, 0),
++        4,
++        1,
++        Some(TRANSPORT),
++        false,
++        None,
++        40,
++    );
++    third.observe(
++        status(3, CalibrationState::Collecting, 20),
++        4,
++        2,
++        Some(TRANSPORT),
++        false,
++        None,
++        50,
++    );
++    let third_result = wait_for_receipt(&scratch.0, THIRD);
++    assert_eq!(third_result.outcome, AttemptOutcome::Failed);
++    assert_eq!(third_result.reason, "polar-lineage-retired");
++    assert!(!third_result.raw_window_complete);
++}
+diff --git a/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs b/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
+index d0524d07..d8028649 100644
+--- a/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
++++ b/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
+@@ -34,6 +34,23 @@ const NANOSECONDS_PER_MICROSECOND: u64 = 1_000;
+ const STANDARD_GRAVITY_METERS_PER_SECOND_SQUARED: f64 = 9.806_65;
+ const VOLUME_SMOOTHING_TAU_MICROS: f64 = 150_000.0;
+ 
++pub(crate) fn smooth_volume(
++    time_us: u64,
++    current: f64,
++    history: Option<(u64, f64)>,
++    stale_after_us: u64,
++    time_constant_us: f64,
++) -> f64 {
++    history.map_or(current, |(before, previous)| {
++        let elapsed = time_us.saturating_sub(before);
++        if elapsed == 0 || elapsed > stale_after_us {
++            return current;
++        }
++        let alpha = -(-(elapsed as f64) / time_constant_us).exp_m1();
++        previous + alpha * (current - previous)
++    })
++}
++
+ /// Coordinate subset used for Polar calibration and live projection.
+ #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+ pub(crate) enum PolarAccProjection {
+@@ -978,14 +995,13 @@ impl PolarAccBreathAdapter {
+         if !self.smooth_volume {
+             return current;
+         }
+-        let value = self.smoothed_volume.map_or(current, |(before, previous)| {
+-            let elapsed = at.get().saturating_sub(before.get());
+-            if elapsed == 0 || elapsed > self.settings.calibration.parameters().stale_after_micros {
+-                return current;
+-            }
+-            let alpha = -(-(elapsed as f64) / VOLUME_SMOOTHING_TAU_MICROS).exp_m1();
+-            previous + alpha * (current - previous)
+-        });
++        let value = smooth_volume(
++            at.get(),
++            current,
++            self.smoothed_volume.map(|(before, previous)| (before.get(), previous)),
++            self.settings.calibration.parameters().stale_after_micros,
++            VOLUME_SMOOTHING_TAU_MICROS,
++        );
+         self.smoothed_volume = Some((at, value));
+         value
+     }
+diff --git a/apps/native-renderer-android/native/src/polar_composition_adapters.rs b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+index e741ea5b..ceeaa6c9 100644
+--- a/apps/native-renderer-android/native/src/polar_composition_adapters.rs
++++ b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+@@ -256,6 +256,8 @@ pub(crate) struct SetupSensorClockSnapshot {
+     pub(crate) ready: bool,
+     pub(crate) generation: u64,
+     pub(crate) source_token: Option<u64>,
++    #[cfg(not(feature = "showcase"))]
++    pub(crate) transport: Option<SetupSensorTransport>,
+     pub(crate) anchor: Option<(u64, u64)>,
+     pub(crate) host_aligned_sample_ns: Option<u64>,
+ }
+@@ -293,6 +295,14 @@ pub(crate) fn setup_sensor_clock_snapshot(binding: (u64, u64)) -> SetupSensorClo
+         } else {
+             None
+         },
++        #[cfg(not(feature = "showcase"))]
++        transport: if expected && matching {
++            ingress.setup_sensor_transport.filter(|transport| {
++                transport.source_token > 0 && transport.connection_generation > 0
++            })
++        } else {
++            None
++        },
+         anchor: if expected && matching {
+             ingress.setup_sensor_clock.anchor()
+         } else {
+@@ -1156,6 +1166,8 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+     sample_index: jni::sys::jint,
+     sample_count: jni::sys::jint,
+     jni_submit_time_ns: jni::sys::jlong,
++    connection_generation: jni::sys::jlong,
++    source_token: jni::sys::jlong,
+     x_mg: jni::sys::jint,
+     y_mg: jni::sys::jint,
+     z_mg: jni::sys::jint,
+@@ -1163,6 +1175,24 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+     let entered_at = std::time::Instant::now();
+     let xyz_mg = [x_mg as f32, y_mg as f32, z_mg as f32];
+     #[cfg(not(feature = "showcase"))]
++    {
++        let timing = crate::personal_tilt_attempt_capture::PolarTiming {
++            connection_generation: connection_generation.max(0) as u64,
++            source_token: source_token.max(0) as u64,
++            frame_sequence: frame_sequence_id.max(0) as u64,
++            sample_index: sample_index.max(0) as u32,
++            sample_count: sample_count.max(0) as u32,
++            sensor_time_ns: sample_sensor_time_ns.max(0) as u64,
++            sample_host_time_ns: sample_host_time_ns.max(0) as u64,
++            frame_host_receipt_time_ns: frame_host_receipt_time_ns.max(0) as u64,
++            jni_submit_time_ns: jni_submit_time_ns.max(0) as u64,
++        };
++        crate::personal_tilt_attempt_owner::observe_raw(
++            crate::personal_tilt_attempt_capture::AttemptRecord::Acc {
++                timing, xyz_mg: [x_mg, y_mg, z_mg],
++            });
++    }
++    #[cfg(not(feature = "showcase"))]
+     let _ = crate::experiment_session_runtime::record_polar_acc_sample(
+         frame_sequence_id.max(0) as u64,
+         sample_index.max(0) as u32,
+@@ -1235,8 +1265,26 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+     sample_index: jni::sys::jint,
+     sample_count: jni::sys::jint,
+     jni_submit_time_ns: jni::sys::jlong,
++    connection_generation: jni::sys::jlong,
++    source_token: jni::sys::jlong,
+     microvolts: jni::sys::jint,
+ ) {
++    #[cfg(not(feature = "showcase"))]
++    {
++        let timing = crate::personal_tilt_attempt_capture::PolarTiming {
++            connection_generation: connection_generation.max(0) as u64,
++            source_token: source_token.max(0) as u64,
++            frame_sequence: frame_sequence_id.max(0) as u64,
++            sample_index: sample_index.max(0) as u32,
++            sample_count: sample_count.max(0) as u32,
++            sensor_time_ns: sample_sensor_time_ns.max(0) as u64,
++            sample_host_time_ns: sample_host_time_ns.max(0) as u64,
++            frame_host_receipt_time_ns: frame_host_receipt_time_ns.max(0) as u64,
++            jni_submit_time_ns: jni_submit_time_ns.max(0) as u64,
++        };
++        crate::personal_tilt_attempt_owner::observe_raw(
++            crate::personal_tilt_attempt_capture::AttemptRecord::Ecg { timing, microvolts });
++    }
+     #[cfg(not(feature = "showcase"))]
+     crate::lsl_panel_runtime::submit_polar_ecg(microvolts);
+     #[cfg(not(feature = "showcase"))]
+diff --git a/apps/native-renderer-android/native/src/renderer_radius_telemetry.rs b/apps/native-renderer-android/native/src/renderer_radius_telemetry.rs
+index 2c7240d8..1cc9f665 100644
+--- a/apps/native-renderer-android/native/src/renderer_radius_telemetry.rs
++++ b/apps/native-renderer-android/native/src/renderer_radius_telemetry.rs
+@@ -11,6 +11,7 @@ pub(crate) struct RendererRadiusFrame {
+     pub(crate) parameter_source: &'static str,
+     pub(crate) progress01: f32,
+     pub(crate) radius_m: f32,
++    pub(crate) radius_limits_m: Option<[f32; 2]>,
+     pub(crate) frame: u64,
+     pub(crate) render_generation: u64,
+     pub(crate) settings_revision: u64,
+@@ -31,6 +32,7 @@ pub(crate) fn observe_frame(frame: RendererRadiusFrame, clock: impl FnOnce() ->
+                 frame.lineage,
+                 frame.progress01,
+                 frame.radius_m,
++                frame.radius_limits_m,
+                 frame.frame,
+                 observed_ns,
+                 frame.render_generation,
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
+index a9d6cf95..7ff26298 100644
+--- a/apps/native-renderer-android/native/src/session_recording_participant.rs
++++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
+@@ -86,6 +86,7 @@ impl ParticipantId {
+ #[derive(Clone, Debug, PartialEq, Eq)]
+ pub(crate) struct ParticipantPlan {
+     participant: ParticipantId,
++    preparation_id: Option<String>,
+     scenario: String,
+     sha256: String,
+     duration_ns: u64,
+@@ -97,9 +98,15 @@ impl ParticipantPlan {
+     pub(crate) fn parse(value: &Value) -> Result<Self, &'static str> {
+         const BAD: &str = "participant-plan-invalid";
+         let authored_main = value.get("authored_main").is_some();
++        let preparation_id = value
++            .get("preparation_id")
++            .map(|identity| identity.as_str().filter(|id| valid_uuid(id)).map(str::to_owned).ok_or(BAD))
++            .transpose()?;
+         value
+             .as_object()
+-            .filter(|object| object.len() == 6 + usize::from(authored_main))
++            .filter(|object| {
++                object.len() == 6 + usize::from(authored_main) + usize::from(preparation_id.is_some())
++            })
+             .ok_or(BAD)?;
+         let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
+         let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
+@@ -148,6 +155,7 @@ impl ParticipantPlan {
+         }
+         Ok(Self {
+             participant,
++            preparation_id,
+             scenario: scenario.to_owned(),
+             sha256: sha256.to_owned(),
+             duration_ns: (frames * NANOS_PER_SECOND).div_ceil(rate),
+@@ -156,6 +164,10 @@ impl ParticipantPlan {
+         })
+     }
+ 
++    pub(crate) fn preparation_id(&self) -> Option<&str> {
++        self.preparation_id.as_deref()
++    }
++
+     fn condition(&self) -> &'static str {
+         if self.scenario == "haupt-15" {
+             "main"
+@@ -300,6 +312,7 @@ impl ParticipantRun {
+         let run = Self {
+             plan: ParticipantPlan {
+                 participant,
++                preparation_id: None,
+                 scenario: scenario.to_owned(),
+                 sha256: sha256.to_owned(),
+                 duration_ns,
+@@ -632,7 +645,7 @@ pub(crate) fn valid_uuid(uuid: &str) -> bool {
+         })
+ }
+ 
+-fn new_session_id() -> Result<String, String> {
++pub(crate) fn new_session_id() -> Result<String, String> {
+     let mut bytes = [0u8; 16];
+     getrandom::fill(&mut bytes).map_err(|_| "participant-uuid-entropy".to_owned())?;
+     bytes[6] = (bytes[6] & 0x0f) | 0x40;
+@@ -1005,6 +1018,22 @@ mod tests {
+         assert!(ParticipantPlan::parse(&missing).is_err());
+     }
+ 
++    #[test]
++    fn participant_plan_accepts_only_a_valid_opaque_calibration_preparation_id() {
++        let mut value = request("Mül_35_F", "haupt-15");
++        assert_eq!(ParticipantPlan::parse(&value).unwrap().preparation_id(), None);
++        let identity = "397f0003-4125-435c-afe6-0cfa45479d78";
++        value["preparation_id"] = json!(identity);
++        assert_eq!(ParticipantPlan::parse(&value).unwrap().preparation_id(), Some(identity));
++        value["extra"] = json!(1);
++        assert!(ParticipantPlan::parse(&value).is_err());
++        value.as_object_mut().unwrap().remove("extra");
++        for invalid in [json!(null), json!("Mül_35_F"), json!("397f0003-4125-135c-afe6-0cfa45479d78")] {
++            value["preparation_id"] = invalid;
++            assert!(ParticipantPlan::parse(&value).is_err());
++        }
++    }
++
+     #[test]
+     fn exploration_requires_the_authored_frame_count_and_preserves_its_duration() {
+         let request = json!({
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+index ab150b93..c69e66b9 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+@@ -4520,7 +4520,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         // panel recreation cannot leave the native session permanently arming.
+         if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
+             if (!requestArmedAudio(after, readback)) {
+-                updateStatus("Session armed, but condition audio preparation was rejected.");
++                // A polled readback must not enqueue Android toasts while preparation waits.
++                setStatusText("Waiting for condition audio preparation.");
+             }
+         }
+         if (changed && before.phase != ExperimentSessionPanelState.Phase.ARMED
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index 3286e2f6..e426aa38 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -1037,7 +1037,9 @@ public final class ExperimentSessionCommandGateway {
+                 || samples.length() == 0) {
+             throw new SecurityException("participant-arm-requires-vr-and-fresh-ecg");
+         }
+-        return new JSONObject(plan).put("participant_id", id).toString();
++        JSONObject verified = new JSONObject(plan).put("participant_id", id);
++        if (body.has("preparation_id")) verified.put("preparation_id", body.getString("preparation_id"));
++        return verified.toString();
+     }
+ 
+     private JSONObject exportTicket(boolean live)throws Exception {
+@@ -1173,7 +1175,10 @@ public final class ExperimentSessionCommandGateway {
+                 throw new SecurityException("shared-scheduler-main-required");
+             Object generation = body.opt("g");
+             int fields = participantArm && !defaultScenario ? 9 : 8;
+-            if (body.length() != fields || !"arm".equals(body.opt("op"))
++            boolean hasPreparation = participantArm && body.has("preparation_id");
++            if (body.length() != fields + (hasPreparation ? 1 : 0)
++                    || hasPreparation && !ExperimentSessionGatewayProtocol.validPreparationId(body.opt("preparation_id"))
++                    || !"arm".equals(body.opt("op"))
+                     || !(generation instanceof Integer || generation instanceof Long)
+                     || !(delegate instanceof WifiDelegate)
+                     || !((WifiDelegate) delegate).scenarioIds().contains(scenario)) {
+@@ -1189,7 +1194,10 @@ public final class ExperimentSessionCommandGateway {
+             command = new JSONObject(body.toString());
+             command.remove("scenario");
+             command.remove("g");
+-            if (participantArm) command.remove("participant_id");
++            if (participantArm) {
++                command.remove("participant_id");
++                command.remove("preparation_id");
++            }
+         }
+         ExperimentSessionBleServer.CommandRequest request=parse(command);
+         JSONObject start = "start".equals(request.operation) && BreathingSetupAudio.selected(context) ? snapshot() : null;
+@@ -1282,7 +1290,7 @@ public final class ExperimentSessionCommandGateway {
+         if (!journal.reserve(command)) return journal.original(id);
+         carrier.updateReceipt(id, "accepted", "Breathing setup admitted.");
+         revalidateEffect();
+-        if ("calibrate".equals(operation) && delegate instanceof WifiDelegate) {
++        if (("calibrate".equals(operation) || "polar-volume".equals(operation)) && delegate instanceof WifiDelegate) {
+             JSONObject setup = BreathingSetupAudio.status();
+             if (setup.optLong("g", -1) == command.getLong("g")
+                     && setup.optLong("r", -1) == command.getLong("r") && setup.optInt("attempt", -1) == 0) {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+index 2293de61..8550b4e0 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+@@ -334,15 +334,23 @@ public final class ExperimentSessionGatewayProtocol {
+             return new JSONObject(body.toString());
+         }
+         Object generation=body.opt("g"),revision=body.opt("r");
+-        if(body.length()!=5||!Integer.valueOf(1).equals(body.opt("v"))||!hex(id,16)
++        boolean hasPreparation = body.has("preparation_id");
++        boolean calibration = "calibrate".equals(operation) || "polar-volume".equals(operation);
++        if(body.length()!=(hasPreparation ? 6 : 5)
++                || hasPreparation && (!calibration || !validPreparationId(body.opt("preparation_id")))
++                ||!Integer.valueOf(1).equals(body.opt("v"))||!hex(id,16)
+                 || !(generation instanceof Integer||generation instanceof Long)
+                 || !(revision instanceof Integer||revision instanceof Long)
+                 || ((Number)generation).longValue()<=0||((Number)generation).longValue()>9007199254740991L
+                 || ((Number)revision).longValue()<0||((Number)revision).longValue()>9007199254740991L
+-                || !("start".equals(operation)||"calibrate".equals(operation)||"polar-fixed".equals(operation)||"polar-adaptive".equals(operation)||"controller".equals(operation)))
++                || !("start".equals(operation)||"calibrate".equals(operation)||"polar-volume".equals(operation)||"polar-fixed".equals(operation)||"polar-adaptive".equals(operation)||"controller".equals(operation)))
+             throw new IllegalArgumentException("closed-breathing-setup-required");
+         return new JSONObject(body.toString());
+     }
++    static boolean validPreparationId(Object value) {
++        return value instanceof String && ((String)value)
++            .matches("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}");
++    }
+     static boolean hex(String value,int length) {
+         return value!=null && value.length()==length && value.matches("[0-9a-f]+");
+     }
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+index 17a25d87..fb5c77d5 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
+@@ -56,7 +56,7 @@ final class BreathingSetupAudio implements AutoCloseable {
+     private static native void nativeObserveClock(long generation, long frame, long monotonicNs, boolean playing);
+     private static native void nativeObserveSourceClockPair(long javaNanoNs, long elapsedNs);
+     private static native String nativeStatus(long nowNs);
+-    private static native String nativeCommand(String json, long nowNs);
++    private static native String nativeCommand(String json, long nowNs, long javaNowNs);
+     private static native String nativeRecoveryEffect(String id, long oldGeneration, long targetGeneration, String action, long nowNs);
+ 
+     static boolean selected(Context context) {
+@@ -129,7 +129,8 @@ final class BreathingSetupAudio implements AutoCloseable {
+         final String body = command.toString();
+         String operation = command.optString("op", "");
+         if (owner.closed && !"receipt".equals(operation)) return rejected("breathing-loop-retired");
+-        if ("calibrate".equals(operation) || "polar-fixed".equals(operation) || "polar-adaptive".equals(operation) || "controller".equals(operation)) {
++        if ("calibrate".equals(operation) || "polar-volume".equals(operation)
++                || "polar-fixed".equals(operation) || "polar-adaptive".equals(operation) || "controller".equals(operation)) {
+             try { return owner.call(new Callable<JSONObject>() {
+                 public JSONObject call() throws Exception { return owner.setupCommand(body); }
+             }); }
+@@ -296,10 +297,10 @@ final class BreathingSetupAudio implements AutoCloseable {
+         BreathingSetupAudio owner = appLifetime;
+         if (owner != null) owner.latchMainCleanup(expectedGeneration, admittedFrame, receipt);
+     }
+-    static void endMain(final long admittedFrame) {
++    static void endMain(final long expectedGeneration, final long admittedFrame) {
+         final BreathingSetupAudio owner = appLifetime;
+         if (owner == null || admittedFrame < 0) return;
+-        try { owner.call(new Callable<Boolean>() { public Boolean call() throws Exception { return owner.endMainIfCurrent(admittedFrame); } }); }
++        try { owner.call(new Callable<Boolean>() { public Boolean call() throws Exception { return owner.endMainIfCurrent(expectedGeneration, admittedFrame); } }); }
+         catch (OutcomeUncertainException uncertain) { throw uncertain; }
+         catch (Exception error) { throw new IllegalStateException("breathing-main-end-failed", error); }
+     }
+@@ -637,10 +638,13 @@ final class BreathingSetupAudio implements AutoCloseable {
+         return cancellationReceipt("outcome_unknown", "main-cancel-stale-revision");
+     }
+ 
+-    private boolean endMainIfCurrent(long admittedFrame) throws Exception {
+-        synchronized (this) { if (closed || mainStartFrame != admittedFrame) return false; }
++    private boolean endMainIfCurrent(long expectedGeneration, long admittedFrame) throws Exception {
++        synchronized (this) {
++            if (closed || generation != expectedGeneration || mainStartFrame != admittedFrame) return false;
++        }
+         for (int attempt = 0; attempt < 2; attempt++) {
+             JSONObject state = new JSONObject(nativeBridge.status(clock.nowNs()));
++            if (state.getLong("g") != expectedGeneration) return false;
+             if (!state.isNull("main_start_frame") && state.getLong("main_start_frame") != admittedFrame) return false;
+             JSONObject command = new JSONObject().put("v", 1)
+                 .put("id", java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16))
+@@ -743,7 +747,7 @@ final class BreathingSetupAudio implements AutoCloseable {
+         public void observeSourceClockPair(long nanoNs, long elapsedNs) { nativeObserveSourceClockPair(nanoNs, elapsedNs); }
+         public void observe(long generation, long frame, long now, boolean playing) { nativeObserveClock(generation, frame, now, playing); }
+         public String status(long now) { return nativeStatus(now); }
+-        public String command(String json, long now) { return nativeCommand(json, now); }
++        public String command(String json, long now) { return nativeCommand(json, now, System.nanoTime()); }
+         public String recoveryEffect(String id, long oldGeneration, long targetGeneration, String action, long now) {
+             return nativeRecoveryEffect(id, oldGeneration, targetGeneration, action, now);
+         }
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+index 946124f4..ead71886 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+@@ -297,7 +297,7 @@ final class ConditionAudioAndroidMediaBackendFactory
+                 BreathingSetupAudio.cancelFailedMain(admittedGeneration, admittedFrame);
+                 return;
+             }
+-            BreathingSetupAudio.endMain(admittedFrame); mainEnded = true;
++            BreathingSetupAudio.endMain(admittedGeneration, admittedFrame); mainEnded = true;
+         }
+         @Override public void beforeFailure(String reason) {
+             if (released || mainEnded || failureCleanup) return;
+diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
+index 83f60d2d..38eef84b 100644
+--- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
++++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
+@@ -2840,6 +2840,8 @@ final class PolarSensorPanel {
+                                 sampleIndex,
+                                 frame.sampleCount,
+                                 System.nanoTime(),
++                                admittedGeneration,
++                                activeSetupSourceToken,
+                                 sample.xMg,
+                                 sample.yMg,
+                                 sample.zMg);
+@@ -2900,6 +2902,8 @@ final class PolarSensorPanel {
+                                 sampleIndex,
+                                 frame.sampleCount,
+                                 System.nanoTime(),
++                                admittedGeneration,
++                                activeSetupSourceToken,
+                                 microvolts);
+                         }
+                         appendEcgEvent(frame);
+@@ -3029,6 +3033,8 @@ final class PolarSensorPanel {
+         int sampleIndex,
+         int sampleCount,
+         long jniSubmitTimeNs,
++        long connectionGeneration,
++        long sourceToken,
+         int xMg,
+         int yMg,
+         int zMg);
+@@ -3041,6 +3047,8 @@ final class PolarSensorPanel {
+         int sampleIndex,
+         int sampleCount,
+         long jniSubmitTimeNs,
++        long connectionGeneration,
++        long sourceToken,
+         int microvolts);
+ 
+     private static native void nativeSubmitPolarPmdFrame(
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
+index 8742f501..52d1f5cb 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
+@@ -203,6 +203,20 @@ public final class BreathingSetupAudioBackendTest {
+                 transientBackend.release();
+             }
+ 
++            long reusedFrame = player.frame + 705600;
++            bridge.mainFrame = reusedFrame;
++            owner.defer(() -> {}, () -> {});
++            player.frame = (int) reusedFrame; now[0] += 16000000000L; owner.observe();
++            ConditionAudioRuntime.MediaBackend previousGeneration = factory.create(provider, listener(), "haupt-15");
++            previousGeneration.prepare(false); previousGeneration.start();
++            java.lang.reflect.Field generation = BreathingSetupAudio.class.getDeclaredField("generation");
++            generation.setAccessible(true);
++            generation.setLong(owner, ++bridge.generation);
++            int endRequestsBefore = bridge.endRequests;
++            previousGeneration.stop(); previousGeneration.release();
++            check(bridge.mainFrame == reusedFrame && bridge.endRequests == endRequestsBefore,
++                "an old background player's cleanup cannot end the same frame in a replacement generation");
++
+             owner.close();
+             check(BreathingSetupAudio.mainRecordingPlan("haupt-15") == null, "retired player cannot advertise an executable plan");
+             BreathingSetupAudio.cancelDeferredExperimentStart();
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
+index 219c6fd4..c4208086 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
+@@ -232,6 +232,14 @@ public final class ExperimentSessionGatewayProtocolTest {
+             if (!mode.equals(selected.getString("op"))) throw new AssertionError("pretrained setup mode changed");
+             denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("op",mode).put("axis",1)));
+         }
++        String preparation = "949d7553-4725-439c-9c80-c7ae5e479ef4";
++        JSONObject boundSetup = ExperimentSessionGatewayProtocol.setupQuery(
++            new JSONObject(setupBody).put("preparation_id", preparation));
++        if (!preparation.equals(boundSetup.getString("preparation_id")))
++            throw new AssertionError("calibration preparation identity was lost");
++        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("preparation_id","invalid")));
++        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("op","controller").put("preparation_id",preparation)));
++        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("preparation_id",org.json.JSONObject.NULL)));
+         denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("g",0)));
+         denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("r",-1)));
+         denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("r",0.0)));
+diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
+index ce214207..8213c3c2 100644
+--- a/docs/EXPERIMENT_SESSION_CONTROL.md
++++ b/docs/EXPERIMENT_SESSION_CONTROL.md
+@@ -53,6 +53,15 @@ a still-valid model, selected input and audio observation. Terminal `end-main`
+ keeps its existing reset semantics. Source or clock retirement cannot be undone
+ by cancellation. These internal commands add no public setup or debug authority.
+ 
++After the shared main reaches its audio-frame boundary and the writer confirms
++a durable completed recording, the native runtime issues `shared-main-completed`
++for that session generation. Android stops the matching condition audio owner
++and waits for its stopped state before submitting the next preparation. The
++authored main retires its condition audio owner through the existing `main-outro`
++receipt, which still schedules the separate outro. The shared PCM owner parks
++through its own lifecycle. Cleanup uses the original PCM generation and admitted
++frame, so a replaced calibration is protected.
++
+ A definitive native Start rejection cancels only the reservation captured under
+ the matching carrier, native owner and complete ARMED session tuple. Duplicate
+ or uncertain outcomes cannot trigger cleanup. A conclusive stale revision may
+@@ -62,6 +71,8 @@ Full native readback owns fenced-operation settlement, including delayed results
+ Focused coverage includes `test_experiment_gateway_breathing_boundary.py`,
+ `test_native_start_rejection_cleanup.py`, `test_remote_durable_pending.py` and
+ the real Java audio-owner/Rust runtime peer in `Test-BreathingSetupAudioHost.ps1`.
++`Test-NativeRendererConditionAudio.ps1` exercises the generated closeout handoff
++through delayed stop, repeated receipts and second preparation.
+ Host checks do not establish physical Start, uninterrupted recording or data
+ custody; those require the selected signed APK and an attended complete run.
+ 
+diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
+index 5fe5b91e..2b30bae8 100644
+--- a/tools/Build-NativeRendererAndroid.ps1
++++ b/tools/Build-NativeRendererAndroid.ps1
+@@ -1539,6 +1539,12 @@ $polarBleStopHooks
+             if (pendingAudioGeneration > 0L && sessionGeneration != pendingAudioGeneration) {
+                 return false;
+             }
++            // The previous stop can be dispatched but still own a player. Do not
++            // submit PREPARE yet: the audio owner remembers rejected command IDs.
++            ConditionAudioContract.Phase phase = runtime.snapshot().phase;
++            if (phase != ConditionAudioContract.Phase.IDLE && phase != ConditionAudioContract.Phase.STOPPED) {
++                return false;
++            }
+             cancelMainOutro();
+             pendingAudioGeneration = sessionGeneration;
+             pendingAudioScenario = scenarioId;
+@@ -1581,10 +1587,9 @@ $polarBleStopHooks
+      */
+     public static void applyConditionAudioControlReceipt(
+             long sessionGeneration, long receiptRevision, String event) {
+-        if ("main-outro".equals(event)) {
+-            if (receiptRevision > 0L) scheduleMainOutro(sessionGeneration);
+-            return;
+-        }
++        boolean mainOutro = "main-outro".equals(event);
++        if (mainOutro && receiptRevision > 0L) scheduleMainOutro(sessionGeneration);
++        boolean mainCompleted = mainOutro || "shared-main-completed".equals(event);
+         ConditionAudioRuntime runtime;
+         String operationId;
+         synchronized (PRESENTATION_LOCK) {
+@@ -1598,7 +1603,7 @@ $polarBleStopHooks
+             appliedAudioControlGeneration = sessionGeneration;
+             appliedAudioControlRevision = receiptRevision;
+             if ("armed".equals(event)) return;
+-            if (!audioPrepared) {
++            if (!mainCompleted && !audioPrepared) {
+                 publishConditionAudioControlFailure(
+                     sessionGeneration, receiptRevision, "audio-not-prepared");
+                 return;
+@@ -1606,6 +1611,10 @@ $polarBleStopHooks
+             runtime = conditionAudioRuntime;
+             operationId = "controller-" + event + "-" + sessionGeneration + "-" + receiptRevision;
+         }
++        if (mainCompleted) {
++            requestConditionAudioRestartStop(sessionGeneration, operationId);
++            return;
++        }
+         if (runtime == null) {
+             publishConditionAudioControlFailure(
+                 sessionGeneration, receiptRevision, "audio-runtime-unavailable");
+diff --git a/tools/checks/Test-NativeRendererConditionAudio.ps1 b/tools/checks/Test-NativeRendererConditionAudio.ps1
+index cdc0562e..eaec65e7 100644
+--- a/tools/checks/Test-NativeRendererConditionAudio.ps1
++++ b/tools/checks/Test-NativeRendererConditionAudio.ps1
+@@ -99,7 +99,7 @@ final class BreathingSetupAudio {
+     static void cancelFailedMain(long generation, long frame) { throw new AssertionError(); }
+     static void resumeLoop() { throw new AssertionError(); }
+     static void pauseLoop() { throw new AssertionError(); }
+-    static void endMain(long frame) { throw new AssertionError(); }
++    static void endMain(long generation, long frame) { throw new AssertionError(); }
+ }
+ '@ | Set-Content -LiteralPath $unselectedAudio -Encoding utf8NoBOM
+     $platformSources += @($contract,$runtime,$androidFactory,$phaseEngine,$unselectedAudio,
+@@ -116,4 +116,7 @@ final class BreathingSetupAudio {
+     }
+ }
+ 
++python -B (Join-Path $PSScriptRoot 'test_experiment_shared_main_audio_closeout.py') --repo $repo
++if ($LASTEXITCODE -ne 0) { throw 'Generated shared main audio closeout failed' }
++
+ Write-Host 'Test-NativeRendererConditionAudio PASS'
+diff --git a/tools/checks/test_experiment_shared_main_audio_closeout.py b/tools/checks/test_experiment_shared_main_audio_closeout.py
+new file mode 100644
+index 00000000..f090c5ba
+--- /dev/null
++++ b/tools/checks/test_experiment_shared_main_audio_closeout.py
+@@ -0,0 +1,130 @@
++"""Run the generated Android audio handoff against a delayed condition owner."""
++
++import argparse
++from pathlib import Path
++import subprocess
++import tempfile
++
++from test_experiment_gateway_dedupe import method
++
++
++HARNESS = r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import java.util.Arrays;
++import java.util.List;
++import io.github.mesmerprism.rustyquest.native_renderer.ConditionAudioContract.*;
++
++final class SharedMainAudioCloseoutHarness {
++    private static final Object PRESENTATION_LOCK = new Object();
++    private static long pendingAudioGeneration, appliedAudioControlGeneration, appliedAudioControlRevision;
++    private static String pendingAudioCondition = "", pendingAudioScenario = "", pendingAudioPrepareOperation = "";
++    private static boolean terminalIntentAdmitted, audioImmersiveAdmitted, audioPrepared;
++    private static int outros;
++    private static final ConditionAudioRuntime conditionAudioRuntime = new ConditionAudioRuntime();
++    private static final BreathPhaseAudioAndroidOwner breathPhaseAudioOwner = null;
++    private static void cancelMainOutro() {}
++    private static void scheduleMainOutro(long generation) { outros++; }
++    private static List<String> conditionAudioScenarios() { return Arrays.asList("haupt-15"); }
++    private static void publishConditionAudioControlFailure(long generation, long revision, String reason) {
++        throw new AssertionError(reason);
++    }
++    private static void check(boolean ok, String message) { if (!ok) throw new AssertionError(message); }
++
++    __GENERATED_METHODS__
++
++    public static void main(String[] args) {
++        ConditionAudioRuntime audio = conditionAudioRuntime;
++        check(startConditionAudio(1, "arm-1", "condition-a", "haupt-15"), "initial arm");
++        audio.phase = Phase.PLAYING;
++        audioPrepared = true;
++        applyConditionAudioControlReceipt(1, 2, "armed");
++        applyConditionAudioControlReceipt(2, 3, "shared-main-completed");
++        applyConditionAudioControlReceipt(1, 1, "shared-main-completed");
++        check(audio.stops == 0, "unmatched generation or revision cannot stop the player");
++        applyConditionAudioControlReceipt(1, 3, "shared-main-completed");
++        check(audio.stops == 1 && audio.phase == Phase.STOPPING, "completed generation submits its stop");
++        applyConditionAudioControlReceipt(1, 3, "shared-main-completed");
++        check(audio.stops == 1, "duplicate completion does not stop twice");
++        check(!startConditionAudio(2, "arm-2", "condition-a", "haupt-15"), "second prepare waits for stop");
++        check(audio.prepares == 1, "waiting must preserve the second operation ID");
++        audio.phase = Phase.STOPPED;
++        audio.trackReady = false;
++        check(!startConditionAudio(2, "arm-2", "condition-a", "haupt-15") && audio.prepares == 1,
++            "the next track must be ready after stopping");
++        audio.trackReady = true;
++        check(startConditionAudio(2, "arm-2", "condition-a", "haupt-15"), "same Arm can now prepare");
++        check(startConditionAudio(2, "arm-2", "condition-a", "haupt-15") && audio.prepares == 2,
++            "second preparation is idempotent");
++        applyConditionAudioControlReceipt(1, 4, "shared-main-completed");
++        check(audio.stops == 1 && audio.generation == 2, "late old completion cannot stop the new owner");
++        audio.phase = Phase.SILENT_AFTER_NATURAL_END;
++        applyConditionAudioControlReceipt(2, 5, "main-outro");
++        check(outros == 1 && audio.stops == 2, "authored completion schedules its outro and retires its condition owner");
++        audio.phase = Phase.STOPPED;
++        check(startConditionAudio(3, "arm-3", "condition-a", "haupt-15"), "authored owner also permits the next arm");
++        System.out.println("SharedMainAudioCloseoutHarness PASS");
++    }
++}
++
++final class BreathPhaseAudioAndroidOwner {
++    String readiness() { return "ready"; }
++    void control(long generation, String event) {}
++}
++
++final class ConditionAudioRuntime {
++    Phase phase = Phase.IDLE;
++    long generation;
++    int prepares, stops;
++    boolean trackReady = true;
++
++    TrackReadiness trackReadiness(String condition) {
++        return new TrackReadiness(true, condition, trackReady ? TrackState.READY : TrackState.PENDING, "");
++    }
++    Snapshot snapshot() { return new Snapshot(phase, generation, 0, "", "", 0, ""); }
++
++    Submission submit(Command command) {
++        switch (command.kind) {
++            case PREPARE:
++                prepares++;
++                if (phase != Phase.IDLE && phase != Phase.STOPPED) throw new AssertionError("premature PREPARE");
++                phase = Phase.PREPARING;
++                generation = command.sessionGeneration;
++                break;
++            case STOP:
++                stops++;
++                if (command.sessionGeneration != generation || command.stopReason != StopReason.RESTART_TO_EXPERIMENTER)
++                    throw new AssertionError("stop must target the exact completed owner");
++                phase = Phase.STOPPING;
++                break;
++            default:
++                throw new AssertionError("unexpected command " + command.kind);
++        }
++        return new Submission(true, true, false, "", command.sessionGeneration, command.operationId);
++    }
++}
++'''
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[2])
++    repo = parser.parse_args().repo
++    builder = (repo / 'tools/Build-NativeRendererAndroid.ps1').read_text(encoding='utf-8-sig')
++    anchors = [
++        'static boolean startConditionAudio(\n            long sessionGeneration, String operationId, String conditionId, String scenarioId)',
++        'public static void applyConditionAudioControlReceipt(',
++        'static boolean requestConditionAudioRestartStop(',
++        'private static boolean requestConditionAudioStop(',
++    ]
++    source = HARNESS.replace('__GENERATED_METHODS__', '\n'.join(method(builder, anchor) for anchor in anchors))
++    contract = (repo / 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github'
++                / 'mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java')
++    with tempfile.TemporaryDirectory(prefix='rq-shared-main-closeout-') as temp:
++        java = Path(temp) / 'SharedMainAudioCloseoutHarness.java'
++        java.write_text(source, encoding='utf-8')
++        subprocess.run(['javac', '--release', '8', '-encoding', 'UTF-8', '-d', temp, contract, java], check=True)
++        subprocess.run(['java', '-cp', temp,
++                        'io.github.mesmerprism.rustyquest.native_renderer.SharedMainAudioCloseoutHarness'], check=True)
++
++
++if __name__ == '__main__':
++    main()

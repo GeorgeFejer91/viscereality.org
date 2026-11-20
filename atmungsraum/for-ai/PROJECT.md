@@ -1,5 +1,86 @@
 # Project
 
+### Active: two consecutive attended runs — 2026-11-20
+
+- [x] Developer 37 completed a 900-second main with guidance bias at zero.
+  Unusable data paused at 51.435 seconds. After confirmed Bluetooth loss,
+  the same strap returned on a new connection, calibration remained ready,
+  and manual Continue advanced the original writer. The phone briefly showed
+  its connect page at completion, recovered the existing pairing in about
+  15 seconds and showed the saved recording.
+- [x] Prepare the [signed Developer 38 candidate](../quest/apks/README.md#developer-38-two-session-candidate--2026-11-20).
+  The source overlay includes the second-session and retained-fit changes,
+  the updated zero-bias Personal Tilt classifier and legacy Volume output
+  smoothing. The tuner compared the previous 20.78 seconds per 32-second
+  holdout with 21.93 seconds for the next candidate at zero bias. Cued
+  agreement is a replay measure and wearable acceptance is pending.
+- [x] Publish the phone ECG recovery, closeout and calibration guidance,
+  Polar Volume picker and rolling sphere-volume chart. The combined
+  `20261120-volume-round-audio` build retains round-audio controls, passes
+  465 rendered states, and is live at merge `26c2b099318053b4f19fc20eb6c2f6cc3e390f44`.
+  Twelve live files match the verified tree, the removed particles module
+  returns 404, and the paired Pixel loads the new entry with Volume enabled.
+  [PR 172](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
+  · [Pages run 44712538548](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44712538548)
+- [x] Install the signed Developer 38 r2 over idle Developer 37 and verify
+  installed bytes, saved Pixel pairing, keep-awake and zero guidance bias.
+  The shared calibration AudioTrack reported playing at frame zero even
+  after an app-only restart. A headset reboot restored advancement on the
+  same output route. Restore Wi-Fi ADB and verify keep-awake after reboot.
+- [x] Complete the first 900-second main in the post-reboot process. At
+  822.700 seconds, loss of Polar range paused writer generation 1. The
+  strap resumed both streams on return, the Personal Tilt fit stayed ready,
+  and the phone Continue advanced the original writer. On the installed
+  `20261120-saved-headsets` release, the ECG graph stayed waiting after
+  signed ECG had resumed. The same phone showed Connect for about
+  15 seconds at completion, then reconciled the saved recording.
+- [x] Reconcile the first archive and its test questionnaire. Next Session
+  opened a blank participant form, and a second zero-bias Personal Tilt
+  attempt fit 797 of 800 bins in the same Quest process.
+- [ ] Fix and retest automatic completion audio cleanup. The second Arm
+  reached generation 2 with an active writer, ready storage and current
+  sensor and calibration audio evidence. It remained in ARMING with zero
+  main time. The shared-scheduler auto-save path bypasses the Java stop
+  used by explicit terminal commands, leaving the previous condition audio
+  generation in the way of the next Arm. Android later killed the stuck
+  process for excessive Binder traffic after repeated status callbacks
+  filled the toast queue. Developer 39 stops the completed condition
+  player and uses panel text during retries. Require both 900-second saves
+  and advancing second main time without a process restart.
+- [x] Add the native [Quest calibration attempt recordings](plans/2026-11-20-calibration-attempt-recording.md)
+  and selected method/attempt metadata to Developer 39. Each admitted retry
+  has its own app-private raw capture. Preserve native timestamps and
+  the official main sample window.
+- [x] Prepare signed Developer 39 with calibrated Polar Volume and signed
+  renderer/guide telemetry for the rolling phone chart. The alternate
+  fixed and adaptive preset State choices are superseded on this build.
+  In the 13-recording cross-cycle replay, 600 ms smoothing on the
+  personal fit reduced held-out radius error to 0.064 m, versus 0.094 m
+  unsmoothed. The headset uses both cycles to fit. Physical comparison
+  remains pending.
+- [x] Publish Developer 39 to the existing private Meta Developer channel
+  in parallel with the lab rerun, as requested. The dashboard shows
+  `0.2.38-dev` / 39, Quest 2 and build `1472719655927046` active.
+  The basic malware and detailed security checks passed.
+- [ ] Finish the paired Volume test. Developer 39 returned signed
+  `calibration-recording-unavailable` for Volume before any cue played,
+  while both Polar streams were fresh. The native log identifies the
+  recording attempt file lock. Rust 1.96 returns an unsupported error
+  for `File::try_lock` on Android. Controller State reaches its preview
+  because it does not open a guided Polar capture. Developer 40 uses the
+  Android nonblocking exclusive lock for admission and recovery. A
+  device storage probe confirmed one owner and release on close. The
+  signed replacement and the two-session hardware run are pending.
+- [x] Compare adaptive axes, state/volume fusion and renderer radius on
+  the 13 available guided browser recordings. Six recordings were held out.
+  On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,
+  Adaptive Tilt's was 17.78, and blending in 25% volume slope gave 21.82.
+  The 150 ms Volume replay had 0.166 m mean absolute radius error against
+  the intended 1–2 m trace, versus 0.195 m with integrated State. Keep
+  real posture changes as the next physical comparison for personalized
+  axis recovery. The observed recordings vary in orientation by at most
+  1.47 degrees; the larger posture changes in the tuner were simulated.
+
 ### Active: main Start rejection and retained calibration — 2026-11-19
 
 The user requests diagnosis and repair before repeating the complete main run

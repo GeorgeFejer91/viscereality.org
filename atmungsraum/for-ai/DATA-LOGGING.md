@@ -79,6 +79,13 @@ retried; Controller State provides the fallback input. These operations do not
 start participant recording. The selected gateway offers only `haupt-15`.
 Historical practice exports and their filenames remain valid.
 
+Developer 39 saves each admitted guided calibration as a separate
+app-private Quest attempt. It retains raw ECG and motion, native clock
+evidence and terminal outcome, including incomplete attempts. The
+verified preparation ID and model identify the selected attempt in the
+main native manifest when that association can be made. The main CSV
+retains its official-Start boundary and format.
+
 Explicit unhealthy-transport recovery is preparation-only. It retires the failed
 attempt and evidence, creates a fresh actual audio generation and requires fresh
 input before new setup. Arm binds that current generation and selected input;

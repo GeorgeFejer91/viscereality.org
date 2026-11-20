@@ -1,0 +1,2053 @@
+diff --git a/apps/native-renderer-android/native/src/breath_composition_runtime.rs b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
+index 17c667c5d29d9391f7e1abeaf1106fab2c1a231f..733833da8ab2d002b6f06fa02f16f7be801a6e6a 100644
+--- a/apps/native-renderer-android/native/src/breath_composition_runtime.rs
++++ b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
+@@ -838,6 +838,12 @@ impl BreathCompositionRuntime {
+             return Err("action-queue-full");
+         }
+         self.authority = candidate;
++        if let Some(adapter) = self.polar_adapter.as_mut() {
++            adapter.set_volume_smoothing(self.authority.snapshot().effective.is_some_and(|request| {
++                request.source == BreathCompositionSource::PolarAcc
++                    && request.mapping == BreathCompositionMapping::Volume
++            }));
++        }
+         self.pending_actions.extend(actions.iter().copied());
+         if clear_calibration {
+             self.latest_calibration = None;
+@@ -946,6 +952,7 @@ impl BreathCompositionRuntime {
+                         settings = tuned;
+                     }
+                     let mut adapter = PolarAccBreathAdapter::new(settings);
++                    adapter.set_volume_smoothing(request.mapping == BreathCompositionMapping::Volume);
+                     #[cfg(feature = "showcase")]
+                     match request.polar_projection {
+                         PolarProjectionSelection::DynamicAxis => {
+@@ -2733,6 +2740,26 @@ mod tests {
+         .to_string()
+     }
+ 
++    #[test]
++    fn mapping_switch_updates_polar_volume_filter_without_restarting_calibration() {
++        let mut runtime = runtime();
++        runtime.apply_command_inner(&select("polar-acc", "state")).unwrap();
++        runtime.start_calibration_inner().unwrap();
++        runtime.apply_polar_configuration_boundary(
++            BreathTimestampMicros::new(1),
++            crate::source_clock::SourceClock::OpenXrTime,
++        );
++        let generation = runtime.snapshot().generation.expect("running calibration");
++        assert!(!runtime.polar_adapter.as_ref().unwrap().volume_smoothing_enabled());
++
++        for (mapping, enabled) in [("volume", true), ("state", false), ("volume", true)] {
++            runtime.apply_command_inner(&select("polar-acc", mapping)).unwrap();
++            assert_eq!(runtime.snapshot().generation, Some(generation));
++            assert!(runtime.pending_actions.is_empty());
++            assert_eq!(runtime.polar_adapter.as_ref().unwrap().volume_smoothing_enabled(), enabled);
++        }
++    }
++
+     #[test]
+     fn panel_requests_require_native_effective_readback() {
+         let mut runtime = runtime();
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+index f81c0b5fd2407d32e852b891cc0cf7c054f09363..712d85384020839c3a3a4127f98ed426282d1635 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
+@@ -218,6 +218,19 @@ pub(crate) struct TiltSample {
+ // Conservative engineering admission limits, not physiological/clinical bounds.
+ // A 25 Hz training grid gives equal time weighting and a hard 800 sample bound.
+ const CLOCK_FRESH_NS: u64 = 250_000_000;
++
++// Preserve a quarter of the slope beyond each calibrated endpoint. Cap the
++// extra input at one calibrated span before encoding it for CommonPhase.
++const PERSONAL_TILT_PHASE_MARGIN: f64 = 0.25;
++pub(crate) const PERSONAL_TILT_PHASE_SCALE: f64 = 1.0 + 2.0 * PERSONAL_TILT_PHASE_MARGIN;
++
++#[derive(Debug, Clone, Copy)]
++pub(crate) struct PolarSignalSample {
++    pub(crate) input: SetupInput,
++    pub(crate) phase_value01: Option<f64>,
++    pub(crate) model_generation: u64,
++    pub(crate) source_timestamp_ns: u64,
++}
+ pub(crate) const SIGNAL_FRESH_NS: u64 = 200_000_000;
+ const ALIGNMENT_TOLERANCE_NS: u64 = 150_000_000;
+ const TRAINING_STEP_NS: u64 = 40_000_000;
+@@ -252,7 +265,18 @@ pub(crate) struct TiltModel {
+ impl TiltModel {
+     pub(crate) fn project(&self, vector_g: [f64; 3]) -> Option<f64> {
+         let unit = gravity_direction(vector_g)?;
+-        Some(((dot(unit, self.axis) - self.low) / (self.high - self.low)).clamp(0.0, 1.0))
++        Some(self.normalized_tilt(unit).clamp(0.0, 1.0))
++    }
++
++    fn normalized_tilt(&self, unit: [f64; 3]) -> f64 {
++        (dot(unit, self.axis) - self.low) / (self.high - self.low)
++    }
++
++    fn phase_value01(&self, unit: [f64; 3]) -> f64 {
++        let tilt = self.normalized_tilt(unit).clamp(-1.0, 2.0);
++        let visible = tilt.clamp(0.0, 1.0);
++        let with_overflow = visible + PERSONAL_TILT_PHASE_MARGIN * (tilt - visible);
++        (with_overflow + PERSONAL_TILT_PHASE_MARGIN) / PERSONAL_TILT_PHASE_SCALE
+     }
+ }
+ 
+@@ -747,6 +771,26 @@ impl BreathingSetup {
+         self.signal_resume_ns = None;
+     }
+ 
++    /// Forget all timed observations while keeping an already fitted axis.
++    /// The caller must prove the original physical source and composition.
++    pub(crate) fn reanchor_unchanged_polar_source(&mut self) -> bool {
++        if self.input != SetupInput::PolarTilt
++            || self.experiment != ExperimentState::Running
++            || self.calibration != CalibrationState::Succeeded
++            || !self.model.as_ref().is_some_and(|model| self.source_owner == Some(model.source_owner))
++        {
++            return false;
++        }
++        self.evidence_retirement_epoch = self.evidence_retirement_epoch.saturating_add(1);
++        self.reset_sample_continuity();
++        self.quality_sample_frame = None;
++        self.quality.warning = "timing";
++        self.live = None;
++        self.signal_resume_ns = None;
++        self.delivery_witness_ns = None;
++        true
++    }
++
+     /// Rejected current-source evidence invalidates an attempt/model without
+     /// admitting the bad sample into calibration or changing source lineage.
+     pub(crate) fn reject_acc(&mut self, owner: u64, failure: SetupFailure) {
+@@ -1176,8 +1220,7 @@ impl BreathingSetup {
+             SetupInput::PolarTilt if self.input_ready(now_ns) => {
+                 let model = self.model.as_ref()?;
+                 let live = self.live?;
+-                let volume = ((dot(live.unit, model.axis) - model.low) / (model.high - model.low))
+-                    .clamp(0.0, 1.0);
++                let volume = model.normalized_tilt(live.unit).clamp(0.0, 1.0);
+                 Some(TiltSample {
+                     input: self.input,
+                     volume,
+@@ -1194,20 +1237,24 @@ impl BreathingSetup {
+     /// Current source/model-owned signal evidence for manual Continue. An
+     /// intentional paused Running clock may assess quality but produces no
+     /// driver output, training samples, or main timeline progress.
+-    pub(crate) fn usable_polar_signal_sample(&self, now_ns: u64) -> Option<TiltSample> {
++    pub(crate) fn usable_polar_signal_sample(&self, now_ns: u64) -> Option<PolarSignalSample> {
+         if !self.clock_fresh(now_ns) || !self.input.is_polar() || self.experiment == ExperimentState::Invalidated
+             || self.clock.is_some_and(|clock| !clock.playing) && self.experiment != ExperimentState::Running
+         { return None; }
+         let source_owner = self.source_owner?;
+         let live = self.live.filter(|live| now_ns >= live.host_ns && now_ns - live.host_ns <= SIGNAL_FRESH_NS)?;
+-        let (model_generation, volume) = if self.input.pretrained() {
+-            (self.calibration_generation, 0.0)
++        let (model_generation, phase_value01) = if self.input.pretrained() {
++            (self.calibration_generation, None)
+         } else {
+-            let model = self.model.as_ref().filter(|model| self.source_owner == Some(model.source_owner))?;
+-            (model.generation, ((dot(live.unit, model.axis) - model.low) / (model.high - model.low)).clamp(0.0, 1.0))
++            let model = self.model.as_ref().filter(|model| model.source_owner == source_owner)?;
++            (model.generation, Some(model.phase_value01(live.unit)))
+         };
+-        Some(TiltSample { input:self.input, volume, phase:None, source_owner:Some(source_owner),
+-            model_generation:Some(model_generation), source_timestamp_ns:live.host_ns })
++        Some(PolarSignalSample {
++            input: self.input,
++            phase_value01,
++            model_generation,
++            source_timestamp_ns: live.host_ns,
++        })
+     }
+ 
+     pub(crate) fn snapshot(&self, now_ns: u64) -> SetupStatus {
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+index 05c4c85219fea7e608460a98a6a1bf26dc00d9af..0b0eedbcdbb052489859fec480789a771f84f6b9 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+@@ -1,6 +1,7 @@
+ //! Explicit product adapter for the audio-frame-owned breathing setup.
+ use crate::experiment_breathing_setup::{
+     BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
++    PERSONAL_TILT_PHASE_SCALE,
+ };
+ #[cfg(not(feature = "showcase"))]
+ use crate::session_recording_contract::CompletionAudioClock;
+@@ -15,6 +16,7 @@ use serde_json::{json, Value};
+ use sha2::{Digest, Sha256};
+ use std::{
+     collections::VecDeque,
++    num::NonZeroU32,
+     sync::{Mutex, OnceLock},
+     time::Instant,
+ };
+@@ -139,6 +141,7 @@ struct Runtime {
+     park_after: Option<(u64, u64)>,
+     last_admitted_frame: Option<u64>,
+     source_binding: Option<(u64, u64)>,
++    projection_source_token: Option<u64>,
+     source_reference: u64,
+     projection_generation: Option<u64>,
+     projection_ready: bool,
+@@ -150,7 +153,7 @@ struct Runtime {
+     controller_resume_deadline_ns: Option<u64>,
+     controller_lost_frames: Option<u64>,
+     source_clock_pair: Option<(u64, u64, Instant)>,
+-    classifier: CommonPhaseClassifier,
++    personal_tilt_classifier: CommonPhaseClassifier,
+     pretrained_classifier: Option<crate::polar_tilt_breath_state::PolarTiltBreathState>,
+     classified_model: Option<u64>,
+     classified_at: Option<u64>,
+@@ -487,11 +490,11 @@ impl Runtime {
+         let now = self.now_ns().max(host);
+         if let Some(sample) = self.core.usable_polar_signal_sample(now) {
+             usable = sample.source_timestamp_ns == host;
+-            if sample.model_generation != self.classified_model {
++            if Some(sample.model_generation) != self.classified_model {
+                 let _ = self
+-                    .classifier
++                    .personal_tilt_classifier
+                     .reset(BreathTimestampMicros::new(source_ns / 1000));
+-                self.classified_model = sample.model_generation;
++                self.classified_model = Some(sample.model_generation);
+                 self.classified_at = None;
+                 self.phase = CommonBreathPhase::Unknown;
+                 self.last_confirmed_phase = None;
+@@ -514,8 +517,8 @@ impl Runtime {
+                             }
+                         },
+                     )
+-                } else {
+-                    self.classifier
++                } else if let Some(phase_value01) = sample.phase_value01 {
++                    self.personal_tilt_classifier
+                         .observe(
+                             BreathTimestampMicros::new(
+                                 source_ns.saturating_add(now.saturating_sub(host)) / 1000,
+@@ -523,10 +526,12 @@ impl Runtime {
+                             CommonPhaseInput::Sample {
+                                 sequence_id: self.sequence,
+                                 sampled_at: BreathTimestampMicros::new(source_ns / 1000),
+-                                value01: sample.volume,
++                                value01: phase_value01,
+                             },
+                         )
+                         .phase
++                } else {
++                    CommonBreathPhase::Unknown
+                 };
+                 self.classified_at = Some(source_ns);
+                 if matches!(
+@@ -549,7 +554,7 @@ impl Runtime {
+         let epoch = self.core.phase_history_epoch();
+         if self.classified_signal_epoch != epoch {
+             let _ = self
+-                .classifier
++                .personal_tilt_classifier
+                 .reset(BreathTimestampMicros::new(source_ns / 1000));
+             if let Some(classifier) = &mut self.pretrained_classifier {
+                 classifier.lose_signal();
+@@ -567,7 +572,7 @@ impl Runtime {
+         self.evidence_retirement_epoch = epoch;
+         self.retire_driver_phase();
+         let _ = self
+-            .classifier
++            .personal_tilt_classifier
+             .reset(BreathTimestampMicros::new(now / 1000));
+         self.classified_model = None;
+         self.classified_at = None;
+@@ -701,6 +706,7 @@ impl Runtime {
+             park_after: None,
+             last_admitted_frame: None,
+             source_binding: None,
++            projection_source_token: None,
+             source_reference: 0,
+             projection_generation: None,
+             projection_ready: false,
+@@ -712,9 +718,16 @@ impl Runtime {
+             controller_resume_deadline_ns: None,
+             controller_lost_frames: None,
+             source_clock_pair: None,
+-            classifier: CommonPhaseClassifier::new(
+-                CommonPhaseConfiguration::new(CommonPhaseParameters::default())
+-                    .expect("valid phase defaults"),
++            personal_tilt_classifier: CommonPhaseClassifier::new(
++                CommonPhaseConfiguration::new(CommonPhaseParameters {
++                    // Thresholds are in calibrated spans per second. The
++                    // analytical input spans a wider interval than display.
++                    enter_derivative_per_second: 0.14 / PERSONAL_TILT_PHASE_SCALE,
++                    exit_derivative_per_second: 0.055 / PERSONAL_TILT_PHASE_SCALE,
++                    ..CommonPhaseParameters::default()
++                })
++                .expect("valid guided personal tilt thresholds")
++                .with_derivative_time_constant_micros(NonZeroU32::new(300_000).unwrap()),
+             ),
+             pretrained_classifier: None,
+             classified_model: None,
+@@ -860,9 +873,14 @@ impl Runtime {
+     }
+     fn bind_source(&mut self, binding: (u64, u64)) {
+         if self.source_binding != Some(binding) {
++            #[cfg(target_os = "android")]
++            if self.source_binding.is_some() {
++                crate::marker("polar-setup-source-transition", "reason=composition-replaced");
++            }
+             self.raw_play_started_ns = None;
+             self.retire_driver_phase();
+             self.projection_generation = None;
++            self.projection_source_token = None;
+             if self.source_binding.is_some_and(|old| old.0 != binding.0) {
+                 self.controller_generation = None;
+                 self.controller_seen_ns = None;
+@@ -883,14 +901,30 @@ impl Runtime {
+                 .is_some_and(|previous| previous != projection.generation)
+             {
+                 self.raw_play_started_ns = None;
+-                self.retire_driver_phase();
+-                self.source_reference = self.source_reference.checked_add(1).unwrap_or(0);
+-                self.core.observe_source_owner(self.source_reference);
+-                self.classified_model = None;
+-                self.classified_at = None;
+-                self.phase = CommonBreathPhase::Unknown;
++                let known_same_source = self.projection_source_token.is_some()
++                    && self.projection_source_token == projection.source_token;
++                let retain_model = known_same_source && self.core.reanchor_unchanged_polar_source();
++                if !retain_model {
++                    self.retire_driver_phase();
++                    self.source_reference = self.source_reference.checked_add(1).unwrap_or(0);
++                    self.core.observe_source_owner(self.source_reference);
++                    self.classified_model = None;
++                    self.classified_at = None;
++                    self.phase = CommonBreathPhase::Unknown;
++                }
++                #[cfg(target_os = "android")]
++                crate::marker("polar-setup-source-transition", if retain_model {
++                    "reason=same-source-clock-reanchor"
++                } else if known_same_source {
++                    "reason=clock-retired-outside-running-main"
++                } else if self.projection_source_token.is_none() || projection.source_token.is_none() {
++                    "reason=clock-retired-without-source-proof"
++                } else {
++                    "reason=physical-source-replaced"
++                });
+             }
+             self.projection_generation = Some(projection.generation);
++            self.projection_source_token = projection.source_token;
+         }
+         self.projection_ready = projection.ready
+             && (projection.expected
+@@ -2465,6 +2499,11 @@ pub(crate) mod test_support {
+             selection,
+         }
+     }
++    pub(crate) fn calibrated_polar_preparation() -> (Guard, u64, u64) {
++        let setup = preparation();
++        let (raw_base, now) = tests::calibrate_selected_polar_ingress();
++        (setup, raw_base + 48_000_000_000, now)
++    }
+     pub(super) fn install_runtime_for_usable_test(r: Runtime) -> Guard {
+         let selection = TEST_SELECTED.lock().unwrap().replace("ab".repeat(32));
+         let previous = state().lock().unwrap().replace(r);
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+index 20469cf2f33e18b91648e0505a3b6bdd32e64ce9..688efeffd31899e387e9fecb11d2c2786b538924 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+@@ -71,6 +71,39 @@ fn runtime() -> Runtime {
+     )
+ }
+ 
++#[test]
++fn personal_tilt_filter_uses_source_elapsed_time_and_tuned_hold_exit() {
++    for step in [5_000, 40_000] {
++        let mut runtime = runtime();
++        for sample_us in (0_u64..=1_080_000).step_by(step) {
++            // A quarter-unit/s inhale for 400ms, then a flat normalized signal.
++            let value = 0.2 + 0.25 * sample_us.min(400_000) as f64 / 1_000_000.0;
++            let received_us = (sample_us / 50_000 + 1) * 50_000;
++            let observation = runtime.personal_tilt_classifier.observe(
++                BreathTimestampMicros::new(received_us),
++                CommonPhaseInput::Sample {
++                    sequence_id: sample_us / step as u64 + 1,
++                    sampled_at: BreathTimestampMicros::new(sample_us),
++                    value01: (value + 0.25) / PERSONAL_TILT_PHASE_SCALE,
++                },
++            );
++            if sample_us == 800_000 {
++                let expected = 0.25 * f64::exp(-400_000.0 / 300_000.0) / PERSONAL_TILT_PHASE_SCALE;
++                assert!(
++                    (observation.filtered_derivative_per_second.unwrap() - expected).abs() < 1e-10,
++                    "decay must depend on source elapsed time, not observation count or receipt cadence"
++                );
++                assert_eq!(observation.candidate, CommonBreathPhase::Inhale);
++            }
++            if sample_us == 880_000 {
++                assert_eq!(observation.candidate, CommonBreathPhase::Hold);
++                assert_eq!(observation.phase, CommonBreathPhase::Inhale);
++            }
++        }
++        assert_eq!(runtime.personal_tilt_classifier.phase(), CommonBreathPhase::Hold);
++    }
++}
++
+ #[test]
+ fn startup_maintenance_fences_setup_under_idle_and_recovery_effects() {
+     let _binding = crate::breath_composition_runtime::scoped_test_binding::install();
+@@ -1117,6 +1150,27 @@ fn calibrated_inhale_runtime_with_binding(binding: (u64, u64)) -> (Runtime, u64,
+     (r, frame, sample_time(frame))
+ }
+ 
++#[test]
++fn personal_tilt_classifies_direction_below_the_visible_floor() {
++    let (mut runtime, base_frame, base_ns) = calibrated_inhale_runtime();
++    for tick in 1..=65 {
++        let now = base_ns + tick * 40_000_000;
++        let tilt = if tick <= 40 {
++            -0.90
++        } else {
++            -0.90 + (tick - 40) as f64 * 0.030
++        };
++        runtime.observe_clock(7, base_frame + tick * 1764, now, true);
++        runtime.observe_host_aligned_acc(100_000_000_000 + now, now, vector(tilt));
++        if tick == 40 {
++            assert_eq!(runtime.input_phase(now), "hold");
++        }
++    }
++    let now = base_ns + 65 * 40_000_000;
++    assert_eq!(runtime.input_volume(now), Some(0.0));
++    assert_eq!(runtime.input_phase(now), "inhale");
++}
++
+ #[test]
+ fn calibrated_batched_tilt_retains_confirmed_phase_between_jittered_packets() {
+     use crate::breath_composition_driver::{tests::setup_frame, BreathCompositionDriver};
+@@ -1249,7 +1303,7 @@ fn latest_confirmed_sensor_phase_survives_a_masked_batch_tail_before_render() {
+             let volume = if replacement == CommonBreathPhase::Hold {
+                 0.2
+             } else {
+-                0.2 - tick as f64 / 200.0
++                0.2 - tick as f64 / 140.0
+             };
+             r.observe_clock(7, base_frame + tick * 1764, now, true);
+             r.observe_acc_with_source(100_000_000_000 + now, now, now, vector(volume));
+@@ -1401,7 +1455,7 @@ fn driver_barriers_fence_real_runtime_confirmations_until_new_valid_sensor_evide
+                 100_000_000_000 + now,
+                 now,
+                 now,
+-                vector(0.2 + tick as f64 / 200.0),
++                vector(0.2 + tick as f64 / 140.0),
+             );
+             if r.phase == CommonBreathPhase::Inhale {
+                 confirmed_ns = now;
+@@ -2104,15 +2158,7 @@ fn global_command(id: u64, op: &str, now: u64) -> Value {
+         now,
+     )
+ }
+-#[test]
+-fn actual_ingress_and_public_arm_keep_calibrated_tilt_then_existing_fixed_controller() {
+-    use rusty_quest_breath_contract::{
+-        assessment::{BreathAssessmentFields, BreathAssessmentObservation, BreathTrackingState},
+-        calibration::CalibrationLifecycle,
+-        composition::{BreathCompositionSource, ControllerProjectionSelection},
+-    };
+-    let _binding = crate::breath_composition_runtime::scoped_test_binding::install();
+-    let _setup = GlobalSetupGuard::install();
++pub(super) fn calibrate_selected_polar_ingress() -> (u64, u64) {
+     let raw_base = crate::polar_composition_adapters::latest_polar_acc_after(None)
+         .map_or(1_000_000_000, |s| s.host_time_ns + 1_000_000_000);
+     let base = raw_base + 900_000_000_000;
+@@ -2152,6 +2198,19 @@ fn actual_ingress_and_public_arm_keep_calibrated_tilt_then_existing_fixed_contro
+     let now = base + 48_000_000_000;
+     assert_eq!(status_json(now)["input"], "polar-tilt");
+     assert_eq!(status_json(now)["ready"], true);
++    (raw_base, now)
++}
++
++#[test]
++fn actual_ingress_and_public_arm_keep_calibrated_tilt_then_existing_fixed_controller() {
++    use rusty_quest_breath_contract::{
++        assessment::{BreathAssessmentFields, BreathAssessmentObservation, BreathTrackingState},
++        calibration::CalibrationLifecycle,
++        composition::{BreathCompositionSource, ControllerProjectionSelection},
++    };
++    let _binding = crate::breath_composition_runtime::scoped_test_binding::install();
++    let _setup = GlobalSetupGuard::install();
++    let (raw_base, now) = calibrate_selected_polar_ingress();
+     assert_eq!(
+         crate::polar_composition_adapters::latest_polar_acc_after(None)
+             .unwrap()
+@@ -2697,7 +2756,7 @@ fn polar_diagnosis_runtime_with_binding(
+             let v = if phase == CommonBreathPhase::Hold {
+                 0.2
+             } else {
+-                0.2 - tick as f64 / 200.0
++                0.2 - tick as f64 / 140.0
+             };
+             r.observe_clock(7, frame, now, true);
+             r.observe_host_aligned_acc(100_000_000_000 + now, now, vector(v));
+@@ -3161,6 +3220,109 @@ fn actual_sensor_clock_retirement_preserves_visual_method_and_retires_data_linea
+     }
+ }
+ 
++#[test]
++fn paused_personal_model_only_revalidates_the_same_proven_polar_transport() {
++    use crate::polar_composition_adapters::{
++        observe_setup_sensor_frame_for_transport, scoped_packet_ingress, submit_setup_sensor_packet,
++        SetupSensorTransport,
++    };
++    use crate::polar_sensor_clock::{ClockFault, SensorFrame};
++    let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++    let binding = crate::polar_input_health::source_binding();
++    let original = SetupSensorTransport { source_token: 41, connection_generation: 9 };
++    for (replacement, generation, same_source) in
++        [(41, 9, true), (41, 11, true), (42, 11, false), (0, 11, false)]
++    {
++        let _ingress = scoped_packet_ingress::install();
++        let frame = |sequence, sensor_last_ns, receipt_ns| SensorFrame {
++            sequence, sensor_last_ns, receipt_ns, rate_hz: 200, count: 40,
++        };
++        for sequence in 1..=4 {
++            let _ = observe_setup_sensor_frame_for_transport(binding, Some(original),
++                frame(sequence, 100_000_000_000 + sequence * 200_000_000, 1_000_000_000 + sequence * 200_000_000));
++        }
++        let (mut runtime, first_frame, first_at) = calibrated_inhale_runtime_with_binding(binding);
++        assert_eq!(command(&mut runtime, 50, "begin-main", first_at)["accepted"], true);
++        for tick in 1..=800 {
++            let at = first_at + tick * 20_000_000;
++            runtime.observe_clock(7, first_frame + tick * 882, at, true);
++            runtime.observe_host_aligned_acc(100_000_000_000 + at, at, vector(0.5));
++        }
++        let playback_frame = first_frame + 800 * 882;
++        let pause_at = first_at + 16_020_000_000;
++        runtime.observe_clock(7, playback_frame, pause_at, false);
++        assert_eq!(runtime.core.snapshot(pause_at).experiment, ExperimentState::Running);
++        let model = |r: &Runtime| r.core.model().map(|m| (m.source_owner, m.generation, m.axis, m.low, m.high));
++        let original_model = model(&runtime).unwrap();
++        let frozen = runtime.core.snapshot(pause_at).experiment_completed_frames;
++        let _setup = test_support::install_runtime_for_usable_test(runtime);
++        let next = SetupSensorTransport {
++            source_token: replacement,
++            connection_generation: generation,
++        };
++
++        // First reconnect packet rewinds the PMD timestamp. The old anchor
++        // must not survive, even for the positively identified same strap.
++        let reconnect_at = pause_at + 6_000_000_000;
++        let initial = observe_setup_sensor_frame_for_transport(binding, Some(next),
++            frame(5, 90_000_000_000, reconnect_at));
++        assert!(matches!(initial, Err(ClockFault::Warming | ClockFault::Retired)));
++        if same_source && generation != original.connection_generation {
++            assert_eq!(observe_setup_sensor_frame_for_transport(binding, Some(original),
++                frame(99, 110_000_000_000, reconnect_at + 1)), Err(ClockFault::Retired));
++        }
++        refresh_source_projection(binding);
++        assert!(!crate::polar_input_health::status(true, true).0.usable_fresh);
++        let initial_setup = {
++            let guard = state().lock().unwrap();
++            let current = guard.as_ref().unwrap();
++            let cached_phase = current.personal_tilt_classifier.is_primed()
++                || current.classified_model.is_some()
++                || current.classified_at.is_some()
++                || current.last_confirmed_phase.is_some()
++                || current.phase != CommonBreathPhase::Unknown;
++            (model(current), current.projection_ready, cached_phase)
++        };
++        assert_eq!(initial_setup.0, same_source.then_some(original_model), "only the proven original strap can retain its fit during re-anchoring");
++        assert!(!initial_setup.1);
++        assert!(!initial_setup.2, "the saved fit must not preserve previously qualified phase evidence");
++        for step in 1_u64..=4 {
++            let source_end = 90_000_000_000 + step * 200_000_000;
++            let at = reconnect_at + step * 200_000_000;
++            observe_source_clock_pair(at, at);
++            observe_clock(7, playback_frame, at, false);
++            let sequence = 5 + step;
++            let _ = observe_setup_sensor_frame_for_transport(binding, Some(next), frame(sequence, source_end, at));
++            refresh_source_projection(binding);
++            for index in 0..40 {
++                let delay = u64::from(39 - index) * 5_000_000;
++                assert!(submit_setup_sensor_packet(Instant::now(), at - delay, source_end - delay,
++                    sequence, index, 40, vector(0.5)));
++            }
++            let current = state().lock().unwrap().as_ref().unwrap().core.snapshot(at);
++            assert!(!current.playing);
++            if same_source {
++                assert_eq!(current.experiment_completed_frames, frozen);
++            }
++        }
++        assert_eq!(crate::polar_input_health::status(true, true).0.usable_fresh, same_source);
++        let at = reconnect_at + 800_000_000;
++        let retained_model = model(state().lock().unwrap().as_ref().unwrap());
++        assert_eq!(retained_model, same_source.then_some(original_model));
++        if same_source {
++            // A genuine composition/selection replacement still fails closed.
++            let (model, status) = {
++                let mut guard = state().lock().unwrap();
++                let current = guard.as_mut().unwrap();
++                current.bind_source((binding.0, binding.1 + 1));
++                (model(current), current.status(at))
++            };
++            assert!(model.is_none());
++            assert_eq!(status["failure"], "source_replaced");
++        }
++    }
++}
++
+ #[test]
+ fn spontaneous_audio_owner_fault_preserves_manual_diagnosis_and_retires_evidence() {
+     use crate::breath_composition_driver::{
+diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+index 743a3abab54657437e06fa9c34eceec592cc4c6f..cf677d6219bbd953cdbb89b1339c2469b6c4df59 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+@@ -10,7 +10,7 @@ use std::{
+     fs,
+     path::{Component, Path, PathBuf},
+     sync::{
+-        atomic::{AtomicU64, Ordering},
++        atomic::{AtomicU64, AtomicUsize, Ordering},
+         mpsc::{self, Receiver, SyncSender, TrySendError},
+         Arc, Mutex, OnceLock, RwLock, TryLockError,
+     },
+@@ -864,6 +864,30 @@ struct OperationHistoryEntry {
+ struct RetryOffer {
+     generation: u64,
+     record: SessionRecord,
++    // Keep the raw lane deferred until this offer is committed or accounted as lost.
++    _pending_raw: Option<PendingRawOffer>,
++}
++
++#[derive(Debug)]
++struct PendingRawOffer(Arc<AtomicUsize>);
++
++impl PendingRawOffer {
++    fn new(pending: &Arc<AtomicUsize>) -> Self {
++        pending.fetch_add(1, Ordering::AcqRel);
++        Self(Arc::clone(pending))
++    }
++}
++
++impl Drop for PendingRawOffer {
++    fn drop(&mut self) {
++        self.0.fetch_sub(1, Ordering::AcqRel);
++    }
++}
++
++#[derive(Clone, Copy)]
++struct RawPacketAdmission {
++    generation: u64,
++    receipt: SourceTimestamp,
+ }
+ 
+ #[derive(Clone, Copy, Debug, Default)]
+@@ -1918,6 +1942,15 @@ impl SessionWorker {
+         &mut self,
+         effects: Vec<SessionEffect>,
+         at: MonotonicNanos,
++    ) -> Result<(), String> {
++        self.process_effects_with_reset_policy(effects, at, false)
++    }
++
++    fn process_effects_with_reset_policy(
++        &mut self,
++        effects: Vec<SessionEffect>,
++        at: MonotonicNanos,
++        retain_selected_setup: bool,
+     ) -> Result<(), String> {
+         for effect in effects {
+             match effect {
+@@ -1926,18 +1959,23 @@ impl SessionWorker {
+                         .pending_start
+                         .take()
+                         .ok_or_else(|| "session-start-contract-missing".to_owned())?;
++                    let selected_setup_arm = spec.experiment_identity.breath_guidance.is_some()
++                        && crate::experiment_breathing_setup_runtime::selected();
+                     self.set_storage_state("preparing", "running", 0);
++                    let mut stage = "recording-recovery";
+                     let preparation =
+                         self.backend
+                             .recover(&self.recording_root)
+                             .and_then(|recovery| {
+                                 self.set_recovery(&recovery);
+                                 if spec.experiment_identity.breath_guidance.is_some() {
++                                    stage = "guided-input";
+                                     let boundary_at = at.get().saturating_add(received_at.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+                                     spec.breath_tracking_configuration = Some(self.backend.prepare_guided_breath(boundary_at, generation, &operation_id)?);
+                                 } else if crate::breath_composition_runtime::effective_request().is_some() {
+                                     // Preserve optional non-guided composition startup, but
+                                     // propagate a selected owner's failure before recording.
++                                    stage = "composition-startup";
+                                     crate::breath_composition_runtime::ensure_running_for_experiment_arm()
+                                         .map_err(|reason| format!("breath-preparation:{reason}"))?;
+                                 }
+@@ -1945,6 +1983,7 @@ impl SessionWorker {
+                                 // configuration boundary through writer preparation.
+                                 self.recording_requires_polar |= crate::polar_input_health::status(false, false).0.required;
+                                 self.refresh_controller_projection();
++                                stage = "recording-writer";
+                                 self.backend.prepare(generation, spec.clone())
+                             });
+                     match preparation {
+@@ -2036,6 +2075,13 @@ impl SessionWorker {
+                             self.process_effects(prepared.effects, MonotonicNanos::new(elapsed))?;
+                         }
+                         Err(error) => {
++                            #[cfg(target_os = "android")]
++                            crate::marker(
++                                "experiment-session-prepare-failed",
++                                format!("generation={generation} stage={stage}"),
++                            );
++                            #[cfg(not(target_os = "android"))]
++                            let _ = stage;
+                             self.set_storage_state("error", "error", 0);
+                             self.active_generation.store(0, Ordering::Release);
+                             *self
+@@ -2054,7 +2100,14 @@ impl SessionWorker {
+                                     error: RecordingFailure::Prepare,
+                                 },
+                             )?;
+-                            self.process_effects(failed.effects, at)?;
++                            // A failed preparation has no acknowledged recording. Keep
++                            // its selected setup owner and let the normal source, clock
++                            // and PCM fences decide whether it can serve a fresh Arm.
++                            self.process_effects_with_reset_policy(
++                                failed.effects,
++                                at,
++                                selected_setup_arm,
++                            )?;
+                             return Err(error);
+                         }
+                     }
+@@ -2259,8 +2312,10 @@ impl SessionWorker {
+                     self.recording_requires_polar = false;
+                     self.polar_pause_latched = false;
+                     self.polar_last_pause = None;
+-                    crate::breath_composition_runtime::reset_to_packaged_defaults();
+-                    let reset_revision = request_particle_packaged_defaults_reset();
++                    let reset_revision = (!retain_selected_setup).then(|| {
++                        crate::breath_composition_runtime::reset_to_packaged_defaults();
++                        request_particle_packaged_defaults_reset()
++                    });
+                     self.current_identity = None;
+                     self.authored_audio = None;
+                     self.current_session_key = None;
+@@ -2270,7 +2325,9 @@ impl SessionWorker {
+                         projection.arm_runtime_epoch = 0;
+                         projection.arm_condition = None;
+                         projection.arm_durable_checkpoint = false;
+-                        projection.defaults_reset_revision = reset_revision;
++                        if let Some(revision) = reset_revision {
++                            projection.defaults_reset_revision = revision;
++                        }
+                     });
+                 }
+                 SessionEffect::ShowExperimenter => {
+@@ -2841,6 +2898,8 @@ pub(crate) struct ExperimentSessionRuntime {
+     terminal_sender: SyncSender<WorkerMessage>,
+     observation_sender: SyncSender<StatusObservation>,
+     retry_sender: SyncSender<RetryOffer>,
++    raw_offer_order: Mutex<()>,
++    pending_raw_offers: Arc<AtomicUsize>,
+     projection: Arc<RwLock<Projection>>,
+     readback_cache: Arc<RwLock<ReadbackCache>>,
+     active_generation: Arc<AtomicU64>,
+@@ -3008,6 +3067,8 @@ impl ExperimentSessionRuntime {
+             terminal_sender,
+             observation_sender,
+             retry_sender,
++            raw_offer_order: Mutex::new(()),
++            pending_raw_offers: Arc::new(AtomicUsize::new(0)),
+             projection,
+             readback_cache,
+             active_generation,
+@@ -3737,14 +3798,86 @@ impl ExperimentSessionRuntime {
+         worker_result.and(join_result)
+     }
+ 
++    fn record_polar_ecg_sample(
++        &self,
++        frame_sequence: u64,
++        sample_index: u32,
++        host_time_ns: u64,
++        sensor_time_ns: u64,
++        frame_host_receipt_time_ns: u64,
++        microvolts: i32,
++    ) -> OfferOutcome {
++        self.record_raw_polar_sample(frame_host_receipt_time_ns, |observed_at| {
++            SessionRecord::PolarEcg(PolarEcgBatch {
++                frame_sequence,
++                samples: vec![PolarEcgSample {
++                    source_sequence: frame_sequence,
++                    sample_index,
++                    source_time: SourceTimestamp {
++                        clock: SourceClock::PolarSensor,
++                        value_ns: sensor_time_ns,
++                    },
++                    received_source: SourceTimestamp {
++                        clock: SourceClock::JavaNanoTime,
++                        value_ns: host_time_ns,
++                    },
++                    observed_at,
++                    microvolts,
++                }]
++                .into_boxed_slice(),
++            })
++        })
++    }
++
++    fn record_raw_polar_sample(
++        &self,
++        frame_host_receipt_time_ns: u64,
++        build_record: impl FnOnce(MonotonicNanos) -> SessionRecord,
++    ) -> OfferOutcome {
++        let generation = self.active_generation.load(Ordering::Acquire);
++        if generation == 0 {
++            return OfferOutcome::NotAccepting;
++        }
++        // Raw callbacks need a coherent clock snapshot. The guard only protects
++        // the clock anchor and is released before checking capture policy.
++        let anchor = self.monotonic_bridge.lock().ok().and_then(|bridge| *bridge);
++        let Some((at_command, received_at)) = anchor else {
++            return OfferOutcome::NotAccepting;
++        };
++        self.offer_record(
++            build_record(project_elapsed_realtime(at_command, received_at)),
++            Some(RawPacketAdmission {
++                generation,
++                receipt: SourceTimestamp {
++                    clock: SourceClock::JavaNanoTime,
++                    value_ns: frame_host_receipt_time_ns,
++                },
++            }),
++        )
++    }
++
+     pub(crate) fn try_offer(&self, record: SessionRecord) -> OfferOutcome {
+-        self.try_offer_with_packet_receipt(record, None)
++        self.offer_record(record, None)
+     }
+ 
+-    fn try_offer_with_packet_receipt(&self, record: SessionRecord, packet_receipt: Option<SourceTimestamp>) -> OfferOutcome {
+-        if !crate::experiment_breathing_setup_runtime::recording_sample_admitted_with_packet_receipt(&record, packet_receipt) {
++    fn offer_record(
++        &self,
++        record: SessionRecord,
++        raw_packet: Option<RawPacketAdmission>,
++    ) -> OfferOutcome {
++        if !crate::experiment_breathing_setup_runtime::recording_sample_admitted_with_packet_receipt(
++            &record,
++            raw_packet.map(|packet| packet.receipt),
++        ) {
+             return OfferOutcome::NotAccepting;
+         }
++        // Serialize the decision between direct writes and the retry lane for
++        // raw packets. The control worker never takes this lock.
++        let _raw_order = raw_packet.map(|_| {
++            self.raw_offer_order
++                .lock()
++                .unwrap_or_else(|poisoned| poisoned.into_inner())
++        });
+         let gate = match self.producer_gate.try_read() {
+             Ok(gate) => gate,
+             // A write-held gate defines the producer cutoff. This offer is
+@@ -3757,13 +3890,20 @@ impl ExperimentSessionRuntime {
+         if generation == 0 || !gate.accepting {
+             return OfferOutcome::NotAccepting;
+         }
++        let ordered_raw = raw_packet.is_some();
++        if raw_packet.is_some_and(|packet| packet.generation != generation) {
++            return OfferOutcome::StaleGeneration;
++        }
++        if ordered_raw && self.pending_raw_offers.load(Ordering::Acquire) != 0 {
++            return self.enqueue_retry(generation, record, OfferOutcome::AdmissionBusy, true);
++        }
+         let writer = match self.writer_slot.try_lock() {
+             Ok(slot) => slot.as_ref().map(Arc::clone),
+             Err(TryLockError::WouldBlock) => None,
+             Err(TryLockError::Poisoned(_)) => return OfferOutcome::WriterClosed,
+         };
+         let Some(writer) = writer else {
+-            return self.enqueue_retry(generation, record, OfferOutcome::AdmissionBusy);
++            return self.enqueue_retry(generation, record, OfferOutcome::AdmissionBusy, ordered_raw);
+         };
+         let receipt = writer.try_offer(generation, record);
+         let outcome = receipt.outcome;
+@@ -3772,7 +3912,7 @@ impl ExperimentSessionRuntime {
+             OfferOutcome::AdmissionBusy | OfferOutcome::WriterClosed
+         ) {
+             if let Some(record) = receipt.into_retry_record() {
+-                return self.enqueue_retry(generation, record, outcome);
++                return self.enqueue_retry(generation, record, outcome, ordered_raw);
+             }
+         }
+         outcome
+@@ -3783,11 +3923,14 @@ impl ExperimentSessionRuntime {
+         generation: u64,
+         record: SessionRecord,
+         busy_outcome: OfferOutcome,
++        ordered_raw: bool,
+     ) -> OfferOutcome {
+-        match self
+-            .retry_sender
+-            .try_send(RetryOffer { generation, record })
+-        {
++        let retry = RetryOffer {
++            generation,
++            record,
++            _pending_raw: ordered_raw.then(|| PendingRawOffer::new(&self.pending_raw_offers)),
++        };
++        match self.retry_sender.try_send(retry) {
+             Ok(()) => busy_outcome,
+             Err(TrySendError::Full(retry)) | Err(TrySendError::Disconnected(retry)) => {
+                 if let Some(recorder) = self.external_loss_slot.get() {
+@@ -4071,12 +4214,13 @@ fn run_worker(
+ fn current_from_bridge(
+     bridge: &Mutex<Option<(MonotonicNanos, Instant)>>,
+ ) -> Option<MonotonicNanos> {
+-    let bridge = bridge.try_lock().ok()?;
+-    let (at_command, received_at) = bridge.as_ref()?;
++    let (at_command, received_at) = (*bridge.try_lock().ok()?)?;
++    Some(project_elapsed_realtime(at_command, received_at))
++}
++
++fn project_elapsed_realtime(at_command: MonotonicNanos, received_at: Instant) -> MonotonicNanos {
+     let elapsed = received_at.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+-    Some(MonotonicNanos::new(
+-        at_command.get().saturating_add(elapsed),
+-    ))
++    MonotonicNanos::new(at_command.get().saturating_add(elapsed))
+ }
+ 
+ #[derive(Default)]
+@@ -4492,12 +4636,6 @@ pub(crate) fn try_offer_record(record: SessionRecord) -> OfferOutcome {
+     })
+ }
+ 
+-fn try_offer_record_with_packet_receipt(record: SessionRecord, packet_receipt: SourceTimestamp) -> OfferOutcome {
+-    runtime().map_or(OfferOutcome::NotAccepting, |runtime| {
+-        runtime.try_offer_with_packet_receipt(record, Some(packet_receipt))
+-    })
+-}
+-
+ pub(crate) fn request_restart_from_native(
+     operation_id: &str,
+     expected_generation: u64,
+@@ -4845,27 +4983,29 @@ pub(crate) fn record_polar_acc_sample(
+     frame_host_receipt_time_ns: u64,
+     xyz_mg: [f32; 3],
+ ) -> OfferOutcome {
+-    let Some(observed_at_ns) = current_elapsed_realtime_ns() else {
++    let Ok(runtime) = runtime() else {
+         return OfferOutcome::NotAccepting;
+     };
+-    try_offer_record_with_packet_receipt(SessionRecord::PolarAcc(PolarAccBatch {
+-        frame_sequence,
+-        samples: vec![PolarAccSample {
+-            source_sequence: frame_sequence,
+-            sample_index,
+-            source_time: SourceTimestamp {
+-                clock: SourceClock::PolarSensor,
+-                value_ns: sensor_time_ns,
+-            },
+-            received_source: SourceTimestamp {
+-                clock: SourceClock::JavaNanoTime,
+-                value_ns: host_time_ns,
+-            },
+-            observed_at: MonotonicNanos::new(observed_at_ns),
+-            xyz_mg,
+-        }]
+-        .into_boxed_slice(),
+-    }), SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: frame_host_receipt_time_ns })
++    runtime.record_raw_polar_sample(frame_host_receipt_time_ns, |observed_at| {
++        SessionRecord::PolarAcc(PolarAccBatch {
++            frame_sequence,
++            samples: vec![PolarAccSample {
++                source_sequence: frame_sequence,
++                sample_index,
++                source_time: SourceTimestamp {
++                    clock: SourceClock::PolarSensor,
++                    value_ns: sensor_time_ns,
++                },
++                received_source: SourceTimestamp {
++                    clock: SourceClock::JavaNanoTime,
++                    value_ns: host_time_ns,
++                },
++                observed_at,
++                xyz_mg,
++            }]
++            .into_boxed_slice(),
++        })
++    })
+ }
+ 
+ pub(crate) fn record_polar_ecg_sample(
+@@ -4876,27 +5016,8 @@ pub(crate) fn record_polar_ecg_sample(
+     frame_host_receipt_time_ns: u64,
+     microvolts: i32,
+ ) -> OfferOutcome {
+-    let Some(observed_at_ns) = current_elapsed_realtime_ns() else {
+-        return OfferOutcome::NotAccepting;
+-    };
+-    try_offer_record_with_packet_receipt(SessionRecord::PolarEcg(PolarEcgBatch {
+-        frame_sequence,
+-        samples: vec![PolarEcgSample {
+-            source_sequence: frame_sequence,
+-            sample_index,
+-            source_time: SourceTimestamp {
+-                clock: SourceClock::PolarSensor,
+-                value_ns: sensor_time_ns,
+-            },
+-            received_source: SourceTimestamp {
+-                clock: SourceClock::JavaNanoTime,
+-                value_ns: host_time_ns,
+-            },
+-            observed_at: MonotonicNanos::new(observed_at_ns),
+-            microvolts,
+-        }]
+-        .into_boxed_slice(),
+-    }), SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: frame_host_receipt_time_ns })
++    let Ok(runtime) = runtime() else { return OfferOutcome::NotAccepting; };
++    runtime.record_polar_ecg_sample(frame_sequence, sample_index, host_time_ns, sensor_time_ns, frame_host_receipt_time_ns, microvolts)
+ }
+ 
+ pub(crate) fn record_polar_heart_rate(
+@@ -7798,6 +7919,143 @@ mod tests {
+         fs::remove_dir_all(root).unwrap();
+     }
+ 
++    #[test]
++    fn contended_ecg_packet_keeps_all_73_samples_in_writer_and_csv_order() {
++        check_contended_ecg_packet(false);
++    }
++
++    #[test]
++    fn contended_capture_clock_does_not_silently_lose_an_interior_ecg_sample() {
++        check_contended_ecg_packet(true);
++    }
++
++    fn check_contended_ecg_packet(clock_contention: bool) {
++        let root = temp_root(if clock_contention { "ecg-clock-contention" } else { "ecg-retry-order" });
++        let runtime = runtime(&root);
++        runtime.apply_command_json(&start_command(&root, "ecg-arm"));
++        wait_for(&runtime, "\"phase\":\"active\"");
++        let (entered_tx, entered_rx) = mpsc::sync_channel(1);
++        let (resume_tx, resume_rx) = mpsc::sync_channel(1);
++        runtime.command_sender.send(WorkerMessage::PauseForTest { entered: entered_tx, resume: resume_rx }).unwrap();
++        entered_rx.recv_timeout(Duration::from_secs(2)).unwrap();
++        runtime.try_offer(SessionRecord::Event(SessionEvent { observed_at: MonotonicNanos::new(1001), kind: SessionEventKind::OfficialStart }));
++        for index in 0..73 {
++            let submit = || runtime.record_polar_ecg_sample(3539, index, 1_000_000 + u64::from(index), 2_000_000 + u64::from(index), 1_000_100, 0);
++            if !clock_contention && index == 59 {
++                let held = runtime.writer_slot.lock().unwrap();
++                submit();
++                drop(held);
++            } else if clock_contention && index == 31 {
++                thread::scope(|scope| {
++                    let held = runtime.monotonic_bridge.lock().unwrap();
++                    let (attempted, attempt) = mpsc::sync_channel(1);
++                    let (finished, finish) = mpsc::sync_channel(1);
++                    let task = scope.spawn(move || {
++                        attempted.send(()).unwrap();
++                        let result = submit();
++                        finished.send(()).unwrap();
++                        result
++                    });
++                    attempt.recv_timeout(Duration::from_secs(2)).unwrap();
++                    // Keep the real clock read contended until the old try-read
++                    // either returns or a repaired capture waits for the snapshot.
++                    let _ = finish.recv_timeout(Duration::from_millis(20));
++                    drop(held);
++                    task.join().unwrap();
++                });
++            } else { submit(); }
++        }
++        resume_tx.send(()).unwrap();
++        runtime.apply_command_json(&command("save-and-exit", "ecg-save", 1, 1_000_000_000));
++        wait_for(&runtime, "\"shutdown_status\":\"complete\"");
++        runtime.shutdown_for_test().unwrap();
++        let directory = root.join("utc-ns-01725000000000000000");
++        let rows: Vec<Value> = fs::read_to_string(directory.join("polar-ecg.jsonl")).unwrap().lines()
++            .map(|line| serde_json::from_str(line).unwrap()).collect();
++        let indices: Vec<u64> = rows.iter().map(|row| row["sample_index"].as_u64().unwrap()).collect();
++        let final_record: Value = serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
++        let plan = crate::session_recording_participant::ParticipantPlan::parse(&json!({
++            "participant_id":"Tes_30_N", "scenario_id":"haupt-15", "scenario_sha256":"a".repeat(64),
++            "sample_rate":44100, "total_frames":39_690_000,
++            "phases":[[0,"inhale"]],
++        })).unwrap();
++        let run = crate::session_recording_participant::ParticipantRun::reserve(&root, plan).unwrap();
++        let descriptor = run.finalize_csv(&directory,
++            ClockAnchor::new(MonotonicNanos::new(1000), UtcEpochNanos::new(1_725_000_000_000_000_000)),
++            MonotonicNanos::new(1_000_000_000), false, "save-and-exit").unwrap().unwrap();
++        let csv = fs::read_to_string(directory.join(descriptor["name"].as_str().unwrap())).unwrap();
++        let ecg: Vec<Vec<&str>> = csv.lines().skip(1).map(|row| row.split(',').collect::<Vec<_>>()).filter(|row| row[5] == "ecg").collect();
++        let csv_indices: Vec<u64> = ecg.iter().map(|row| row[13].parse().unwrap()).collect();
++        let elapsed: Vec<u64> = ecg.iter().map(|row| row[7].parse().unwrap()).collect();
++        fs::remove_dir_all(root.parent().unwrap()).unwrap();
++        assert_eq!(indices, (0..73).collect::<Vec<_>>(), "raw writer must keep every interior index in source order");
++        assert_eq!(csv_indices, indices, "CSV must preserve exact native sample membership and order");
++        assert!(elapsed.windows(2).all(|window| window[0] <= window[1]));
++        assert_eq!(final_record["dropped_records"], 0);
++    }
++
++    #[test]
++    fn contended_raw_retry_overflow_marks_recording_unsaved() {
++        let root = temp_root("raw-retry-overflow");
++        let runtime = runtime(&root);
++        runtime.apply_command_json(&start_command(&root, "overflow-arm"));
++        wait_for(&runtime, "\"phase\":\"active\"");
++        let (entered_tx, entered_rx) = mpsc::sync_channel(1);
++        let (resume_tx, resume_rx) = mpsc::sync_channel(1);
++        runtime
++            .command_sender
++            .send(WorkerMessage::PauseForTest {
++                entered: entered_tx,
++                resume: resume_rx,
++            })
++            .unwrap();
++        entered_rx.recv_timeout(Duration::from_secs(2)).unwrap();
++
++        let submit = |ordinal: usize| {
++            runtime.record_polar_ecg_sample(
++                1 + (ordinal / 73) as u64,
++                (ordinal % 73) as u32,
++                1_000_000 + ordinal as u64,
++                2_000_000 + ordinal as u64,
++                1_001_000,
++                0,
++            )
++        };
++        // Force one deferred record, then submit with an available writer.
++        // The prior retry still owns the raw lane.
++        let first = {
++            let _held = runtime.writer_slot.lock().unwrap();
++            submit(0)
++        };
++        let deferred: Vec<_> = (1..RETRY_QUEUE_CAPACITY).map(submit).collect();
++        let overflow = submit(RETRY_QUEUE_CAPACITY);
++        let cutoff = runtime.apply_command_json(&command(
++            "save-and-exit",
++            "overflow-save",
++            1,
++            1_000_000_000,
++        ));
++        let after_cutoff = submit(RETRY_QUEUE_CAPACITY + 1);
++        resume_tx.send(()).unwrap();
++        let status = wait_for(&runtime, "\"shutdown_status\":\"complete\"");
++        runtime.shutdown_for_test().unwrap();
++
++        let directory = root.join("utc-ns-01725000000000000000");
++        let final_record: Value =
++            serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
++        let rows = fs::read_to_string(directory.join("polar-ecg.jsonl")).unwrap();
++        fs::remove_dir_all(root.parent().unwrap()).unwrap();
++        assert_eq!(first, OfferOutcome::AdmissionBusy);
++        assert!(deferred.iter().all(|outcome| *outcome == OfferOutcome::AdmissionBusy));
++        assert_eq!(overflow, OfferOutcome::QueueFull);
++        assert!(cutoff.contains("\"command_status\":\"queued\""));
++        assert_eq!(after_cutoff, OfferOutcome::NotAccepting);
++        assert_eq!(rows.lines().count(), RETRY_QUEUE_CAPACITY);
++        assert_eq!(final_record["dropped_records"], 1);
++        assert_eq!(final_record["saved"], false);
++        assert!(status.contains("\"status\":\"unsaved\""));
++    }
++
+     #[test]
+     fn producer_retry_loss_is_generation_scoped_and_stale_safe() {
+         let state = AtomicU64::new(0);
+@@ -8729,6 +8987,118 @@ mod tests {
+     }
+     include!("experiment_session_polar_tests.rs");
+ 
++    #[test]
++    fn guided_arm_prepare_failure_keeps_calibrated_input_and_existing_owner() {
++        use crate::experiment_breathing_setup_runtime as setup;
++        let _binding = crate::breath_composition_runtime::scoped_test_binding::install();
++        let root = temp_root("guided-arm-failed-before-writer");
++        fs::create_dir_all(&root).unwrap();
++        // The real writer must not open a new run over the reserved UTC identity.
++        let occupied = root.join("utc-ns-01725000000000000000");
++        fs::write(&occupied, "occupied").unwrap();
++        let mut inventory = guided_inventory();
++        for condition in &mut inventory.conditions {
++            condition.completion_threshold_ms = 900_000;
++        }
++        let guidance = inventory.conditions[0].breath_guidance.as_mut().unwrap();
++        guidance.default_bias_percent = 0;
++        let guidance = guidance.timeline.identity.encoded_value();
++        let runtime = ExperimentSessionRuntime::spawn_with_preparation_mode(
++            root.clone(),
++            Some(inventory),
++            1,
++            PreparationMode::RemoteVr,
++            |slot, loss| Box::new(ActualRecordingBackend::new(slot, loss)),
++        )
++        .unwrap();
++        wait_for(&runtime, "\"initialization_status\":\"ready\"");
++        let (_setup, raw, now) = setup::test_support::calibrated_polar_preparation();
++        let source = crate::polar_input_health::source_binding();
++        let initial = setup::guided_tracking_configuration(1, "failed-guided-arm")
++            .unwrap()
++            .unwrap();
++        let mut arm: Value = serde_json::from_str(&start_command(&root, "failed-guided-arm")).unwrap();
++        arm["operation"] = json!("arm");
++        arm["completion_threshold_ms"] = json!(900000);
++        arm["elapsed_realtime_ns"] = json!(now);
++        arm["breath_guidance"] = guidance;
++        runtime.apply_command_json(&arm.to_string());
++        wait_for(&runtime, "\"last_operation_id\":\"failed-guided-arm\"");
++        let response: Value = serde_json::from_str(&runtime.apply_command_json(
++            &json!({"schema":EXPERIMENT_SESSION_COMMAND_SCHEMA,"operation":"status"}).to_string(),
++        ))
++        .unwrap();
++        let failed = &response["readback"];
++        assert_eq!(failed["phase"], "idle", "{failed}");
++        assert_eq!(failed["route_action"], "none", "{failed}");
++        assert_eq!(failed["storage_status"], "error", "{failed}");
++        assert_eq!(failed["last_operation_status"], "failed", "{failed}");
++        assert!(
++            failed["last_reason"]
++                .as_str()
++                .unwrap()
++                .starts_with("recording-session-directory-create:"),
++            "{failed}"
++        );
++        assert_eq!(failed["arm_durable_checkpoint"], false, "{failed}");
++        assert_eq!(runtime.active_generation.load(Ordering::Acquire), 0);
++        let status = setup::status_json(now);
++        assert_eq!(
++            status["calibration"], "ready",
++            "prepare failure retired the personal model: {status}"
++        );
++        assert_eq!(source, crate::polar_input_health::source_binding());
++        assert_eq!(fs::read(&occupied).unwrap(), b"occupied");
++
++        let fresh = now + 40_000_000;
++        let fresh_raw = raw + 40_000_000;
++        let held = crate::polar_composition_adapters::latest_polar_acc_after(None)
++            .unwrap()
++            .xyz_mg;
++        setup::observe_source_clock_pair(fresh_raw, fresh);
++        setup::observe_clock(7, 2_118_564, fresh, true);
++        assert!(
++            crate::polar_composition_adapters::submit_host_aligned_polar_acc_measurement(
++                fresh_raw,
++                100_000_000_000 + fresh_raw,
++                held,
++            )
++        );
++        let fresh_status = setup::status_json(fresh);
++        assert_eq!(fresh_status["ready"], true, "{fresh_status}");
++        let retried = setup::guided_tracking_configuration(2, "retry-guided-arm")
++            .unwrap()
++            .unwrap();
++        assert_eq!(retried["model"], initial["model"]);
++        assert_eq!(retried["audio_generation"], initial["audio_generation"]);
++        arm["operation_id"] = json!("retry-guided-arm");
++        arm["expected_generation"] = json!(1);
++        arm["elapsed_realtime_ns"] = json!(fresh);
++        arm["started_at_utc_ns"] = json!(1_725_000_000_000_000_001_u64);
++        runtime.apply_command_json(&arm.to_string());
++        let response: Value = serde_json::from_str(&wait_for(
++            &runtime,
++            "\"last_operation_id\":\"retry-guided-arm\"",
++        ))
++        .unwrap();
++        let applied = &response["readback"];
++        assert_eq!(applied["arm_durable_checkpoint"], true, "{applied}");
++        assert_eq!(applied["arm_generation"], 2, "{applied}");
++        assert_eq!(applied["arm_operation_id"], "retry-guided-arm", "{applied}");
++
++        crate::breath_composition_runtime::reset_to_packaged_defaults();
++        let retired = setup::status_json(fresh);
++        assert_eq!(
++            retired["failure"], "source_replaced",
++            "genuine source replacement still retires the model: {retired}"
++        );
++        assert!(setup::guided_tracking_configuration(3, "foreign-source-arm")
++            .unwrap()
++            .is_err());
++        runtime.shutdown_for_test().unwrap();
++        fs::remove_dir_all(root.parent().unwrap()).unwrap();
++    }
++
+     #[test]
+     fn explicit_preparation_update_uses_real_idle_writer_and_actual_new_audio_park() {
+         let _binding = crate::breath_composition_runtime::scoped_test_binding::install();
+diff --git a/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs b/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
+index eca6d93c953c92172aa765b5d1de951efe523537..d0524d0707521cdc5568787304bc70263c4dd07c 100644
+--- a/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
++++ b/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
+@@ -32,6 +32,7 @@ use crate::polar_composition_adapters::PolarAccMeasurement;
+ 
+ const NANOSECONDS_PER_MICROSECOND: u64 = 1_000;
+ const STANDARD_GRAVITY_METERS_PER_SECOND_SQUARED: f64 = 9.806_65;
++const VOLUME_SMOOTHING_TAU_MICROS: f64 = 150_000.0;
+ 
+ /// Coordinate subset used for Polar calibration and live projection.
+ #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+@@ -305,6 +306,8 @@ pub(crate) struct PolarAccBreathAdapter {
+     last_phase_observation: Option<CommonPhaseObservation>,
+     last_unbiased_phase_observation: Option<CommonPhaseObservation>,
+     last_tracking: Option<BreathTrackingState>,
++    smooth_volume: bool,
++    smoothed_volume: Option<(BreathTimestampMicros, f64)>,
+     telemetry: PolarAccAdapterTelemetry,
+ }
+ 
+@@ -326,10 +329,24 @@ impl PolarAccBreathAdapter {
+             last_phase_observation: None,
+             last_unbiased_phase_observation: None,
+             last_tracking: None,
++            smooth_volume: false,
++            smoothed_volume: None,
+             telemetry: PolarAccAdapterTelemetry::default(),
+         }
+     }
+ 
++    #[cfg(test)]
++    pub(crate) fn volume_smoothing_enabled(&self) -> bool {
++        self.smooth_volume
++    }
++
++    pub(crate) fn set_volume_smoothing(&mut self, enabled: bool) {
++        if self.smooth_volume != enabled {
++            self.smooth_volume = enabled;
++            self.smoothed_volume = None;
++        }
++    }
++
+     #[cfg(feature = "showcase")]
+     pub(crate) fn enable_dynamic_state(&mut self, inverted: bool) {
+         self.dynamic_state = Some((
+@@ -457,6 +474,7 @@ impl PolarAccBreathAdapter {
+         self.last_sampled_at = None;
+         self.last_acceleration_g = None;
+         self.last_tracking = None;
++        self.smoothed_volume = None;
+         self.last_phase_observation = Some(self.phase.reset(at));
+         self.last_unbiased_phase_observation = Some(self.unbiased_phase.reset(at));
+         self.telemetry = PolarAccAdapterTelemetry::default();
+@@ -804,8 +822,9 @@ impl PolarAccBreathAdapter {
+         }
+         self.last_tracking = Some(tracking);
+         let volume01 = if tracking == BreathTrackingState::Valid {
+-            calibration.live.map(|live| live.volume01)
++            calibration.live.map(|live| self.volume_output(live.sampled_at, live.volume01))
+         } else {
++            self.smoothed_volume = None;
+             None
+         };
+         let quality01 = calibration
+@@ -955,7 +974,24 @@ impl PolarAccBreathAdapter {
+         }
+     }
+ 
++    fn volume_output(&mut self, at: BreathTimestampMicros, current: f64) -> f64 {
++        if !self.smooth_volume {
++            return current;
++        }
++        let value = self.smoothed_volume.map_or(current, |(before, previous)| {
++            let elapsed = at.get().saturating_sub(before.get());
++            if elapsed == 0 || elapsed > self.settings.calibration.parameters().stale_after_micros {
++                return current;
++            }
++            let alpha = -(-(elapsed as f64) / VOLUME_SMOOTHING_TAU_MICROS).exp_m1();
++            previous + alpha * (current - previous)
++        });
++        self.smoothed_volume = Some((at, value));
++        value
++    }
++
+     fn reset_phase(&mut self, at: BreathTimestampMicros, reason: CommonPhaseResetReason) {
++        self.smoothed_volume = None;
+         #[cfg(feature = "showcase")]
+         if let Some((estimator, _)) = self.dynamic_state.as_mut() {
+             estimator.reset_history();
+@@ -1534,6 +1570,43 @@ mod tests {
+         );
+     }
+ 
++    #[test]
++    fn volume_output_smoothing_keeps_calibration_and_phase_inputs_intact() {
++        let mut original = adapter(PolarAccProjection::Xz);
++        let mut smoothed = adapter(PolarAccProjection::Xz);
++        smoothed.set_volume_smoothing(true);
++        for adapter in [&mut original, &mut smoothed] {
++            start(adapter, 1_000_000, 1);
++            calibrate_line(adapter, 1, 1_000_000, [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
++        }
++        for offset in 1..=3_u64 {
++            let at = 1_700_000 + offset * 20_000;
++            let input = frame(
++                8 + offset,
++                at,
++                800_000_000 + offset * 20_000_000,
++                [-0.20, 1.0, 0.0],
++                PolarAccelerationUnit::StandardGravity,
++            );
++            let raw = original.observe(timestamp(at), generation(1), input);
++            let display = smoothed.observe(timestamp(at), generation(1), input);
++            assert_eq!(raw.calibration.live, display.calibration.live);
++            assert_eq!(raw.phase, display.phase);
++            if offset == 3 {
++                assert!(display.assessment.unwrap().volume01 > raw.assessment.unwrap().volume01);
++            }
++        }
++
++        let missing = smoothed.observe(timestamp(1_900_000), generation(1), PolarAccInput::Missing { sequence_id: 12 });
++        assert_eq!(missing.assessment.unwrap().volume01, None);
++        let next = smoothed.observe(
++            timestamp(1_920_000),
++            generation(1),
++            frame(13, 1_920_000, 1_020_000_000, [-0.20, 1.0, 0.0], PolarAccelerationUnit::StandardGravity),
++        );
++        assert_eq!(next.assessment.unwrap().volume01, next.calibration.live.map(|live| live.volume01));
++    }
++
+     #[test]
+     fn ready_volume_is_bounded_and_responds_before_the_next_analysis_tick() {
+         let mut adapter = adapter(PolarAccProjection::Xz);
+diff --git a/apps/native-renderer-android/native/src/polar_composition_adapters.rs b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+index d91cfbe5fa5ab6fbfdef6967dd260de6b63b5362..e741ea5b664b88e3b2bce180573664f828ab5fed 100644
+--- a/apps/native-renderer-android/native/src/polar_composition_adapters.rs
++++ b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+@@ -230,6 +230,7 @@ pub(crate) struct PolarRrMeasurement {
+ struct PolarMeasurementIngress {
+     setup_sensor_clock_expected: bool,
+     setup_sensor_clock: crate::polar_sensor_clock::SensorClock,
++    setup_sensor_transport: Option<SetupSensorTransport>,
+     host_aligned_compatibility_binding: Option<(u64, u64)>,
+     host_aligned_compatibility_seen: Option<(std::time::Instant, u64)>,
+     presentation_clock_pair: Option<PolarPresentationClockPair>,
+@@ -254,6 +255,7 @@ pub(crate) struct SetupSensorClockSnapshot {
+     pub(crate) expected: bool,
+     pub(crate) ready: bool,
+     pub(crate) generation: u64,
++    pub(crate) source_token: Option<u64>,
+     pub(crate) anchor: Option<(u64, u64)>,
+     pub(crate) host_aligned_sample_ns: Option<u64>,
+ }
+@@ -283,6 +285,14 @@ pub(crate) fn setup_sensor_clock_snapshot(binding: (u64, u64)) -> SetupSensorClo
+         } else {
+             0
+         },
++        source_token: if expected && matching {
++            ingress.setup_sensor_transport.and_then(|transport| {
++                (transport.source_token > 0 && transport.connection_generation > 0)
++                    .then_some(transport.source_token)
++            })
++        } else {
++            None
++        },
+         anchor: if expected && matching {
+             ingress.setup_sensor_clock.anchor()
+         } else {
+@@ -291,17 +301,53 @@ pub(crate) fn setup_sensor_clock_snapshot(binding: (u64, u64)) -> SetupSensorClo
+     }
+ }
+ 
++#[cfg(test)]
+ pub(crate) fn observe_setup_sensor_frame(
+     binding: (u64, u64),
+     frame: crate::polar_sensor_clock::SensorFrame,
+ ) -> Result<(), crate::polar_sensor_clock::ClockFault> {
++    observe_setup_sensor_frame_for_transport(binding, None, frame)
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) struct SetupSensorTransport {
++    pub(crate) source_token: u64,
++    pub(crate) connection_generation: u64,
++}
++
++pub(crate) fn observe_setup_sensor_frame_for_transport(
++    binding: (u64, u64),
++    transport: Option<SetupSensorTransport>,
++    frame: crate::polar_sensor_clock::SensorFrame,
++) -> Result<(), crate::polar_sensor_clock::ClockFault> {
++    use crate::polar_sensor_clock::ClockFault;
+     if binding != crate::polar_input_health::source_binding() {
+-        return Err(crate::polar_sensor_clock::ClockFault::Retired);
++        return Err(ClockFault::Retired);
+     }
+-    let mut ingress = lock_ingress();
+-    ingress.setup_sensor_clock_expected = true;
+-    ingress.setup_sensor_clock.bind(binding);
+-    ingress.setup_sensor_clock.observe_frame(frame)
++    let (result, retired) = {
++        let mut ingress = lock_ingress();
++        let before = ingress.setup_sensor_clock.generation();
++        ingress.setup_sensor_clock_expected = true;
++        if ingress.setup_sensor_clock.binding() != Some(binding) {
++            ingress.setup_sensor_clock.bind(binding);
++        } else if ingress.setup_sensor_transport != transport {
++            if matches!((ingress.setup_sensor_transport, transport), (Some(old), Some(new))
++                if old.source_token == new.source_token && old.connection_generation > new.connection_generation)
++            {
++                return Err(ClockFault::Retired);
++            }
++            ingress.setup_sensor_clock.restart_transport();
++        }
++        ingress.setup_sensor_transport = transport;
++        let result = ingress.setup_sensor_clock.observe_frame(frame);
++        (result, before != ingress.setup_sensor_clock.generation())
++    };
++    if retired {
++        // A new anchor starts without previous usable evidence. It does not
++        // acknowledge the existing loss deadline or advance the session.
++        crate::polar_input_health::publish_setup_usable(binding, false);
++    }
++    result
+ }
+ 
+ /// Packet metadata selects the derived source clock. Raw recording callers must
+@@ -325,7 +371,12 @@ pub(crate) fn submit_setup_sensor_packet(
+         }
+         let mut ingress = lock_ingress();
+         ingress.setup_sensor_clock_expected = true;
+-        ingress.setup_sensor_clock.bind(binding);
++        // Only a frame from the admitted transport establishes a binding.
++        // A racing composition change cannot inherit the previous frame.
++        if ingress.setup_sensor_clock.binding() != Some(binding) {
++            clock_fault = Some(crate::polar_sensor_clock::ClockFault::Retired);
++            return false;
++        }
+         match ingress
+             .setup_sensor_clock
+             .project(sequence, index, count, sensor, host)
+@@ -1222,11 +1273,17 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+     sample_rate_hz: jni::sys::jint,
+     sample_count: jni::sys::jint,
+     previous_receipt_delta_ns: jni::sys::jlong,
++    setup_source_token: jni::sys::jlong,
++    setup_connection_generation: jni::sys::jlong,
+ ) {
+     if measurement_type == 2 && crate::experiment_breathing_setup_runtime::selected() {
+         let binding = crate::polar_input_health::source_binding();
+-        let _ = observe_setup_sensor_frame(
++        let _ = observe_setup_sensor_frame_for_transport(
+             binding,
++            Some(SetupSensorTransport {
++                source_token: setup_source_token.max(0) as u64,
++                connection_generation: setup_connection_generation.max(0) as u64,
++            }),
+             crate::polar_sensor_clock::SensorFrame {
+                 sequence: frame_sequence_id.max(0) as u64,
+                 sensor_last_ns: sensor_frame_time_ns.max(0) as u64,
+diff --git a/apps/native-renderer-android/native/src/polar_sensor_clock.rs b/apps/native-renderer-android/native/src/polar_sensor_clock.rs
+index bbb04e29db8eeb85220372e2fc0078baad05107f..791fd121a9109df9ae713ba84d0963e0432067d3 100644
+--- a/apps/native-renderer-android/native/src/polar_sensor_clock.rs
++++ b/apps/native-renderer-android/native/src/polar_sensor_clock.rs
+@@ -54,14 +54,17 @@ pub(crate) struct SensorClock {
+ impl SensorClock {
+     pub(crate) fn bind(&mut self, binding: (u64, u64)) {
+         if self.binding != Some(binding) {
+-            let generation = self.generation.saturating_add(1);
+-            *self = Self {
+-                binding: Some(binding),
+-                generation,
+-                ..Self::default()
+-            };
++            self.binding = Some(binding);
++            self.restart_transport();
+         }
+     }
++    pub(crate) fn restart_transport(&mut self) {
++        *self = Self {
++            binding: self.binding,
++            generation: self.generation.saturating_add(1),
++            ..Self::default()
++        };
++    }
+     fn begin_warmup(&mut self, frame: SensorFrame) {
+         let offset = i128::from(frame.receipt_ns) - i128::from(frame.sensor_last_ns);
+         self.anchor = None;
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+index 13955c4693337f7de254ab4a1ce5b214876a8db5..ab150b93375b4166454f6762f7b62e3e9dd667c4 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+@@ -894,6 +894,11 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                     remotePending=null;
+                 }
+                 if(!carrier.acceptsStatusRead(generation,epoch))throw new IllegalStateException("native-owner-status-read-unavailable");
++                // The headless shell can stop polling after the original Arm
++                // settles. Share only the completed Idle observation with its
++                // command panel, without running any command or effect callback.
++                if(remotePending==null && remoteTerminal==null && remoteSetupPendingId.isEmpty())
++                    read.reconcileCompletedSession(EXPERIMENT_SESSION_PANEL,SystemClock.elapsedRealtimeNanos());
+                 return read;
+             }
+ 
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
+index af5bf01bca5be2172d9883864dedf1c811dbdd93..7d26d2848723f35074f81a8665f7d22622fa479c 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
+@@ -365,6 +365,23 @@ final class ExperimentSessionPanelCoordinator {
+             statusResponseAccepted);
+         return acceptedState;
+     }
++    /** Adopt the saved same-generation Idle seen by the Wi-Fi observer after automatic completion. */
++    synchronized void reconcileCompletedSession(long epoch,NativeReceipt receipt,
++            long completedNanos,long nowNanos) {
++        if (epoch<=0L || epoch!=runtimeEpoch || freshRuntimeExpected
++                || !state.pendingOperationId.isEmpty() || !state.recording
++                || receipt.recording || !"idle".equals(receipt.phase) || !"idle".equals(receipt.controlState)
++                || receipt.generation!=state.generation || receipt.revision<=state.revision
++                || completedNanos<=nativeReadCompletedNanos || completedNanos>nowNanos
++                || nowNanos<nativeObservationClock || nowNanos-completedNanos>5000000000L) return;
++        switch (state.phase) {
++            case ARMED: case RUNNING: case PAUSED: case RECORDING:
++                acceptNativeReadback(epoch,receipt,completedNanos,nowNanos,true);
++                break;
++            default:
++                break;
++        }
++    }
+     // Observation only: never command completion, authority or physical freshness.
+     synchronized void observeNativeStatusReadback(long epoch, NativeReceipt receipt,
+             boolean acceptedState, long completedNanos, long nowNanos) {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
+index 38d3ac6aad475cb66e76bb497b6f729822d9dc28..e0931a4ecf4b0a4338a1e46552cda0916c983883 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
+@@ -15,10 +15,17 @@ final class ExperimentSessionWifiSnapshot {
+     static final class Read {
+         final JSONObject status, nativeStatus;
+         private final long completedNanos, epoch;
++        private final ExperimentSessionPanelCoordinator.NativeReceipt completedSession;
+         private long lastNowNanos;
+-        Read(JSONObject status, JSONObject nativeStatus, long completedNanos, long epoch) {
++        private Read(JSONObject status, JSONObject nativeStatus, long completedNanos, long epoch,
++                ExperimentSessionPanelCoordinator.NativeReceipt completedSession) {
+             this.status=status; this.nativeStatus=nativeStatus;
+             this.completedNanos=completedNanos; this.epoch=epoch;this.lastNowNanos=completedNanos;
++            this.completedSession=completedSession;
++        }
++        void reconcileCompletedSession(ExperimentSessionPanelCoordinator commandPanel, long nowNanos) {
++            if(completedSession!=null)
++                commandPanel.reconcileCompletedSession(epoch,completedSession,completedNanos,nowNanos);
+         }
+         synchronized JSONObject statusAt(long nowNanos, long currentEpoch) throws Exception {
+             if (currentEpoch!=epoch || completedNanos<=0 || nowNanos<lastNowNanos
+@@ -71,7 +78,14 @@ final class ExperimentSessionWifiSnapshot {
+         }
+         ExperimentSessionBleProtocol.projectPolarInput(status,nativeStatus);
+         status.put("pd",new JSONObject().put("v",1).put("native",nativeDiagnostics(input)).put("java",JSONObject.NULL));
+-        Read read=new Read(status,nativeStatus,completedNanos,epoch);
++        JSONObject result=nativeStatus.optJSONObject("recording_result");
++        // The saved result survives the Idle transition; the live completion
++        // flag resets there. A projected Idle without that result proves no save.
++        boolean completedSession="idle".equals(nativeStatus.opt("phase"))
++            && "idle".equals(nativeStatus.opt("control_state"))
++            && result!=null && "saved".equals(result.opt("status"))
++            && Boolean.TRUE.equals(result.opt("completed"));
++        Read read=new Read(status,nativeStatus,completedNanos,epoch,completedSession?parsed.receipt:null);
+         read.statusAt(nowNanos,epoch);
+         return read;
+     }
+diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
+index 120207ded41cc600d996c38dfbd1f43402da7ffe..83f60d2d2f32fb6317ba8895a260db2bf59e857c 100644
+--- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
++++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
+@@ -141,6 +141,9 @@ final class PolarSensorPanel {
+     private final ArrayList<DeviceEntry> devices = new ArrayList<DeviceEntry>();
+     private final Object countersLock = new Object();
+     private final Object connectionIdentityLock = new Object();
++    private final PolarSetupConnectionIdentity setupConnectionIdentity = new PolarSetupConnectionIdentity();
++    private String pendingSetupAddress = "";
++    private long activeSetupSourceToken;
+     private final long[] previewSensorTimesNs = new long[260];
+     private final int[] previewMicrovolts = new int[260];
+     private boolean previewRequested;
+@@ -1443,6 +1446,7 @@ final class PolarSensorPanel {
+         pendingPmdMode = selectedPmdMode();
+         pendingConnectionLabel = entry.label();
+         pendingConnectionDeviceInstanceId = entry.instanceId();
++        pendingSetupAddress = entry.address;
+         try {
+             BluetoothGatt nextGatt;
+             if (Build.VERSION.SDK_INT >= 23) {
+@@ -2195,6 +2199,12 @@ final class PolarSensorPanel {
+                 if (closing || callbackGatt != gatt) {
+                     return;
+                 }
++                if (!connected) {
++                    BluetoothDevice actual = callbackGatt.getDevice();
++                    activeSetupSourceToken = setupConnectionIdentity.observe(
++                        pendingSetupAddress, actual == null ? "" : safeAddress(actual));
++                    pendingSetupAddress = "";
++                }
+                 connected = true;
+             }
+             connectedLabel = pendingConnectionLabel;
+@@ -2806,7 +2816,9 @@ final class PolarSensorPanel {
+                             frame.sensorTimestampNs,
+                             activeAccSampleRateHz,
+                             frame.sampleCount,
+-                            previousReceiptDeltaNs);
++                            previousReceiptDeltaNs,
++                            activeSetupSourceToken,
++                            admittedGeneration);
+                         for (int sampleIndex = 0; sampleIndex < frame.accSamples.size(); sampleIndex++) {
+                             AccSample sample = frame.accSamples.get(sampleIndex);
+                             long sampleHostTimeNs = sampleTimeNs(
+@@ -2864,7 +2876,9 @@ final class PolarSensorPanel {
+                             frame.sensorTimestampNs,
+                             activeEcgSampleRateHz,
+                             frame.sampleCount,
+-                            previousReceiptDeltaNs);
++                            previousReceiptDeltaNs,
++                            0L,
++                            0L);
+                         for (int sampleIndex = 0; sampleIndex < frame.ecgSamplesMicrovolts.size(); sampleIndex++) {
+                             long sampleHostTimeNs = sampleTimeNs(
+                                 frame.hostTimeNs,
+@@ -3036,7 +3050,9 @@ final class PolarSensorPanel {
+         long sensorFrameTimeNs,
+         int sampleRateHz,
+         int sampleCount,
+-        long previousReceiptDeltaNs);
++        long previousReceiptDeltaNs,
++        long setupSourceToken,
++        long setupConnectionGeneration);
+ 
+     private static native void nativeSubmitPolarHeartRateMeasurement(long hostTimeNs, int bpm);
+ 
+@@ -3518,6 +3534,8 @@ final class PolarSensorPanel {
+             currentGatt = gatt;
+             gatt = null;
+             connected = false;
++            activeSetupSourceToken = 0L;
++            pendingSetupAddress = "";
+             liveHealth.clear();
+             batteryReadTicket++; batteryReadGatt = null; batteryReadCharacteristic = null;
+             if (batteryReadTimeout != null) handler.removeCallbacks(batteryReadTimeout);
+@@ -4480,6 +4498,26 @@ final class PolarSensorPanel {
+     }
+ }
+ 
++/** Private process-local equality witness, never a label or externally visible identifier. */
++final class PolarSetupConnectionIdentity {
++    private static final java.util.concurrent.atomic.AtomicLong NEXT = new java.util.concurrent.atomic.AtomicLong();
++    private String address = "";
++    private long token;
++
++    long observe(String admitted, String connected) {
++        if (admitted == null || connected == null || !admitted.equalsIgnoreCase(connected)
++                || !admitted.matches("(?i)([0-9a-f]{2}:){5}[0-9a-f]{2}")
++                || "00:00:00:00:00:00".equals(admitted)
++                || "02:00:00:00:00:00".equals(admitted)
++                || "FF:FF:FF:FF:FF:FF".equalsIgnoreCase(admitted)) return 0L;
++        if (!admitted.equalsIgnoreCase(address)) {
++            address = admitted;
++            token = NEXT.incrementAndGet();
++        }
++        return token > 0L ? token : 0L;
++    }
++}
++
+ /** Observations only. nanoTime witnesses never become acquisition acceptance time. */
+ final class PolarAcquisitionDiagnostics {
+     private long callbacks,accCallbacks,decodes,submits,malformedAcc,disconnects;
+diff --git a/crates/rusty-quest-breath-contract/src/phase.rs b/crates/rusty-quest-breath-contract/src/phase.rs
+index 4dc499280ca6652c95a7c75a7a28fc2b3f44ce7b..09f169a0233943a17a3ebd36754de430ff870d8c 100644
+--- a/crates/rusty-quest-breath-contract/src/phase.rs
++++ b/crates/rusty-quest-breath-contract/src/phase.rs
+@@ -5,6 +5,7 @@
+ //! platform dependency; callers inject all timestamps and reset causes.
+ 
+ use crate::{assessment::CommonBreathPhase, BreathTimestampMicros};
++use std::num::NonZeroU32;
+ 
+ /// Stable schema identifier for phase observations.
+ pub const COMMON_PHASE_OBSERVATION_SCHEMA_ID: &str = "rusty.quest.breath_phase.observation.v1";
+@@ -19,7 +20,8 @@ pub struct CommonPhaseParameters {
+     pub enter_derivative_per_second: f64,
+     /// Absolute derivative below which a directional phase may exit.
+     pub exit_derivative_per_second: f64,
+-    /// EMA weight assigned to the newest timestamp-normalized derivative.
++    /// Fixed EMA weight assigned to the newest derivative when an elapsed-time
++    /// filter was not explicitly selected.
+     pub derivative_filter_alpha: f64,
+     /// Required continuous directional-candidate confirmation.
+     pub directional_confirmation_micros: u64,
+@@ -53,7 +55,10 @@ impl Default for CommonPhaseParameters {
+ 
+ /// Validated immutable phase configuration.
+ #[derive(Clone, Copy, Debug, PartialEq)]
+-pub struct CommonPhaseConfiguration(CommonPhaseParameters);
++pub struct CommonPhaseConfiguration {
++    parameters: CommonPhaseParameters,
++    derivative_time_constant_micros: Option<NonZeroU32>,
++}
+ 
+ impl CommonPhaseConfiguration {
+     /// Validate all signal and temporal bounds.
+@@ -104,13 +109,27 @@ impl CommonPhaseConfiguration {
+         {
+             return Err(CommonPhaseConfigurationError::InvalidDiscontinuityInterval);
+         }
+-        Ok(Self(parameters))
++        Ok(Self {
++            parameters,
++            derivative_time_constant_micros: None,
++        })
++    }
++
++    /// Use a derivative EMA whose weight follows source-sample elapsed time.
++    /// The positive time constant replaces the fixed per-sample alpha.
++    #[must_use]
++    pub const fn with_derivative_time_constant_micros(
++        mut self,
++        time_constant: NonZeroU32,
++    ) -> Self {
++        self.derivative_time_constant_micros = Some(time_constant);
++        self
+     }
+ 
+     /// Return the validated parameters.
+     #[must_use]
+     pub const fn parameters(self) -> CommonPhaseParameters {
+-        self.0
++        self.parameters
+     }
+ }
+ 
+@@ -390,10 +409,11 @@ impl CommonPhaseClassifier {
+         let filtered_derivative =
+             self.filtered_derivative_per_second
+                 .map_or(raw_derivative, |old| {
+-                    parameters.derivative_filter_alpha.mul_add(
+-                        raw_derivative,
+-                        (1.0 - parameters.derivative_filter_alpha) * old,
+-                    )
++                    let alpha = self.configuration.derivative_time_constant_micros.map_or(
++                        parameters.derivative_filter_alpha,
++                        |tau| -(-elapsed_as_f64 / f64::from(tau.get())).exp_m1(),
++                    );
++                    alpha.mul_add(raw_derivative, (1.0 - alpha) * old)
+                 });
+         self.last_sequence_id = Some(sequence_id);
+         self.last_sampled_at = Some(sampled_at);
+@@ -636,6 +656,33 @@ mod tests {
+         );
+     }
+ 
++    #[test]
++    fn elapsed_derivative_filter_is_opt_in() {
++        let defaults = CommonPhaseConfiguration::new(CommonPhaseParameters::default()).unwrap();
++        for (configuration, expected) in [
++            (defaults, 0.25 * 0.55),
++            (
++                defaults.with_derivative_time_constant_micros(NonZeroU32::new(300_000).unwrap()),
++                0.25 * f64::exp(-1.0),
++            ),
++        ] {
++            let mut classifier = CommonPhaseClassifier::new(configuration);
++            let _ = classifier.observe(
++                BreathTimestampMicros::new(100_000),
++                sample(1, 100_000, 0.2),
++            );
++            let _ = classifier.observe(
++                BreathTimestampMicros::new(200_000),
++                sample(2, 200_000, 0.225),
++            );
++            let held = classifier.observe(
++                BreathTimestampMicros::new(500_000),
++                sample(3, 500_000, 0.225),
++            );
++            assert!((held.filtered_derivative_per_second.unwrap() - expected).abs() < 1e-12);
++        }
++    }
++
+     #[test]
+     fn missing_stale_malformed_order_and_time_fail_closed() {
+         let mut classifier = CommonPhaseClassifier::new(configuration());
+diff --git a/tools/checks/test_experiment_wifi_snapshot.py b/tools/checks/test_experiment_wifi_snapshot.py
+index bc13af287faee3d2272f6564ba418cf4ed704a05..db2059a3772cf8d702b07d0351739d5ca6141e73 100644
+--- a/tools/checks/test_experiment_wifi_snapshot.py
++++ b/tools/checks/test_experiment_wifi_snapshot.py
+@@ -48,6 +48,8 @@ class ExperimentSessionBleServer {static final class CommandRequest {}
+  boolean live=true;long generation=9,nativeEpoch=7;long currentGeneration(){return generation;}long currentNativeEpoch(){return nativeEpoch;}
+  boolean acceptsStatusRead(long g,long e){return live&&g==generation&&e==nativeEpoch;}
+  void updateReceiptForGeneration(long g,String id,String state,String detail){}
++ String lastReceipt="";
++ void updateReceipt(String id,String state,String detail){lastReceipt=detail;}
+ }
+ final class ExperimentControlMode {static final int CHOOSE=0,DIRECT=1,REMOTE=2;
+  static final class Snapshot {boolean selected=true;int mode=2;long packed=10;String name="remote";String wireName(){return name;}}
+@@ -82,7 +84,23 @@ public final class WifiSnapshotHarness {
+  class Delegate implements WifiDelegate {
+   int legacyReads;boolean replace,noStopHealth;JSONObject raw=response(9,900),setup;
+   ExperimentSessionWifiSnapshot wifiObservation;long wifiGeneration,wifiEpoch;
+-  class RemotePending {ExperimentSessionControlCapability.Fence sessionFence;String operation,nativeId,browserId;long serverGeneration,nativeOwnerEpoch;int requestedBias;}
++  final ExperimentSessionPanelCoordinator EXPERIMENT_SESSION_PANEL=new ExperimentSessionPanelCoordinator();
++  final ExperimentSessionJsonCodec codec=new ExperimentSessionJsonCodec(()->EXPERIMENT_SESSION_PANEL);
++  final Object REMOTE_SINK=new Object();
++  class Shell {
++   ExperimentSessionPanelCoordinator.NativeCommand submitted;
++   long currentLaunchEpochForUi(){return 1L;}
++   void submit(ExperimentSessionPanelCoordinator.NativeCommand command,boolean start,Object sink,long launch) {
++    check(start&&sink==REMOTE_SINK&&launch==1L,"remote Arm reaches original shell submission");
++    submitted=command;
++   }
++  }
++  final Shell EXPERIMENT_SESSION_SHELL=new Shell();
++  class RemotePending {
++   ExperimentSessionControlCapability.Fence sessionFence;String operation,nativeId,browserId,scenarioId;
++   long serverGeneration,nativeOwnerEpoch,armLaunchEpoch;int requestedBias;
++   RemotePending(String id,String nativeId,String operation,long generation,String condition){this.nativeId=nativeId;}
++  }
+   String rejectRemoteSessionDetail(RemotePending p,String reason){throw new AssertionError("Unselected session rejection cannot execute in read-only snapshot fixture");}
+   RemotePending remotePending;Object remoteTerminal;String remoteSetupPendingId="";Object remoteContext=new Object();
+   java.lang.ref.WeakReference<BreathCompositionPanelModule> remotePanel=new java.lang.ref.WeakReference<>(null);
+@@ -96,6 +114,12 @@ public final class WifiSnapshotHarness {
+   JSONObject sessionControlReadback()throws Exception{return raw.getJSONObject("readback");}
+   __READBACK__
+   __PRODUCER__
++  void arm(String id){
++   ExperimentSessionBleServer server=remoteServer();
++   String scenario="haupt-15",participantPlan=null;
++   ArmRequest request=new ArmRequest(id);
++   __ARM__
++  }
+   JSONObject polarSetupReadback(){return setup;}JSONObject polarStopReadback(){if(replace)carrier.generation++;return new JSONObject()
+    .put("connected",false).put("acc_requested",true).put("acc_pmd_ack_running",true)
+    .put("diagnostics",new JSONObject().put("clock","java-nano-time").put("observed_at_monotonic_ns",42).put("callback_count",15).put("acc_callback_count",14)
+@@ -106,6 +130,10 @@ public final class WifiSnapshotHarness {
+    .put("contact",new JSONObject().put("state","unsupported").put("supported",false).put("detected",JSONObject.NULL).put("age_ms",4))
+    .put("battery",new JSONObject().put("percent",80).put("age_ms",100)).put("raw",repeat("x",20000));}
+  }
++ static class ArmRequest {
++  final String id,operation="arm",condition="condition-a";final int bias=0;
++  ArmRequest(String id){this.id=id;}
++ }
+  Delegate delegate=new Delegate();
+  WifiSnapshotHarness()throws Exception{}
+  __SNAPSHOT__
+@@ -233,6 +261,54 @@ public final class WifiSnapshotHarness {
+    check(Long.toString(valid).equals(emitted.getJSONObject("o").getString("e")),"valid int64 epoch truncated: "+valid);
+   }
+  }
++ static void nextArmAfterAutomaticCompletion()throws Exception {
++  WifiSnapshotHarness h=new WifiSnapshotHarness();
++  for(long generation=3;generation<=4;generation++) {
++   // Simulate the original remote Arm having settled and the command panel having
++   // seen Running before the unattached Shell stopped polling this session.
++   long revision=9+(generation-3)*2;
++   JSONObject running=response(revision,900);
++   if(h.delegate.EXPERIMENT_SESSION_SHELL.submitted!=null)
++    running.getJSONObject("readback").put("last_operation_id",h.delegate.EXPERIMENT_SESSION_SHELL.submitted.operationId)
++     .put("last_operation_status","accepted");
++   running.getJSONObject("readback").put("generation",generation);
++   ExperimentSessionAndroidShell.SessionReadback seen=h.delegate.codec.parse(running.toString(),null,false);
++   h.delegate.EXPERIMENT_SESSION_PANEL.acceptNativeReadback(7L,seen.receipt,SystemClock.elapsedRealtimeNanos(),SystemClock.elapsedRealtimeNanos(),true);
++   h.delegate.remotePending=null;h.delegate.EXPERIMENT_SESSION_SHELL.submitted=null;
++   check(h.delegate.EXPERIMENT_SESSION_PANEL.snapshot().phase==ExperimentSessionPanelState.Phase.RUNNING,"command panel previously observed actual Running");
++   // The native authored main saves internally. Its fresh Idle result is read by
++   // the real gateway's separate Wi-Fi status owner, without a shell callback.
++   JSONObject idle=idleWithEpoch(7L);
++   idle.getJSONObject("readback").put("generation",generation).put("revision",revision+1)
++    .put("recording_result",new JSONObject().put("status","saved").put("completed",true));
++   h.delegate.raw=idle;ControlPanelActivity.raw=idle;
++   JSONObject observed=h.snapshot();
++   check(observed.getString("p").equals("IDLE")&&!observed.getBoolean("rec")&&!observed.getBoolean("pending"),"gateway sees durable native Idle before subsequent Arm");
++   h.delegate.arm("successive-arm-"+generation);
++   check(h.delegate.EXPERIMENT_SESSION_SHELL.submitted!=null,"next remote Arm after completed main must reach the native shell: "+h.carrier.lastReceipt);
++   check(h.delegate.EXPERIMENT_SESSION_SHELL.submitted.expectedGeneration==generation,"new Arm must retain observed native generation");
++  }
++ }
++ static void completedSessionFences()throws Exception {
++  for(String blocked:new String[]{"missing-save","unsaved","early","foreign-generation","same-revision","remote-pending","local-save"}) {
++   WifiSnapshotHarness h=new WifiSnapshotHarness();
++   ExperimentSessionPanelCoordinator panel=h.delegate.EXPERIMENT_SESSION_PANEL;
++   ExperimentSessionAndroidShell.SessionReadback running=h.delegate.codec.parse(response(9,900).toString(),null,false);
++   panel.acceptNativeReadback(7L,running.receipt,SystemClock.elapsedRealtimeNanos(),SystemClock.elapsedRealtimeNanos(),true);
++   JSONObject idle=idleWithEpoch(7L),nativeStatus=idle.getJSONObject("readback");
++   if(!"missing-save".equals(blocked))nativeStatus.put("recording_result",new JSONObject()
++    .put("status","unsaved".equals(blocked)?"unsaved":"saved").put("completed",!"early".equals(blocked)));
++   if("foreign-generation".equals(blocked))nativeStatus.put("generation",4L);
++   if("same-revision".equals(blocked))nativeStatus.put("revision",9L);
++   if("remote-pending".equals(blocked))h.delegate.remoteSetupPendingId="original-setup";
++   if("local-save".equals(blocked))check(panel.restartToExperimenter(panel.allocateRouteEvent())!=null,"local save reserves its original command");
++   ExperimentSessionPanelState before=panel.snapshot();
++   h.delegate.raw=idle;ControlPanelActivity.raw=idle;
++   check("IDLE".equals(h.snapshot().getString("p")),"gateway reports its independent native Idle observation: "+blocked);
++   check(panel.snapshot()==before,"Idle cannot retire command-side state without current, completed, unclaimed proof: "+blocked);
++   check(h.delegate.EXPERIMENT_SESSION_SHELL.submitted==null,"Wi-Fi observation never submits a shell command: "+blocked);
++  }
++ }
+  static void scan()throws Exception {
+   PolarReceiptHarness h=new PolarReceiptHarness();
+   SystemClock.ms=31000;check("pending".equals(h.remoteSetupReceipt("original",7).getString("state")),"Scan must stay pending at31seconds");
+@@ -253,6 +329,7 @@ public final class WifiSnapshotHarness {
+    if(!"epoch".equals(args[0])){new WifiSnapshotHarness().gateway();observation();
+     java.nio.file.Files.write(java.nio.file.Paths.get(args[1]),pauseContract().toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));}
+    rawEpochs();
++   if(!"epoch".equals(args[0])){nextArmAfterAutomaticCompletion();completedSessionFences();}
+   }
+   if(!"gateway".equals(args[0])&&!"epoch".equals(args[0]))scan();
+   System.out.println("PASS production full Wi-Fi projection/gateway and scan receipt: "+args[0]);
+@@ -271,7 +348,7 @@ final class PolarReceiptHarness {
+  __DISPATCH__
+  __RECEIPT__
+ }
+-'''.replace('__SNAPSHOT__', method(gateway, 'private JSONObject snapshot(')).replace('__HEALTH__',method(gateway,'static void projectPolarHealth(')).replace('__RECEIPT__', method(polar, 'synchronized JSONObject remoteSetupReceipt(')).replace('__READBACK__', method(module, 'private JSONObject sessionControlReadback(JSONObject response)')).replace('__PRODUCER__', method(module, 'public ExperimentSessionWifiSnapshot.Read wifiSnapshot(')).replace('__DISPATCH__', method(polar, 'synchronized JSONObject dispatchRemoteSetup('))
++'''.replace('__SNAPSHOT__', method(gateway, 'private JSONObject snapshot(')).replace('__HEALTH__',method(gateway,'static void projectPolarHealth(')).replace('__RECEIPT__', method(polar, 'synchronized JSONObject remoteSetupReceipt(')).replace('__READBACK__', method(module, 'private JSONObject sessionControlReadback(JSONObject response)')).replace('__PRODUCER__', method(module, 'public ExperimentSessionWifiSnapshot.Read wifiSnapshot(')).replace('__ARM__', method(module, 'if ("arm".equals(request.operation)) {')).replace('__DISPATCH__', method(polar, 'synchronized JSONObject dispatchRemoteSetup('))
+     with tempfile.TemporaryDirectory(prefix='rq-wifi-snapshot-') as temp:
+         out = Path(temp)
+         fixture = out / 'WifiSnapshotHarness.java'
+diff --git a/tools/checks/test_polar_acquisition_callbacks.py b/tools/checks/test_polar_acquisition_callbacks.py
+index 49d4fa94ade832d0ea6af093d74bf3fff661c946..70ea3dbe52a5c3835b70d9c64cc558f3dc0cce6c 100644
+--- a/tools/checks/test_polar_acquisition_callbacks.py
++++ b/tools/checks/test_polar_acquisition_callbacks.py
+@@ -46,6 +46,7 @@ class AcquisitionCallbackTest {
+  final PolarLiveHealth liveHealth=new PolarLiveHealth();String connectedDeviceInstanceId="sensor";
+  final PolarAcquisitionDiagnostics diagnostics=new PolarAcquisitionDiagnostics();
+  BluetoothGatt gatt=new BluetoothGatt(); boolean connected=true,closing;
++ long activeSetupSourceToken=41,publishedToken,publishedConnection;
+  long autoConnectionGeneration=1,automaticConnectionUpdatedAtUnixMs,automaticConnectionEvidenceGeneration;
+  long malformedFrames,heartRateEvents,latestBpm,rrIntervals,controlEvents,accFrames,accSamples,lastAccFrameReceiptNs,ecgFrames,ecgSamples,lastEcgFrameReceiptNs;
+  int activeAccSampleRateHz=200,activeEcgSampleRateHz=200,accSubmits,ecgSubmits,hrSubmits,rrSubmits,frames,appends,controls;
+@@ -78,11 +79,17 @@ class AcquisitionCallbackTest {
+  long sampleTimeNs(long t,int rate,int i,int n){return t;}
+  void nativeSubmitPolarHeartRateMeasurement(long t,int bpm){commit();hrSubmits++;}
+  void nativeSubmitPolarRrMeasurement(long t,float rr){commit();rrSubmits++;}
+- void nativeSubmitPolarPmdFrame(int m,long s,long h,long t,int rate,int n,long d){commit();frames++;}
++ void nativeSubmitPolarPmdFrame(int m,long s,long h,long t,int rate,int n,long d,long token,long connection){commit();frames++;publishedToken=token;publishedConnection=connection;}
+  void nativeSubmitPolarAccMeasurement(long h,long s,long r,long f,int i,int n,long j,int x,int y,int z){commit();accSubmits++;if(failSubmit)throw new IllegalStateException("JNI sink failure");}
+  void nativeSubmitPolarEcgMeasurement(long h,long s,long r,long f,int i,int n,long j,int v){commit();ecgSubmits++;}
+  static void check(boolean yes,String reason){if(!yes)throw new AssertionError(reason);}
+  public static void main(String[] args) {
++  PolarSetupConnectionIdentity witness=new PolarSetupConnectionIdentity();
++  String original="12:34:56:78:9A:BC",differentAddress="12:34:56:78:9A:BD";
++  long originalToken=witness.observe(original,original);
++  check(originalToken>0&&witness.observe(original.toLowerCase(Locale.US),original)==originalToken,"the same admitted Bluetooth device preserves its private token");
++  check(witness.observe(original,differentAddress)==0&&witness.observe("H10","H10")==0&&witness.observe("02:00:00:00:00:00","02:00:00:00:00:00")==0,"different, label-only or placeholder identity proves nothing");
++  check(witness.observe(differentAddress,differentAddress)!=originalToken&&new PolarSetupConnectionIdentity().observe(original,original)!=originalToken,"replacement or retired process owner cannot inherit the token");
+   for(int mode=1;mode<=4;mode++)for(int kind=0;kind<4;kind++) {
+    final AcquisitionCallbackTest owner=new AcquisitionCallbackTest();final BluetoothGatt admitted=owner.gatt;final int replacement=mode;
+    duringDecode=()->{synchronized(owner.connectionIdentityLock){
+@@ -104,10 +111,11 @@ class AcquisitionCallbackTest {
+    check(owner.allCommitsLocked,"acquisition commit must hold the same lock as retirement/replacement");
+    check(owner.appends==1&&owner.malformedFrames==0,"current callback must record exactly once");
+    if(kind==0){check(owner.accSubmits==1&&owner.frames==1&&owner.accFrames==1,"current ACC lost");
++    check(owner.publishedToken==owner.activeSetupSourceToken&&owner.publishedConnection==owner.autoConnectionGeneration,"exact current ACC owner publishes the private transport witness inside its lock");
+     Map<String,Object> d=owner.diagnostics.snapshot(System.nanoTime());
+     check(((Long)d.get("acc_callback_count"))==1&&((Long)d.get("decode_count"))==1&&((Long)d.get("jni_submit_count"))==1,"callback/decode/submit boundaries distinct");
+     check(d.get("callback_age_ms")!=null&&d.get("decode_duration_ms")!=null,"Java diagnostic ages measured");}
+-   if(kind==1)check(owner.ecgSubmits==1&&owner.frames==1&&owner.ecgFrames==1,"current ECG lost");
++   if(kind==1)check(owner.ecgSubmits==1&&owner.frames==1&&owner.ecgFrames==1&&owner.publishedToken==0&&owner.publishedConnection==0,"current ECG keeps its existing recording boundary without carrying a setup identity");
+    if(kind==2)check(owner.hrSubmits==1&&owner.rrSubmits==1,"current HR/RR lost");
+    if(kind==3)check(owner.controls==1,"current PMD control lost");
+   }
+@@ -135,7 +143,7 @@ class AcquisitionCallbackTest {
+ __METHODS__
+ }
+ __POLICY__
+-'''.replace("__MODELS__", models).replace("__REAL_ACC__", real_acc).replace("__METHODS__", methods).replace("__POLICY__", policy + "\n" + diagnostics + "\n" + block(source, "final class PolarLiveHealth"))
++'''.replace("__MODELS__", models).replace("__REAL_ACC__", real_acc).replace("__METHODS__", methods).replace("__POLICY__", policy + "\n" + diagnostics + "\n" + block(source, "final class PolarLiveHealth") + "\n" + block(source, "final class PolarSetupConnectionIdentity"))
+     with tempfile.TemporaryDirectory(prefix="rq-polar-acquisition-") as temporary:
+         output = Path(temporary)
+         java = output / "AcquisitionCallbackTest.java"
