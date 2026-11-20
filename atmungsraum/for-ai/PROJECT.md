@@ -16,17 +16,45 @@
   agreement is a replay measure and wearable acceptance is pending.
 - [ ] Publish and verify the [phone ECG recovery](https://github.com/GeorgeFejer91/viscereality.org/pull/172)
   on top of the pairing and session-handoff changes already on main. The
-  exact phone candidate passed the 462-state check. The current GitHub
-  account can open the pull request and upstream merge requires write access.
-- [ ] At the next attended start, install Developer 38 over the idle Developer
-  37, confirm the APK bytes and the installed Pixel release with the existing
-  pairing, and confirm the watchdog and zero bias. Leave browser Bluetooth
-  disconnected. Complete two 900-second recordings through the installed
-  phone in the same Quest app process. In the first, exercise true Polar
-  range loss, gated manual Continue, and new-clock ECG drawing. At the
-  first save, check recovery and a blank participant form. Verify a new
-  run generation, fresh calibration, advancing time and the second full
-  save. The operator requested a pause before another start.
+  exact `20261120-audio-stall` candidate at `d1992bd` passed the 462-state
+  check and provides headset restart guidance for the verified frame-zero
+  failure. It also fixes the closeout and calibration layout defects.
+  GitHub rejected the merge from the current account, which has read access.
+- [x] Install the signed Developer 38 r2 over idle Developer 37 and verify
+  installed bytes, saved Pixel pairing, keep-awake and zero guidance bias.
+  The shared calibration AudioTrack reported playing at frame zero even
+  after an app-only restart. A headset reboot restored advancement on the
+  same output route. Restore Wi-Fi ADB and verify keep-awake after reboot.
+- [x] Complete the first 900-second main in the post-reboot process. At
+  822.700 seconds, loss of Polar range paused writer generation 1. The
+  strap resumed both streams on return, the Personal Tilt fit stayed ready,
+  and the phone Continue advanced the original writer. On the installed
+  `20261120-saved-headsets` release, the ECG graph stayed waiting after
+  signed ECG had resumed. The same phone showed Connect for about
+  15 seconds at completion, then reconciled the saved recording.
+- [x] Reconcile the first archive and its test questionnaire. Next Session
+  opened a blank participant form, and a second zero-bias Personal Tilt
+  attempt fit 797 of 800 bins in the same Quest process.
+- [ ] Fix and retest automatic completion audio cleanup. The second Arm
+  reached generation 2 with an active writer, ready storage and current
+  sensor and calibration audio evidence. It remained in ARMING with zero
+  main time. The shared-scheduler auto-save path bypasses the Java stop
+  used by explicit terminal commands, leaving the previous condition audio
+  generation in the way of the next Arm. Require both 900-second saves and
+  advancing second main time without a process restart.
+- [ ] Add [Quest calibration attempt recordings](plans/2026-11-20-calibration-attempt-recording.md)
+  for future APKs. Preserve retries, raw samples and their outcomes. Retain
+  the existing selected-input fields in the native main manifest and use
+  explicit preparation ownership to identify the accepted attempt.
+- [x] Compare adaptive axes, state/volume fusion and renderer radius on
+  the 13 available guided browser recordings. Six recordings were held out.
+  On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,
+  Adaptive Tilt's was 17.78, and blending in 25% volume slope gave 21.82.
+  The 150 ms Volume replay had 0.166 m mean absolute radius error against
+  the intended 1–2 m trace, versus 0.195 m with integrated State. Keep
+  real posture changes as the next physical comparison for personalized
+  axis recovery. The observed recordings vary in orientation by at most
+  1.47 degrees; the larger posture changes in the tuner were simulated.
 
 ### Active: main Start rejection and retained calibration — 2026-11-19
 
