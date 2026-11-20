@@ -13,7 +13,7 @@ import { captureUtc } from './collection-time.js?v=1';
 import { BreathingSetup } from './breathing-setup.js?v=25';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
-import { SessionParticles } from './session-particles.js?v=1';
+import { LiveSphereVolume } from './live-sphere-volume.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=3';
 import { KioskControl } from './kiosk-control.js?v=10';
 import { ApkRelease } from './quest-release.js?v=2';
@@ -400,9 +400,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const apkRelease = new ApkRelease({ onChange: () => paint() });
   const breathDisplay = new LiveBreathDisplay();
   const sessionScene = byId('session-scene');
-  const sceneStatus = byId('session-scene-status');
-  const sceneRadius = byId('session-scene-radius');
-  const particles = new SessionParticles(sessionScene.querySelector('canvas'));
+  const sphereVolume = new LiveSphereVolume();
+  const volumeStatus = byId('session-volume-status');
+  const volumePaths = [byId('session-volume-ist'), byId('session-volume-soll')];
+  const volumeValues = [byId('session-volume-ist-value'), byId('session-volume-soll-value')];
+  const volumePlot = byId('session-volume-plot');
+  const volumeKey = byId('session-volume-key');
+  const volumeBounds = [byId('session-volume-min'), byId('session-volume-max')];
+  const volumeFormat = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
+  const smallVolumeFormat = new Intl.NumberFormat('de-DE', { maximumSignificantDigits: 3 });
   const ecgDisplay = new LiveEcgDisplay();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let animationFrame = 0;
@@ -1090,7 +1096,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         && !breath.instructionPending && !questionnaire?.required && !savingAnswers && !metaControl.pending,
       instructionPending: breath.instructionPending,
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
-    renderLive(performance.now());
+    const now = performance.now();
+    updateSessionVolume(breath, statusTiming, now);
+    renderLive(now);
     scheduleBreathExpiry();
     scheduleAnimation();
   }
@@ -1245,35 +1253,50 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (current) text(scale, `2 s · 130 Hz · ±${current.range} µV · Basislinie zentriert`);
   }
 
-  function renderSessionScene(session, current, now) {
+  function updateSessionVolume(view, timing, now) {
+    const session = runningScene();
     const owner = rehearsal.gateway?.owner;
-    const sceneVisible = Boolean(session && owner && !document.hidden);
-    if (sessionScene.hidden === sceneVisible) sessionScene.hidden = !sceneVisible;
-    const paused = session?.p === 'PAUSED';
-    const radius = particles.render({
-      key: sceneVisible ? `${owner.device}/${owner.epoch}/${owner.native_epoch}/${session.g}` : '',
-      progress: current?.actualLive ? current.actualProgress : null,
-      paused,
-      reducedMotion: reducedMotion.matches,
-      now,
-    });
-    if (sceneVisible) {
-      text(sceneStatus, radius === null ? 'Kein aktueller Partikelradius'
-        : paused ? 'Partikelvorschau pausiert' : 'Partikelradius in der Quest');
-      if (sceneRadius.hidden !== (radius === null)) sceneRadius.hidden = radius === null;
-      if (radius !== null) text(sceneRadius, `${Math.round(radius * 100)} %`);
-      return !paused && Boolean(current?.actualAnimating);
+    if (!session || !owner || document.hidden) {
+      sphereVolume.update(null, now);
+      return;
     }
-    return false;
+    const age = timing ? session.o?.a + timing.transportMs + Math.max(0, now - timing.receivedAt) : Infinity;
+    sphereVolume.update({
+      key: `${owner.device}/${owner.epoch}/${owner.native_epoch}/${session.g}`,
+      paused: session.p === 'PAUSED', elapsed: session.ms, generation: session.g,
+      witnessGeneration: session.o?.g,
+      age, sample: view.available ? view.renderer : null, audio: view.setup?.audio_generation,
+    }, now);
+  }
+
+  function renderSessionScene(session, now) {
+    const frame = session && !document.hidden ? sphereVolume.frame(now, reducedMotion.matches) : null;
+    const hasData = Boolean(frame?.actualPath);
+    const sceneVisible = Boolean(frame && rehearsal.gateway?.owner && (!frame.paused || hasData));
+    if (sessionScene.hidden === sceneVisible) sessionScene.hidden = !sceneVisible;
+    if (!sceneVisible) return false;
+    sessionScene.toggleAttribute('data-paused', frame.paused);
+    if (volumePlot.hidden === hasData) volumePlot.hidden = !hasData;
+    if (volumeKey.hidden === hasData) volumeKey.hidden = !hasData;
+    const format = value => value === null ? '—' : `${(value > 0 && value < 1 ? smallVolumeFormat : volumeFormat).format(value)} m³`;
+    [frame.actualPath, frame.intendedPath].forEach((path, i) => {
+      if (volumePaths[i].getAttribute('d') !== path) volumePaths[i].setAttribute('d', path);
+    });
+    [frame.actual, frame.intended].forEach((value, i) => text(volumeValues[i], format(value)));
+    frame.bounds.forEach((value, i) => text(volumeBounds[i], frame.actualPath ? format(value) : '—'));
+    text(volumeStatus, frame.paused ? 'Pausiert.'
+      : !frame.live ? 'Warte auf Quest.'
+      : frame.intended === null ? 'Sollwert fehlt.' : 'Quest live');
+    return frame.live;
   }
 
   function renderLive(now) {
     const previewVisible = livePreviewVisible();
     const view = breathing.view;
     const session = runningScene();
-    const current = previewVisible || session || displayedStep === 'input'
-      ? breathDisplay.frame(now, (!previewVisible && !session) || reducedMotion.matches) : null;
-    let moving = renderSessionScene(session, current, now);
+    const current = previewVisible || displayedStep === 'input'
+      ? breathDisplay.frame(now, !previewVisible || reducedMotion.matches) : null;
+    let moving = renderSessionScene(session, now);
     const showInputVolume = Boolean(current?.desiredAvailable) && !view?.renderer
       && typeof current.inputVolume === 'number';
     if (view?.available) {
@@ -1325,8 +1348,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
 
   function scheduleBreathExpiry() {
     clearTimeout(breathTimer);
-    const current = breathDisplay.frame(performance.now(), reducedMotion.matches);
-    const expiries = [current?.live ? current.ttl : null, current?.actualLive ? current.actualTTL : null].filter(value => value !== null && value !== undefined);
+    const now = performance.now();
+    const current = breathDisplay.frame(now, reducedMotion.matches);
+    const volume = runningScene() ? sphereVolume.frame(now, reducedMotion.matches) : null;
+    const expiries = [current?.live ? current.ttl : null, current?.actualLive ? current.actualTTL : null,
+      volume?.ttl].filter(value => value !== null && value !== undefined);
     if (!document.hidden && expiries.length) {
       breathTimer = setTimeout(() => { renderLive(performance.now()); scheduleBreathExpiry(); }, Math.min(...expiries) + 1);
     }
@@ -1401,6 +1427,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     nextLive = 0;
     archiveRead++;
     archiveListRead++;
+    sphereVolume.reset();
     archiveScope = '';
     archiveListLoaded = false;
     reconciledRecordings = undefined;
@@ -2179,10 +2206,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     find.focus();
   });
   const timer = setInterval(tick, 1000);
-  // Renderer samples expire after 500 ms. Read the visible preview every 100 ms
-  // to leave room for observed-sample playout; other work keeps the ordinary tick.
+  // Renderer samples expire after 500 ms. Read live charts and previews at the
+  // same bounded cadence so a missing renderer can recover without a reload.
   const previewTimer = setInterval(() => {
-    const liveScene = runningScene()?.p === 'RUNNING' && Boolean(breathing.view?.setup?.renderer);
+    const liveScene = runningScene()?.p === 'RUNNING' && Object.hasOwn(breathing.view?.setup ?? {}, 'renderer');
     if (document.hidden || (!livePreviewVisible() && !liveScene) || connecting || userAction || !rehearsal.gateway?.owner) return;
     void rehearsal.refresh({ statusOnly: true });
   }, 100);
@@ -2207,6 +2234,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       showTrace(null);
       paint();
     } else {
+      sphereVolume.reset();
       nextConnect = nextSavedProbe = nextSync = 0;
       paint();
       renderLive(performance.now());
