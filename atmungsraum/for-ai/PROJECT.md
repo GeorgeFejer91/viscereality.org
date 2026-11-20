@@ -5264,7 +5264,12 @@ Chrome, install, and verify standalone relaunch from the Android launcher.
   with an empty spoken-word TXT. Full decode passed. The original 50,155,244 bytes
   match SHA-256 `53bf70a3e1362721a5657eeaf8b8b94348f27c78818430840a6e98b0395b04c4`.
   The browser and Quest continue to select their configured tracks.
-- [ ] Verify the exact Pages deployment and compare the public MP3 to the source.
+- [x] Publish the asset on main at 82893d0. [Pages run 44701402444](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44701402444)
+  succeeded. The full public MP3 matched the source SHA-256, a byte range
+  returned HTTP 206, the public TXT was empty, and the app entry returned HTTP
+  200. The context check and exact-commit smartphone gate passed (462 states).
+- [ ] Confirm the installed PWA on the lab Pixel when it is available. The
+  phone was unavailable through the local device connections during publication.
 
 ## Browser session background music — 2026-11-08
 
