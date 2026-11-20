@@ -146,7 +146,11 @@ headset and phone.
   The mounted browser regression approves the second headset, reloads the PWA
   and reconnects to the first headset with the original membership. A separate
   two-tab regression verifies that an old automatic connection cannot overwrite
-  a newer headset selection.
+  a newer headset selection. Commit `c449c9a7a3c62bd0a9e4c0577b30d9eb22d86ff0`
+  passed independent review and the exact 462-state pre-push gate. [Pages run 44648030392](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44648030392)
+  succeeded with seven live runtime response matches. The installed Pixel 10
+  loaded `20261120-saved-headsets` from its launcher. A read-only comparison
+  confirmed the same saved enrollment before and after refresh.
 - [x] Publish MesmerPrism's PRs #170 and #171 and the reviewed follow-up in
   `514e8ff738f872d63f614cad5e1f8c41940fca31`. The exact pre-push gate passed
   462 rendered phone states. The Node run passed 352 tests and skipped 19
