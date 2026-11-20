@@ -5,6 +5,7 @@ startup-permission-kiosk.patch text eol=lf -whitespace
 startup-kiosk-host-fixture.patch text eol=lf -whitespace
 background-music.patch text eol=lf -whitespace
 round-polar-recording.patch text eol=lf -whitespace
+calibrated-volume-and-capture.patch text eol=lf -whitespace
 # The resolver validates the exact bytes of the provider manifest and assets.
 build-assets/provider/** -text
 build-assets/provider/**/*.json whitespace=cr-at-eol

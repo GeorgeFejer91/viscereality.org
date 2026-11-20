@@ -40,12 +40,29 @@
   sensor and calibration audio evidence. It remained in ARMING with zero
   main time. The shared-scheduler auto-save path bypasses the Java stop
   used by explicit terminal commands, leaving the previous condition audio
-  generation in the way of the next Arm. Require both 900-second saves and
-  advancing second main time without a process restart.
-- [ ] Add [Quest calibration attempt recordings](plans/2026-11-20-calibration-attempt-recording.md)
-  for future APKs. Preserve retries, raw samples and their outcomes. Retain
-  the existing selected-input fields in the native main manifest and use
-  explicit preparation ownership to identify the accepted attempt.
+  generation in the way of the next Arm. Android later killed the stuck
+  process for excessive Binder traffic after repeated status callbacks
+  filled the toast queue. Developer 39 stops the completed condition
+  player and uses panel text during retries. Require both 900-second saves
+  and advancing second main time without a process restart.
+- [x] Add the native [Quest calibration attempt recordings](plans/2026-11-20-calibration-attempt-recording.md)
+  and selected method/attempt metadata to Developer 39. Each admitted retry
+  has its own app-private raw capture. Preserve native timestamps and
+  the official main sample window.
+- [x] Prepare signed Developer 39 with calibrated Polar Volume and signed
+  renderer/guide telemetry for the rolling phone chart. The alternate
+  fixed and adaptive preset State choices are superseded on this build.
+  In the 13-recording cross-cycle replay, 600 ms smoothing on the
+  personal fit reduced held-out radius error to 0.064 m, versus 0.094 m
+  unsmoothed. The headset uses both cycles to fit. Physical comparison
+  remains pending.
+- [ ] Verify Developer 39 and its paired phone release on the lab devices,
+  then publish the qualified APK to the existing private Meta Developer
+  channel. Dashboard currently shows code 33 for Quest 2. Verify the
+  exact active build before updating the website release hint. Developer
+  39 is installed locally with exact checksum and a cold launch. The
+  Pixel was disconnected after the first attended run and still needs to
+  reconnect for the paired test.
 - [x] Compare adaptive axes, state/volume fusion and renderer radius on
   the 13 available guided browser recordings. Six recordings were held out.
   On those six, Personal Tilt's cue agreement was 21.93 of 32 seconds,

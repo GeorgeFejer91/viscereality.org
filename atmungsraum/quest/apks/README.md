@@ -1,5 +1,39 @@
 # Atmungsraum Quest 2 APKs
 
+## Developer 39 calibrated Volume candidate — 2026-11-20
+
+Canonical Developer package `org.viscereality.atmungsraum.developer`,
+version `0.2.38-dev`, code 39, 73,678,911 bytes. APK SHA-256
+`b18f54008000f1faba074b802374c331add9b5c601f644a6a031407e37e20811`.
+The v3 signer SHA-256 is
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+
+Apply [calibrated-volume-and-capture.patch](../calibrated-volume-and-capture.patch)
+to Developer 38 source `5d053dba13b17f37924aba3b0c41d5b04b5348e1`. It
+reconstructs tree `26abd1f02ec7e1cf90c0df0571ad427650f6b6c5` from native
+source `3af8a77f429703550b1025fe87d59bd0094faaaa`. The patch is 179,484
+bytes, SHA-256 `1a033b385118f85cbb958360c73e8ff3daf215dedb0f23002a79115e81d063b8`.
+The canonical build uses the Developer signer, SDK207, the retained
+private visual profile, and the approved Zen loop from website main
+`857b61f`. It passed signed 900-second session closure, ARM64, APK v3
+and 16 KiB alignment.
+
+The new audio handoff stops the completed session's condition player
+before the next Arm prepares its track. Status polling keeps its
+preparation message in the panel. Polar Volume and Personal Tilt State
+share the guided two-cycle calibration. Personal Volume applies a 600 ms
+source-time output filter. Each admitted attempt stores app-private raw
+Polar ECG and motion, clock evidence and a result. The native recording
+binds the selected fit to an attempt when the phone supplies the matching
+preparation ID and the Quest verifies it. The paired phone update plots
+intended and actual sphere volume using signed renderer and cue evidence.
+
+The lab Quest 2 accepted the exact signed bytes through File Manager.
+It cold-launched through the standard Android launcher and remained
+awake. The combined native suite passed 946 tests with six isolated
+fixtures kept separate. The paired hardware rerun and Meta Developer
+distribution remain pending.
+
 ## Developer 38 two-session candidate — 2026-11-20
 
 Canonical local Developer package `org.viscereality.atmungsraum.developer`,
